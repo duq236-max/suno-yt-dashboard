@@ -12,10 +12,13 @@ import {
     loadLyricsHistory,
     addLyricsHistory,
     deleteLyricsHistory,
+    getCustomVocals,
+    saveCustomVocal,
+    deleteCustomVocal,
     generateId,
     formatDatetime,
 } from '@/lib/storage';
-import { LyricsHistoryItem } from '@/types';
+import { LyricsHistoryItem, CustomVocal } from '@/types';
 
 const LANG_OPTIONS: { value: LyricsHistoryItem['language']; label: string }[] = [
     { value: 'ko', label: '한국어' },
@@ -33,6 +36,7 @@ interface FormState {
     model: 'flash' | 'pro';
     copyrightDefense: boolean;
     vocalStyleId: string;
+    shortForm: boolean;
 }
 
 const DEFAULT_FORM: FormState = {
@@ -44,6 +48,7 @@ const DEFAULT_FORM: FormState = {
     model: 'flash',
     copyrightDefense: false,
     vocalStyleId: '',
+    shortForm: false,
 };
 
 export default function LyricsPage() {
@@ -58,9 +63,14 @@ export default function LyricsPage() {
     });
     const [copied, setCopied] = useState(false);
     const [toast, setToast] = useState<string | null>(null);
+    const [customVocals, setCustomVocals] = useState<CustomVocal[]>([]);
+    const [vocalRecommending, setVocalRecommending] = useState(false);
+    const [vocalRecommendReason, setVocalRecommendReason] = useState<string | null>(null);
+    const [estimatedDuration, setEstimatedDuration] = useState<number | null>(null);
 
     useEffect(() => {
         setHistory(loadLyricsHistory());
+        setCustomVocals(getCustomVocals());
     }, []);
 
     function updateForm<K extends keyof FormState>(key: K, value: FormState[K]) {
@@ -92,6 +102,7 @@ export default function LyricsPage() {
                     creativityParams: creativity,
                     copyrightDefense: form.copyrightDefense,
                     vocalKeywords,
+                    shortForm: form.shortForm,
                 }),
             });
 
@@ -115,6 +126,11 @@ export default function LyricsPage() {
             };
 
             setResult(generated);
+
+            // 예상 재생시간 추정 (J5): 한국어 기준 ~3글자/초, 영어 ~1.5단어/초
+            const charCount = generated.lyrics.replace(/\[.+?\]|\n/g, '').length;
+            const charsPerSec = form.language === 'en' ? 8 : 5;
+            setEstimatedDuration(Math.round(charCount / charsPerSec));
 
             // 히스토리 저장
             const historyItem: LyricsHistoryItem = {
@@ -161,6 +177,51 @@ export default function LyricsPage() {
         setTimeout(() => setToast(null), 3500);
     }
 
+    function handleSaveCustomVocal() {
+        if (!form.vocalStyleId) { showToast('먼저 보컬 스타일을 선택해주세요.'); return; }
+        const vocal = vocalStyles.find(v => v.id === form.vocalStyleId);
+        if (!vocal) return;
+        const entry: CustomVocal = {
+            id: generateId(),
+            name: vocal.name,
+            vocalStyleId: form.vocalStyleId,
+            genre: form.genre.join(', '),
+            mood: form.mood,
+            createdAt: new Date().toISOString(),
+        };
+        setCustomVocals(saveCustomVocal(entry));
+        showToast(`💾 "${vocal.name}" 커스텀 보컬이 저장됐어요.`);
+    }
+
+    function handleDeleteCustomVocal(id: string) {
+        setCustomVocals(deleteCustomVocal(id));
+    }
+
+    async function handleRecommendVocal() {
+        const apiKey = loadData().geminiApiKey;
+        if (!apiKey) { showToast('Gemini API 키를 먼저 설정해주세요.'); return; }
+        if (form.genre.length === 0) { showToast('장르를 먼저 선택해주세요.'); return; }
+        setVocalRecommending(true);
+        setVocalRecommendReason(null);
+        try {
+            const res = await fetch('/api/gemini/vocal', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ apiKey, genre: form.genre.join(', '), mood: form.mood }),
+            });
+            const json = await res.json() as { id?: string; name?: string; reason?: string; error?: string };
+            if (!res.ok) throw new Error(json.error ?? 'API 오류');
+            if (json.id) {
+                updateForm('vocalStyleId', json.id);
+                setVocalRecommendReason(json.reason ?? null);
+            }
+        } catch (err) {
+            showToast(err instanceof Error ? err.message : '추천 실패');
+        } finally {
+            setVocalRecommending(false);
+        }
+    }
+
     function handleSendToSuno() {
         type ChromeWindow = Window & { chrome?: { runtime?: { id?: string } } };
         const hasChromeRuntime = typeof window !== 'undefined' &&
@@ -196,6 +257,23 @@ export default function LyricsPage() {
                                 <div className="card-title">✍️ 가사 생성 설정</div>
                             </div>
 
+                            {/* Shorts 모드 (J5) */}
+                            <div className="form-group">
+                                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+                                    <input
+                                        type="checkbox"
+                                        checked={form.shortForm}
+                                        onChange={e => updateForm('shortForm', e.target.checked)}
+                                    />
+                                    <span style={{ fontSize: '13px', fontWeight: 600 }}>
+                                        ⚡ Shorts 모드 (30~60초)
+                                        <span style={{ color: 'var(--text-muted)', fontWeight: 400, marginLeft: '6px' }}>
+                                            4줄·강렬한 훅
+                                        </span>
+                                    </span>
+                                </label>
+                            </div>
+
                             {/* 모델 선택 */}
                             <div className="form-group">
                                 <label className="form-label">AI 모델</label>
@@ -225,9 +303,47 @@ export default function LyricsPage() {
                                 <GenreSelector value={form.genre} onChange={v => updateForm('genre', v)} />
                             </div>
 
-                            {/* 보컬 스타일 (H2) */}
+                            {/* 보컬 스타일 (H2 + H3 + H4) */}
                             <div className="form-group">
-                                <label className="form-label">보컬 스타일 (선택)</label>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                    <label className="form-label" style={{ margin: 0 }}>보컬 스타일 (선택)</label>
+                                    <div style={{ display: 'flex', gap: '6px' }}>
+                                        {form.genre.length > 0 && (
+                                            <button
+                                                onClick={handleRecommendVocal}
+                                                disabled={vocalRecommending}
+                                                style={{
+                                                    padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 600,
+                                                    cursor: vocalRecommending ? 'not-allowed' : 'pointer',
+                                                    border: '1px solid var(--accent)', background: 'var(--accent-dim)',
+                                                    color: 'var(--accent)', opacity: vocalRecommending ? 0.6 : 1,
+                                                }}
+                                            >
+                                                {vocalRecommending ? '⏳ 추천 중...' : '🤖 보컬 자동 추천'}
+                                            </button>
+                                        )}
+                                        <button
+                                            onClick={handleSaveCustomVocal}
+                                            style={{
+                                                padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 600,
+                                                cursor: 'pointer',
+                                                border: '1px solid var(--border)', background: 'var(--bg-secondary)',
+                                                color: 'var(--text-muted)',
+                                            }}
+                                        >💾 이 보컬 저장</button>
+                                    </div>
+                                </div>
+
+                                {vocalRecommendReason && (
+                                    <div style={{
+                                        marginBottom: '8px', padding: '8px 12px',
+                                        background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.3)',
+                                        borderRadius: '8px', fontSize: '11px', color: '#a5b4fc',
+                                    }}>
+                                        🤖 {vocalRecommendReason}
+                                    </div>
+                                )}
+
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                                     {vocalStyles.map(vs => (
                                         <button
@@ -248,6 +364,40 @@ export default function LyricsPage() {
                                         </button>
                                     ))}
                                 </div>
+
+                                {/* 저장된 커스텀 보컬 프리셋 (H3) */}
+                                {customVocals.length > 0 && (
+                                    <div style={{ marginTop: '10px' }}>
+                                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '6px', fontWeight: 600 }}>
+                                            💾 저장된 커스텀 보컬 ({customVocals.length}/5)
+                                        </div>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                            {customVocals.map(cv => (
+                                                <div
+                                                    key={cv.id}
+                                                    style={{
+                                                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                                        padding: '6px 10px', borderRadius: '6px',
+                                                        background: 'var(--bg-secondary)', border: '1px solid var(--border)',
+                                                        fontSize: '11px',
+                                                    }}
+                                                >
+                                                    <button
+                                                        onClick={() => updateForm('vocalStyleId', cv.vocalStyleId)}
+                                                        style={{ background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', flex: 1 }}
+                                                    >
+                                                        <span style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>{cv.name}</span>
+                                                        {cv.genre && <span style={{ color: 'var(--text-muted)', marginLeft: '6px' }}>{cv.genre}</span>}
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDeleteCustomVocal(cv.id)}
+                                                        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', color: 'var(--text-muted)', marginLeft: '4px' }}
+                                                    >🗑️</button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             {/* 저작권 방어 경고 (G1·G2) */}
@@ -262,8 +412,14 @@ export default function LyricsPage() {
                             {/* 주제 */}
                             <div className="form-group">
                                 <label className="form-label">주제 / 테마 (선택)</label>
-                                <input className="form-input" placeholder="예: 늦은 밤 카페, 비 오는 날, 새벽 드라이브" value={form.theme}
-                                    onChange={e => updateForm('theme', e.target.value)} />
+                                <input
+                                    className="form-input"
+                                    placeholder={form.shortForm
+                                        ? '예: 강렬한 훅으로 시작하는 이별, 오늘 밤만큼은...'
+                                        : '예: 늦은 밤 카페, 비 오는 날, 새벽 드라이브'}
+                                    value={form.theme}
+                                    onChange={e => updateForm('theme', e.target.value)}
+                                />
                             </div>
 
                             {/* 언어 */}
@@ -423,6 +579,26 @@ export default function LyricsPage() {
                                                 </button>
                                             </div>
                                         </div>
+
+                                        {/* 예상 재생시간 (J5) */}
+                                        {estimatedDuration !== null && !selectedHistory && (
+                                            <div style={{
+                                                marginBottom: '12px', padding: '8px 14px',
+                                                background: form.shortForm
+                                                    ? 'rgba(234,179,8,0.1)'
+                                                    : 'rgba(34,197,94,0.08)',
+                                                border: `1px solid ${form.shortForm ? 'rgba(234,179,8,0.3)' : 'rgba(34,197,94,0.2)'}`,
+                                                borderRadius: '8px', fontSize: '12px',
+                                                color: form.shortForm ? '#fde047' : '#86efac',
+                                                display: 'flex', alignItems: 'center', gap: '6px',
+                                            }}>
+                                                {form.shortForm ? '⚡' : '🕐'}
+                                                예상 재생시간: 약 <strong>{estimatedDuration}초</strong>
+                                                {form.shortForm && estimatedDuration > 60 && (
+                                                    <span style={{ color: '#f87171', marginLeft: '4px' }}>— Shorts 한도 초과!</span>
+                                                )}
+                                            </div>
+                                        )}
 
                                         {/* Suno Style 힌트 */}
                                         {displaySunoStyle && (

@@ -1,4 +1,4 @@
-import { AppData, ScrapSheet, ChannelInfo, ScheduleConfig, YoutubeChannel, BrandKit, LyricsHistoryItem, RevenueEntry } from '@/types';
+import { AppData, ScrapSheet, ChannelInfo, ScheduleConfig, YoutubeChannel, BrandKit, LyricsHistoryItem, RevenueEntry, CustomVocal, Song, ThumbnailHistoryItem } from '@/types';
 export type { BrandKit };
 
 const STORAGE_KEY = 'suno-yt-data';
@@ -129,6 +129,89 @@ export function addRevenueEntry(entry: RevenueEntry): RevenueEntry[] {
 
 export function deleteRevenueEntry(id: string): RevenueEntry[] {
     return saveRevenue(loadRevenue().filter(e => e.id !== id));
+}
+
+// ─── Songs (F5) ──────────────────────────────────────────────
+const SONGS_KEY = 'suno-yt-songs';
+
+export function loadSongs(): Song[] {
+    if (typeof window === 'undefined') return [];
+    try {
+        return JSON.parse(localStorage.getItem(SONGS_KEY) ?? '[]') as Song[];
+    } catch {
+        return [];
+    }
+}
+
+export function saveSongs(songs: Song[]): Song[] {
+    if (typeof window === 'undefined') return songs;
+    localStorage.setItem(SONGS_KEY, JSON.stringify(songs));
+    return songs;
+}
+
+export function addSong(song: Song): Song[] {
+    return saveSongs([song, ...loadSongs()]);
+}
+
+export function deleteSong(id: string): Song[] {
+    return saveSongs(loadSongs().filter(s => s.id !== id));
+}
+
+// ─── Custom Vocals (H3) ──────────────────────────────────────
+const CUSTOM_VOCALS_KEY = 'custom_vocals';
+const MAX_CUSTOM_VOCALS = 5;
+
+export function getCustomVocals(): CustomVocal[] {
+    if (typeof window === 'undefined') return [];
+    try {
+        return JSON.parse(localStorage.getItem(CUSTOM_VOCALS_KEY) ?? '[]') as CustomVocal[];
+    } catch {
+        return [];
+    }
+}
+
+export function saveCustomVocal(vocal: CustomVocal): CustomVocal[] {
+    const existing = getCustomVocals();
+    const updated = [vocal, ...existing].slice(0, MAX_CUSTOM_VOCALS);
+    localStorage.setItem(CUSTOM_VOCALS_KEY, JSON.stringify(updated));
+    return updated;
+}
+
+export function deleteCustomVocal(id: string): CustomVocal[] {
+    const updated = getCustomVocals().filter(v => v.id !== id);
+    localStorage.setItem(CUSTOM_VOCALS_KEY, JSON.stringify(updated));
+    return updated;
+}
+
+// ─── Thumbnail History (I5) ──────────────────────────────────
+const THUMBNAIL_HISTORY_KEY = 'thumbnail_history';
+
+export function loadThumbnailHistory(): ThumbnailHistoryItem[] {
+    if (typeof window === 'undefined') return [];
+    try {
+        return JSON.parse(localStorage.getItem(THUMBNAIL_HISTORY_KEY) ?? '[]') as ThumbnailHistoryItem[];
+    } catch {
+        return [];
+    }
+}
+
+export function saveThumbnailHistory(items: ThumbnailHistoryItem[]): void {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem(THUMBNAIL_HISTORY_KEY, JSON.stringify(items.slice(0, 10)));
+}
+
+export function addThumbnailHistory(item: ThumbnailHistoryItem): ThumbnailHistoryItem[] {
+    const updated = [item, ...loadThumbnailHistory()].slice(0, 10);
+    saveThumbnailHistory(updated);
+    return updated;
+}
+
+export function toggleThumbnailFavorite(id: string): ThumbnailHistoryItem[] {
+    const updated = loadThumbnailHistory().map(i =>
+        i.id === id ? { ...i, isFavorite: !i.isFavorite } : i
+    );
+    saveThumbnailHistory(updated);
+    return updated;
 }
 
 // ─── Utilities ───────────────────────────────────────────────

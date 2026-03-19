@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import Header from '@/components/Header';
-import { loadData } from '@/lib/storage';
-import type { CoverResult } from '@/types';
+import { loadData, generateId, addThumbnailHistory, loadThumbnailHistory, toggleThumbnailFavorite } from '@/lib/storage';
+import type { CoverResult, ThumbnailHistoryItem } from '@/types';
 import { CreativityPanel } from '@/components/CreativityPanel';
 
 const GENRES = ['Lo-fi Hip-hop', 'Jazz', 'Classical Piano', 'Ambient', 'EDM', 'Chillhop', '수면 음악', '카페 BGM', '명상 음악', 'Nature Sounds'];
@@ -33,6 +33,11 @@ export default function CoverPage() {
     const [selectedPresetLabel, setSelectedPresetLabel] = useState('');
     const [japaneseOverlay, setJapaneseOverlay] = useState('');
     const [aspectRatio, setAspectRatio] = useState<'16:9' | '9:16'>('16:9');
+    // D4: Pollinations 이미지 생성
+    const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
+    const [imageLoadState, setImageLoadState] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
+    // I5: 썸네일 이력
+    const [thumbnailHistory, setThumbnailHistory] = useState<ThumbnailHistoryItem[]>([]);
 
     useEffect(() => {
         const data = loadData();
@@ -43,6 +48,7 @@ export default function CoverPage() {
             if (bk.primaryGenre) setGenre(bk.primaryGenre);
             if (bk.moodKeywords?.length) setKeywords(bk.moodKeywords.slice(0, 4).join(', '));
         }
+        setThumbnailHistory(loadThumbnailHistory());
     }, []);
 
     async function handleGenerate() {
@@ -81,6 +87,9 @@ export default function CoverPage() {
 
             setResult(json);
             setState('done');
+            // D4: 새 생성 시 이전 이미지 초기화
+            setGeneratedImageUrl(null);
+            setImageLoadState('idle');
         } catch (err) {
             setErrorMsg(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.');
             setState('error');
@@ -91,6 +100,31 @@ export default function CoverPage() {
         await navigator.clipboard.writeText(text);
         setCopiedField(field);
         setTimeout(() => setCopiedField(null), 2000);
+    }
+
+    // D4: Pollinations.AI 이미지 생성
+    function handleGenerateImage() {
+        if (!result) return;
+        const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(result.sd_prompt)}`;
+        setGeneratedImageUrl(url);
+        setImageLoadState('loading');
+
+        const item: ThumbnailHistoryItem = {
+            id: generateId(),
+            prompt: result.sd_prompt,
+            imageUrl: url,
+            style: selectedPresetLabel || genre,
+            createdAt: new Date().toISOString(),
+            isFavorite: false,
+        };
+        const updated = addThumbnailHistory(item);
+        setThumbnailHistory(updated);
+    }
+
+    // I5: 즐겨찾기 토글
+    function handleToggleFavorite(id: string) {
+        const updated = toggleThumbnailFavorite(id);
+        setThumbnailHistory(updated);
     }
 
     const canGenerate = !!channelName && !!genre && !!apiKey;
@@ -338,6 +372,49 @@ export default function CoverPage() {
                             </div>
                         </div>
 
+                        {/* D4: Pollinations.AI 이미지 미리보기 */}
+                        <div className="card" style={{ padding: '20px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                                <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
+                                    실제 이미지 미리보기
+                                </div>
+                                <button
+                                    onClick={handleGenerateImage}
+                                    disabled={imageLoadState === 'loading'}
+                                    className="btn btn-primary btn-sm"
+                                >
+                                    {imageLoadState === 'loading' ? '생성 중...' : '🎨 Pollinations.AI로 이미지 생성'}
+                                </button>
+                            </div>
+                            {!generatedImageUrl && imageLoadState === 'idle' && (
+                                <div style={{ padding: '32px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px', background: 'var(--bg-secondary)', borderRadius: '8px' }}>
+                                    버튼을 눌러 무료 AI 이미지를 생성하세요
+                                </div>
+                            )}
+                            {imageLoadState === 'loading' && (
+                                <div className="loading-pulse" style={{ height: '220px', borderRadius: '8px' }} />
+                            )}
+                            {generatedImageUrl && (
+                                <>
+                                    <img
+                                        src={generatedImageUrl}
+                                        alt="Generated thumbnail"
+                                        style={{
+                                            width: '100%', borderRadius: '8px',
+                                            display: imageLoadState === 'done' ? 'block' : 'none',
+                                        }}
+                                        onLoad={() => setImageLoadState('done')}
+                                        onError={() => setImageLoadState('error')}
+                                    />
+                                    {imageLoadState === 'error' && (
+                                        <div style={{ padding: '16px', color: 'var(--accent)', fontSize: '13px', background: 'rgba(229,62,62,0.08)', borderRadius: '8px' }}>
+                                            이미지 생성에 실패했습니다. 잠시 후 다시 시도해주세요.
+                                        </div>
+                                    )}
+                                </>
+                            )}
+                        </div>
+
                         {/* Negative 프롬프트 */}
                         <div className="card" style={{ padding: '20px' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
@@ -414,6 +491,49 @@ export default function CoverPage() {
                             >
                                 🔄 다시 생성
                             </button>
+                        </div>
+                    </div>
+                )}
+
+                {/* I5: 썸네일 생성 이력 갤러리 */}
+                {thumbnailHistory.length > 0 && (
+                    <div className="card" style={{ padding: '20px', marginTop: '8px' }}>
+                        <div className="card-header" style={{ marginBottom: '16px' }}>
+                            <span className="card-title">생성 이력</span>
+                            <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>최근 {thumbnailHistory.length}개</span>
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px' }}>
+                            {thumbnailHistory.map(item => (
+                                <div key={item.id} style={{
+                                    borderRadius: '10px', overflow: 'hidden',
+                                    border: '1px solid var(--border)', background: 'var(--bg-secondary)',
+                                    position: 'relative',
+                                }}>
+                                    <img
+                                        src={item.imageUrl}
+                                        alt={item.style}
+                                        style={{ width: '100%', aspectRatio: '16/9', objectFit: 'cover', display: 'block' }}
+                                        loading="lazy"
+                                    />
+                                    <div style={{ padding: '8px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <span style={{ fontSize: '11px', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '110px' }}>
+                                            {item.style || '커스텀'}
+                                        </span>
+                                        <button
+                                            onClick={() => handleToggleFavorite(item.id)}
+                                            style={{
+                                                background: 'none', border: 'none', cursor: 'pointer',
+                                                fontSize: '16px', padding: '2px', lineHeight: 1,
+                                                color: item.isFavorite ? '#ecc94b' : 'var(--text-muted)',
+                                                transition: 'color 0.15s',
+                                            }}
+                                            title={item.isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가'}
+                                        >
+                                            {item.isFavorite ? '★' : '☆'}
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 )}

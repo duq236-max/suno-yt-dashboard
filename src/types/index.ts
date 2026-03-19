@@ -119,6 +119,17 @@ export interface StatsSummary {
   channels: ChannelStats[];
 }
 
+// Phase 5 — 음원 등록 현황
+export interface Song {
+    id: string;
+    title: string;
+    genre: string;
+    distributedAt: string;   // 'YYYY-MM-DD'
+    platforms: string[];
+    isrc?: string;
+    status: 'draft' | 'distributed' | 'earning';
+}
+
 // Phase 5 — 수익 관리
 export interface RevenueEntry {
     id: string;
@@ -129,6 +140,26 @@ export interface RevenueEntry {
     streams?: number;
     period: string;   // 'YYYY-MM' 형식
     genre?: string;
+    createdAt: string;
+}
+
+// I5 — 썸네일 생성 이력
+export interface ThumbnailHistoryItem {
+    id: string;
+    prompt: string;
+    imageUrl: string;
+    style: string;
+    createdAt: string;
+    isFavorite: boolean;
+}
+
+// Phase 5 H3 — 커스텀 보컬 프리셋
+export interface CustomVocal {
+    id: string;
+    name: string;
+    vocalStyleId: string;
+    genre: string;
+    mood: string;
     createdAt: string;
 }
 

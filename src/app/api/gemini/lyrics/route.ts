@@ -12,8 +12,9 @@ function buildLyricsPrompt(params: {
     style: string;
     copyrightDefense: boolean;
     vocalKeywords?: string;
+    shortForm?: boolean;
 }): string {
-    const { genre, mood, theme, language, style, copyrightDefense, vocalKeywords } = params;
+    const { genre, mood, theme, language, style, copyrightDefense, vocalKeywords, shortForm } = params;
     const langGuide =
         language === 'ko' ? '한국어' :
         language === 'en' ? '영어' :
@@ -32,6 +33,20 @@ function buildLyricsPrompt(params: {
     const vocalNote = vocalKeywords
         ? `\n- 보컬 스타일: ${vocalKeywords} (suno_prompt에 반드시 포함)`
         : '';
+    const shortFormNote = shortForm
+        ? '\n- 🎬 Shorts 모드: 정확히 4줄, 최대 60초 분량, 강렬한 훅으로 시작할 것 (Generate exactly 4 lines, max 60 seconds, start with a strong hook)'
+        : '';
+    const structureRule = shortForm
+        ? `가사 구조 규칙 (Shorts 모드):
+- [Hook] 섹션 하나만 사용
+- 정확히 4줄, 각 줄은 짧고 강렬하게
+- 첫 줄은 귀에 바로 꽂히는 강렬한 훅
+- Suno AI 60초 Shorts에 최적화`
+        : `가사 구조 규칙:
+- [Intro], [Verse 1], [Pre-Chorus], [Chorus], [Verse 2], [Bridge], [Outro] 섹션 사용
+- 각 섹션 레이블은 대괄호로 표기
+- Suno AI에 최적화된 가사 (반복 후렴 강조, 멜로디에 맞는 음절)
+- 전체 가사는 최소 16줄 이상`;
     return `당신은 Suno AI 전문 작사가 겸 프롬프트 엔지니어입니다.
 다음 조건으로 완성된 가사와 Suno 전용 프롬프트를 JSON 형식으로 생성해주세요.${defenseNote}
 
@@ -41,13 +56,9 @@ function buildLyricsPrompt(params: {
 - 주제/테마: ${theme || '자유'}
 - 언어: ${langGuide}
 - 언어 가이드: ${langInstructions}
-- 스타일: ${style || '일반'}${vocalNote}
+- 스타일: ${style || '일반'}${vocalNote}${shortFormNote}
 
-가사 구조 규칙:
-- [Intro], [Verse 1], [Pre-Chorus], [Chorus], [Verse 2], [Bridge], [Outro] 섹션 사용
-- 각 섹션 레이블은 대괄호로 표기
-- Suno AI에 최적화된 가사 (반복 후렴 강조, 멜로디에 맞는 음절)
-- 전체 가사는 최소 16줄 이상
+${structureRule}
 
 suno_prompt 규칙 (Suno 웹 UI 스타일 입력창에 그대로 붙여넣는 용도):
 - 장르 태그 + 보컬 스타일 태그 + BPM 범위 + 악기 구성 + 분위기 태그를 영어 콤마 구분으로 나열
@@ -85,6 +96,7 @@ export async function POST(req: NextRequest) {
             copyrightDefense?: boolean;
             vocalKeywords?: string;
             creativityParams?: Partial<CreativityParams>;
+            shortForm?: boolean;
         };
 
         const {
@@ -98,6 +110,7 @@ export async function POST(req: NextRequest) {
             copyrightDefense = false,
             vocalKeywords = '',
             creativityParams,
+            shortForm = false,
         } = body;
 
         const creativity: CreativityParams = {
@@ -114,7 +127,7 @@ export async function POST(req: NextRequest) {
         }
 
         const modelId: GeminiModel = model === 'pro' ? 'gemini-2.5-pro' : 'gemini-2.5-flash';
-        const prompt = buildLyricsPrompt({ genre, mood, theme, language, style, copyrightDefense, vocalKeywords });
+        const prompt = buildLyricsPrompt({ genre, mood, theme, language, style, copyrightDefense, vocalKeywords, shortForm });
 
         const res = await fetch(
             `${GEMINI_BASE}/${modelId}:generateContent?key=${apiKey}`,

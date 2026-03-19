@@ -318,6 +318,11 @@ export default function DashboardPage() {
                         <Link href="/lyrics" className="btn btn-primary btn-sm">✨ 가사 만들기</Link>
                         <Link href="/cover" className="btn btn-secondary btn-sm">🎨 커버 아트</Link>
                         <Link href="/ideation" className="btn btn-ghost btn-sm">💡 영상 아이디어</Link>
+                        {lyricsCount > 0 && (
+                            <Link href="/lyrics" className="btn btn-ghost btn-sm" style={{ borderColor: 'rgba(99,102,241,0.4)', color: '#818cf8' }}>
+                                ↩️ 계속 이어서
+                            </Link>
+                        )}
                     </div>
                     {recentGenres.length > 0 && (
                         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>

@@ -7,9 +7,12 @@ import {
     loadRevenue,
     addRevenueEntry,
     deleteRevenueEntry,
+    loadSongs,
+    addSong,
+    deleteSong,
     generateId,
 } from '@/lib/storage';
-import { RevenueEntry } from '@/types';
+import { RevenueEntry, Song } from '@/types';
 
 type Platform = RevenueEntry['platform'];
 
@@ -88,9 +91,39 @@ export default function RevenuePage() {
     const [ytViews, setYtViews] = useState('');
     const [monthlyGoalUsd, setMonthlyGoalUsd] = useState('100');
 
+    // ─── F5 음원 등록 상태 ───────────────────────────────────
+    const [songs, setSongs] = useState<Song[]>([]);
+    const [showSongForm, setShowSongForm] = useState(false);
+    const [songForm, setSongForm] = useState({
+        title: '', genre: '', distributedAt: new Date().toISOString().slice(0, 10),
+        platforms: '', isrc: '', status: 'draft' as Song['status'],
+    });
+
     useEffect(() => {
         setEntries(loadRevenue());
+        setSongs(loadSongs());
     }, []);
+
+    function handleSongSubmit(e: React.FormEvent) {
+        e.preventDefault();
+        if (!songForm.title.trim() || !songForm.genre.trim()) return;
+        const song: Song = {
+            id: generateId(),
+            title: songForm.title.trim(),
+            genre: songForm.genre.trim(),
+            distributedAt: songForm.distributedAt,
+            platforms: songForm.platforms.split(',').map(p => p.trim()).filter(Boolean),
+            isrc: songForm.isrc.trim() || undefined,
+            status: songForm.status,
+        };
+        setSongs(addSong(song));
+        setSongForm({ title: '', genre: '', distributedAt: new Date().toISOString().slice(0, 10), platforms: '', isrc: '', status: 'draft' });
+        setShowSongForm(false);
+    }
+
+    function handleSongDelete(id: string) {
+        setSongs(deleteSong(id));
+    }
 
     // ─── F3 계산 ────────────────────────────────────────────
     const f3TotalUsd = STREAM_PLATFORMS
@@ -525,6 +558,140 @@ export default function RevenuePage() {
                                                 >
                                                     ✕
                                                 </button>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </div>
+
+            {/* ─── F5: 음원 등록 현황 ─── */}
+            <div className="card" style={{ marginTop: '20px' }}>
+                <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <h2 className="card-title">🎵 음원 등록 현황</h2>
+                    <button
+                        className="btn btn-primary btn-sm"
+                        onClick={() => setShowSongForm(v => !v)}
+                    >
+                        {showSongForm ? '✕ 닫기' : '+ 곡 등록'}
+                    </button>
+                </div>
+
+                {showSongForm && (
+                    <form onSubmit={handleSongSubmit} style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--border)' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                            <div className="form-group">
+                                <label className="form-label">곡 제목 *</label>
+                                <input
+                                    className="form-input"
+                                    value={songForm.title}
+                                    onChange={e => setSongForm(f => ({ ...f, title: e.target.value }))}
+                                    placeholder="예: Midnight Lofi Rain"
+                                    required
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">장르 *</label>
+                                <input
+                                    className="form-input"
+                                    value={songForm.genre}
+                                    onChange={e => setSongForm(f => ({ ...f, genre: e.target.value }))}
+                                    placeholder="예: Lofi, Pop"
+                                    required
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">유통일</label>
+                                <input
+                                    className="form-input"
+                                    type="date"
+                                    value={songForm.distributedAt}
+                                    onChange={e => setSongForm(f => ({ ...f, distributedAt: e.target.value }))}
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">플랫폼 (쉼표 구분)</label>
+                                <input
+                                    className="form-input"
+                                    value={songForm.platforms}
+                                    onChange={e => setSongForm(f => ({ ...f, platforms: e.target.value }))}
+                                    placeholder="예: Spotify, Apple Music"
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">ISRC</label>
+                                <input
+                                    className="form-input"
+                                    value={songForm.isrc}
+                                    onChange={e => setSongForm(f => ({ ...f, isrc: e.target.value }))}
+                                    placeholder="예: KR-ABC-24-00001"
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">상태</label>
+                                <select
+                                    className="form-select"
+                                    value={songForm.status}
+                                    onChange={e => setSongForm(f => ({ ...f, status: e.target.value as Song['status'] }))}
+                                >
+                                    <option value="draft">초안</option>
+                                    <option value="distributed">유통 완료</option>
+                                    <option value="earning">수익 발생 중</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div style={{ marginTop: '14px', display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                            <button type="button" className="btn btn-ghost btn-sm" onClick={() => setShowSongForm(false)}>취소</button>
+                            <button type="submit" className="btn btn-primary btn-sm">저장</button>
+                        </div>
+                    </form>
+                )}
+
+                {songs.length === 0 ? (
+                    <div className="empty-state" style={{ padding: '32px 0' }}>
+                        <div style={{ fontSize: '36px', marginBottom: '10px' }}>🎵</div>
+                        <p>등록된 음원이 없습니다.</p>
+                        <p style={{ fontSize: '13px', opacity: 0.6 }}>위의 &lsquo;+ 곡 등록&rsquo; 버튼으로 음원을 추가하세요.</p>
+                    </div>
+                ) : (
+                    <div className="table-wrapper" style={{ marginTop: '14px' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                            <thead>
+                                <tr style={{ borderBottom: '1px solid var(--border)', color: 'var(--text-muted)' }}>
+                                    <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 500 }}>곡명</th>
+                                    <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 500 }}>장르</th>
+                                    <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 500 }}>유통일</th>
+                                    <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 500 }}>플랫폼</th>
+                                    <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 500 }}>ISRC</th>
+                                    <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 500 }}>상태</th>
+                                    <th style={{ padding: '8px 12px', textAlign: 'center', fontWeight: 500 }}>삭제</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {songs.map(song => {
+                                    const statusColor = song.status === 'earning' ? '#22c55e' : song.status === 'distributed' ? '#60a5fa' : 'var(--text-muted)';
+                                    const statusLabel = song.status === 'earning' ? '💰 수익 중' : song.status === 'distributed' ? '✅ 유통 완료' : '📝 초안';
+                                    return (
+                                        <tr key={song.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                                            <td style={{ padding: '10px 12px', fontWeight: 500 }}>{song.title}</td>
+                                            <td style={{ padding: '10px 12px', color: 'var(--text-muted)' }}>{song.genre}</td>
+                                            <td style={{ padding: '10px 12px', color: 'var(--text-muted)' }}>{song.distributedAt}</td>
+                                            <td style={{ padding: '10px 12px', color: 'var(--text-muted)' }}>
+                                                {song.platforms.length > 0 ? song.platforms.join(', ') : '—'}
+                                            </td>
+                                            <td style={{ padding: '10px 12px', color: 'var(--text-muted)', fontFamily: 'monospace', fontSize: '12px' }}>
+                                                {song.isrc ?? '—'}
+                                            </td>
+                                            <td style={{ padding: '10px 12px', color: statusColor, fontWeight: 500 }}>{statusLabel}</td>
+                                            <td style={{ padding: '10px 12px', textAlign: 'center' }}>
+                                                <button
+                                                    className="btn btn-danger btn-sm"
+                                                    onClick={() => handleSongDelete(song.id)}
+                                                    title="삭제"
+                                                >✕</button>
                                             </td>
                                         </tr>
                                     );

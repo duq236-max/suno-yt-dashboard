@@ -5,14 +5,31 @@ import Header from '@/components/Header';
 import Link from 'next/link';
 import { loadData, updateGeminiApiKey } from '@/lib/storage';
 
+type Theme = 'dark' | 'light';
+
+function applyTheme(theme: Theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+}
+
 export default function SettingsPage() {
     const [cleared, setCleared] = useState(false);
     const [apiKey, setApiKey] = useState('');
     const [apiKeySaved, setApiKeySaved] = useState(false);
+    const [theme, setTheme] = useState<Theme>('dark');
 
     useEffect(() => {
         setApiKey(loadData().geminiApiKey ?? '');
+        const stored = (localStorage.getItem('theme') ?? 'dark') as Theme;
+        setTheme(stored);
+        applyTheme(stored);
     }, []);
+
+    function toggleTheme() {
+        const next: Theme = theme === 'dark' ? 'light' : 'dark';
+        setTheme(next);
+        localStorage.setItem('theme', next);
+        applyTheme(next);
+    }
 
     function clearAll() {
         if (!confirm('모든 데이터를 초기화하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) return;
@@ -39,6 +56,54 @@ export default function SettingsPage() {
                 </div>
 
                 <div style={{ maxWidth: '520px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+
+                    {/* ─── 테마 설정 ─── */}
+                    <div className="card">
+                        <div className="card-title" style={{ marginBottom: '12px' }}>🎨 화면 테마</div>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <div>
+                                <div style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 500 }}>
+                                    {theme === 'dark' ? '🌙 다크 모드' : '☀️ 라이트 모드'}
+                                </div>
+                                <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '3px' }}>
+                                    현재 테마: {theme === 'dark' ? '어두운 배경' : '밝은 배경'}
+                                </div>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={toggleTheme}
+                                style={{
+                                    width: '52px',
+                                    height: '28px',
+                                    borderRadius: '14px',
+                                    background: theme === 'light' ? 'var(--accent)' : 'var(--border)',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    position: 'relative',
+                                    transition: 'background 0.25s ease',
+                                    flexShrink: 0,
+                                }}
+                                aria-label="테마 전환"
+                            >
+                                <span style={{
+                                    position: 'absolute',
+                                    top: '3px',
+                                    left: theme === 'light' ? '27px' : '3px',
+                                    width: '22px',
+                                    height: '22px',
+                                    borderRadius: '50%',
+                                    background: '#fff',
+                                    transition: 'left 0.25s ease',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontSize: '12px',
+                                }}>
+                                    {theme === 'dark' ? '🌙' : '☀️'}
+                                </span>
+                            </button>
+                        </div>
+                    </div>
 
                     {/* ─── Gemini API 키 ─── */}
                     <div className="card" style={{ borderColor: 'rgba(99, 102, 241, 0.25)', background: 'rgba(99, 102, 241, 0.04)' }}>

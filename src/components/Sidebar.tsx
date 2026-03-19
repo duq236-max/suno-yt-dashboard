@@ -4,7 +4,10 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+
+const RECENT_PAGES_KEY = 'recentPages';
+const RECENT_MAX = 3;
 
 interface NavItem {
   href: string;
@@ -72,6 +75,12 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname();
   const { data: session } = useSession();
   const ref = useRef<HTMLElement>(null);
+  const [recentPages, setRecentPages] = useState<string[]>(() => {
+    if (typeof window === 'undefined') return [];
+    try {
+      return JSON.parse(localStorage.getItem(RECENT_PAGES_KEY) ?? '[]') as string[];
+    } catch { return []; }
+  });
 
   useEffect(() => {
     function handleMouseDown(e: MouseEvent) {
@@ -84,6 +93,17 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
     }
     return () => document.removeEventListener('mousedown', handleMouseDown);
   }, [isOpen, onClose]);
+
+  // 현재 경로를 최근 방문 목록에 저장 (최대 3개)
+  useEffect(() => {
+    if (!pathname || pathname === '#') return;
+    try {
+      const stored = JSON.parse(localStorage.getItem(RECENT_PAGES_KEY) ?? '[]') as string[];
+      const updated = [pathname, ...stored.filter((p) => p !== pathname)].slice(0, RECENT_MAX);
+      localStorage.setItem(RECENT_PAGES_KEY, JSON.stringify(updated));
+      setRecentPages(updated);
+    } catch { /* ignore */ }
+  }, [pathname]);
 
   return (
     <aside className={`sidebar${isOpen ? ' sidebar-open' : ''}`} ref={ref}>
@@ -109,7 +129,12 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
               >
                 <span className="icon">{item.icon}</span>
                 {item.label}
-                {item.badge && (
+                {item.href !== '#' && recentPages.includes(item.href) && pathname !== item.href && (
+                  <span className="sidebar-badge" style={{ background: 'rgba(99,102,241,0.2)', color: '#818cf8', border: '1px solid rgba(99,102,241,0.3)' }}>
+                    최근
+                  </span>
+                )}
+                {item.badge && !(item.href !== '#' && recentPages.includes(item.href) && pathname !== item.href) && (
                   <span className={`sidebar-badge ${item.badgeType || ''}`}>
                     {item.badge}
                   </span>

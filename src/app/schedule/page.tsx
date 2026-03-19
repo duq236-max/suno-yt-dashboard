@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Header from '@/components/Header';
 import { loadData, updateSchedule } from '@/lib/storage';
 import { ScheduleConfig } from '@/types';
+import type { ScheduleRecommendation } from '@/app/api/gemini/schedule/route';
 
 const FREQ_OPTIONS = [
     { value: 'daily', label: '매일', desc: '매일 업로드 목표' },
@@ -21,12 +22,27 @@ function isUploadDay(dayOfWeek: number, frequency: ScheduleConfig['frequency']):
     return false;
 }
 
+/** 요일 이름 → 0(일)..6(토) 인덱스 */
+function dayNameToDow(name: string): number | null {
+    const map: Record<string, number> = {
+        '일': 0, '일요일': 0,
+        '월': 1, '월요일': 1,
+        '화': 2, '화요일': 2,
+        '수': 3, '수요일': 3,
+        '목': 4, '목요일': 4,
+        '금': 5, '금요일': 5,
+        '토': 6, '토요일': 6,
+    };
+    return map[name] ?? null;
+}
+
 interface MiniCalendarProps {
     frequency: ScheduleConfig['frequency'];
     enabled: boolean;
+    highlightDow?: number | null;  // AI 추천 요일 하이라이트
 }
 
-function MiniCalendar({ frequency, enabled }: MiniCalendarProps) {
+function MiniCalendar({ frequency, enabled, highlightDow }: MiniCalendarProps) {
     const today = new Date();
     const [viewDate, setViewDate] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
 
@@ -91,13 +107,15 @@ function MiniCalendar({ frequency, enabled }: MiniCalendarProps) {
                     const dow = (firstDayOfWeek + (day - 1)) % 7;
                     const scheduled = enabled && isUploadDay(dow, frequency);
                     const todayMark = isToday(day);
+                    const aiHighlight = highlightDow != null && dow === highlightDow;
                     return (
                         <div key={day} style={{
                             position: 'relative',
                             display: 'flex', flexDirection: 'column', alignItems: 'center',
                             padding: '6px 2px',
                             borderRadius: '6px',
-                            background: todayMark ? 'var(--accent-dim)' : 'transparent',
+                            background: todayMark ? 'var(--accent-dim)' : aiHighlight ? 'rgba(251,191,36,0.12)' : 'transparent',
+                            outline: aiHighlight ? '1px solid rgba(251,191,36,0.4)' : undefined,
                         }}>
                             <span style={{
                                 fontSize: '12px',
@@ -151,10 +169,56 @@ export default function SchedulePage() {
         emailAddress: '',
     });
     const [saved, setSaved] = useState(false);
+    const [aiRec, setAiRec] = useState<ScheduleRecommendation | null>(null);
+    const [aiLoading, setAiLoading] = useState(false);
+    const [aiError, setAiError] = useState('');
+    const [highlightDow, setHighlightDow] = useState<number | null>(null);
 
     useEffect(() => {
         setConfig(loadData().schedule);
     }, []);
+
+    async function handleAiRecommend() {
+        const data = loadData();
+        if (!data.geminiApiKey) {
+            setAiError('설정 페이지에서 Gemini API 키를 먼저 입력하세요.');
+            return;
+        }
+        setAiLoading(true);
+        setAiError('');
+        try {
+            const res = await fetch('/api/gemini/schedule', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    apiKey: data.geminiApiKey,
+                    genre: data.channel?.genre ?? data.brandKit?.primaryGenre,
+                    targetAudience: data.channel?.targetAudience,
+                    channelName: data.channel?.name ?? data.brandKit?.channelName,
+                }),
+            });
+            const json = await res.json() as ScheduleRecommendation & { error?: string };
+            if (!res.ok || json.error) throw new Error(json.error ?? '추천 실패');
+            setAiRec(json);
+            setHighlightDow(dayNameToDow(json.bestDay));
+        } catch (err) {
+            setAiError(err instanceof Error ? err.message : '오류 발생');
+        } finally {
+            setAiLoading(false);
+        }
+    }
+
+    function applyAiTime() {
+        if (!aiRec) return;
+        // bestTime에서 시간 파싱 (예: "저녁 8~9시" → "20:00")
+        const hourMatch = aiRec.bestTime.match(/(\d+)/);
+        if (!hourMatch) return;
+        let hour = parseInt(hourMatch[1], 10);
+        const isEvening = aiRec.bestTime.includes('저녁') || aiRec.bestTime.includes('밤') || aiRec.bestTime.includes('오후');
+        if (isEvening && hour < 12) hour += 12;
+        const timeStr = `${String(hour).padStart(2, '0')}:00`;
+        setConfig(c => ({ ...c, targetTime: timeStr, enabled: true }));
+    }
 
     function handleSave() {
         updateSchedule(config);
@@ -180,8 +244,70 @@ export default function SchedulePage() {
 
                 <div style={{ maxWidth: '700px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
+                    {/* ⏰ AI 최적 업로드 시간 추천 */}
+                    <div className="card">
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: aiRec || aiError ? '14px' : 0 }}>
+                            <div>
+                                <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '3px' }}>
+                                    ⏰ 최적 업로드 시간 AI 추천
+                                </div>
+                                <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                                    채널 장르·타겟 시청자 기반으로 Gemini가 분석합니다
+                                </div>
+                            </div>
+                            <button
+                                className="btn btn-primary btn-sm"
+                                onClick={handleAiRecommend}
+                                disabled={aiLoading}
+                                style={{ flexShrink: 0 }}
+                            >
+                                {aiLoading ? '분석 중…' : '✨ AI 추천'}
+                            </button>
+                        </div>
+
+                        {aiError && (
+                            <div style={{ fontSize: '13px', color: '#ef4444', padding: '10px 14px', background: 'rgba(239,68,68,0.08)', borderRadius: '8px' }}>
+                                {aiError}
+                            </div>
+                        )}
+
+                        {aiRec && (
+                            <div style={{
+                                padding: '14px 16px',
+                                borderRadius: '10px',
+                                background: 'rgba(251,191,36,0.08)',
+                                border: '1px solid rgba(251,191,36,0.3)',
+                            }}>
+                                <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', marginBottom: '10px' }}>
+                                    <div>
+                                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '3px' }}>추천 요일</div>
+                                        <div style={{ fontSize: '18px', fontWeight: 700, color: '#f59e0b' }}>{aiRec.bestDay}</div>
+                                    </div>
+                                    <div>
+                                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '3px' }}>추천 시간</div>
+                                        <div style={{ fontSize: '18px', fontWeight: 700, color: '#f59e0b' }}>{aiRec.bestTime}</div>
+                                    </div>
+                                </div>
+                                <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '12px' }}>
+                                    💡 {aiRec.reason}
+                                </div>
+                                <button
+                                    className="btn btn-sm"
+                                    onClick={applyAiTime}
+                                    style={{
+                                        background: 'rgba(251,191,36,0.15)',
+                                        border: '1px solid rgba(251,191,36,0.4)',
+                                        color: '#f59e0b',
+                                    }}
+                                >
+                                    📌 이 시간으로 예약
+                                </button>
+                            </div>
+                        )}
+                    </div>
+
                     {/* 캘린더 */}
-                    <MiniCalendar frequency={config.frequency} enabled={config.enabled} />
+                    <MiniCalendar frequency={config.frequency} enabled={config.enabled} highlightDow={highlightDow} />
 
                     {/* 활성화 카드 */}
                     <div className="card">
