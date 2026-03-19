@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Header from '@/components/Header';
+import DistributionChecklist from '@/components/DistributionChecklist';
 import {
     loadRevenue,
     addRevenueEntry,
@@ -11,6 +12,23 @@ import {
 import { RevenueEntry } from '@/types';
 
 type Platform = RevenueEntry['platform'];
+
+// ─── F3: 스트리밍 수익 계산기 ───────────────────────────────
+interface StreamPlatform {
+    id: string;
+    label: string;
+    icon: string;
+    rateUsd: number | null;   // null = KRW 플랫폼
+    rateKrw: number | null;
+    currency: 'USD' | 'KRW';
+}
+
+const STREAM_PLATFORMS: StreamPlatform[] = [
+    { id: 'spotify',    label: 'Spotify',      icon: '🎵', rateUsd: 0.004, rateKrw: null, currency: 'USD' },
+    { id: 'apple',      label: 'Apple Music',  icon: '🍎', rateUsd: 0.007, rateKrw: null, currency: 'USD' },
+    { id: 'ytmusic',    label: 'YouTube Music', icon: '▶️', rateUsd: 0.002, rateKrw: null, currency: 'USD' },
+    { id: 'melon',      label: '멜론',           icon: '🍈', rateUsd: null,  rateKrw: 1.5,  currency: 'KRW' },
+];
 
 const PLATFORMS: { value: Platform; label: string; icon: string }[] = [
     { value: 'youtube',     label: 'YouTube',     icon: '▶️' },
@@ -60,9 +78,41 @@ export default function RevenuePage() {
     const [showForm, setShowForm] = useState(false);
     const [deleteId, setDeleteId] = useState<string | null>(null);
 
+    // ─── F3 스트리밍 스트림 수 입력 상태 ─────────────────────
+    const [streamCounts, setStreamCounts] = useState<Record<string, string>>({
+        spotify: '', apple: '', ytmusic: '', melon: '',
+    });
+
+    // ─── F4 RPM 계산기 상태 ──────────────────────────────────
+    const [rpm, setRpm] = useState('2.00');
+    const [ytViews, setYtViews] = useState('');
+    const [monthlyGoalUsd, setMonthlyGoalUsd] = useState('100');
+
     useEffect(() => {
         setEntries(loadRevenue());
     }, []);
+
+    // ─── F3 계산 ────────────────────────────────────────────
+    const f3TotalUsd = STREAM_PLATFORMS
+        .filter(p => p.currency === 'USD')
+        .reduce((sum, p) => {
+            const count = parseInt(streamCounts[p.id] || '0', 10);
+            return sum + (isNaN(count) ? 0 : count * (p.rateUsd ?? 0));
+        }, 0);
+    const f3TotalKrw = STREAM_PLATFORMS
+        .filter(p => p.currency === 'KRW')
+        .reduce((sum, p) => {
+            const count = parseInt(streamCounts[p.id] || '0', 10);
+            return sum + (isNaN(count) ? 0 : count * (p.rateKrw ?? 0));
+        }, 0);
+
+    // ─── F4 계산 ────────────────────────────────────────────
+    const rpmVal     = parseFloat(rpm) || 0;
+    const viewsVal   = parseInt(ytViews || '0', 10) || 0;
+    const goalVal    = parseFloat(monthlyGoalUsd) || 0;
+    const estimatedUsd   = (rpmVal * viewsVal) / 1000;
+    const progressPct    = goalVal > 0 ? Math.min(100, (estimatedUsd / goalVal) * 100) : 0;
+    const viewsNeeded    = goalVal > 0 && rpmVal > 0 ? Math.ceil((goalVal / rpmVal) * 1000) : 0;
 
     // ─── 요약 계산 ────────────────────────────────────────────
     const total     = entries.reduce((s, e) => s + e.amount, 0);
@@ -115,6 +165,9 @@ export default function RevenuePage() {
                 subtitle="플랫폼별 수익을 기록하고 분석하세요"
             />
 
+            {/* ─── F2: 유통 전 체크리스트 ─── */}
+            <DistributionChecklist />
+
             {/* ─── 요약 카드 ─── */}
             <div className="stats-grid" style={{ marginBottom: '24px' }}>
                 <div className="stat-card">
@@ -131,6 +184,178 @@ export default function RevenuePage() {
                     <div className="stat-label">🎵 음원 수익</div>
                     <div className="stat-value">{fmt(musicTotal)}</div>
                     <div className="stat-sub">{entries.filter(e => e.platform !== 'youtube').length}건</div>
+                </div>
+            </div>
+
+            {/* ─── F3: DistroKid 스트리밍 수익 계산기 ─── */}
+            <div className="card" style={{ marginBottom: '20px' }}>
+                <div className="card-header">
+                    <h2 className="card-title">📀 스트리밍 수익 계산기</h2>
+                </div>
+                <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '8px 0 16px' }}>
+                    플랫폼별 스트리밍 수를 입력하면 예상 수익을 계산합니다.
+                </p>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    {STREAM_PLATFORMS.map(p => {
+                        const count = parseInt(streamCounts[p.id] || '0', 10);
+                        const rev = isNaN(count) ? 0 :
+                            p.currency === 'USD'
+                                ? count * (p.rateUsd ?? 0)
+                                : count * (p.rateKrw ?? 0);
+                        return (
+                            <div
+                                key={p.id}
+                                style={{
+                                    padding: '14px',
+                                    borderRadius: '8px',
+                                    background: 'var(--bg-secondary)',
+                                    border: '1px solid var(--border)',
+                                }}
+                            >
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                                    <span style={{ fontSize: '18px' }}>{p.icon}</span>
+                                    <span style={{ fontWeight: 500, fontSize: '14px' }}>{p.label}</span>
+                                    <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginLeft: 'auto' }}>
+                                        단가 {p.currency === 'USD' ? `$${p.rateUsd}` : `₩${p.rateKrw}`}/스트림
+                                    </span>
+                                </div>
+                                <input
+                                    className="form-input"
+                                    type="number"
+                                    min={0}
+                                    value={streamCounts[p.id]}
+                                    onChange={e => setStreamCounts(prev => ({ ...prev, [p.id]: e.target.value }))}
+                                    placeholder="스트리밍 수 입력"
+                                    style={{ marginBottom: '8px' }}
+                                />
+                                <div style={{ fontSize: '13px', color: 'var(--accent)', fontWeight: 600 }}>
+                                    예상: {p.currency === 'USD'
+                                        ? `$${rev.toFixed(2)}`
+                                        : `₩${rev.toLocaleString('ko-KR')}`}
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+                <div style={{
+                    marginTop: '16px',
+                    padding: '14px 16px',
+                    borderRadius: '8px',
+                    background: 'rgba(229,62,62,0.08)',
+                    border: '1px solid rgba(229,62,62,0.2)',
+                    display: 'flex',
+                    gap: '24px',
+                    flexWrap: 'wrap',
+                }}>
+                    <div>
+                        <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>USD 합계</span>
+                        <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--accent)' }}>
+                            ${f3TotalUsd.toFixed(2)}
+                        </div>
+                    </div>
+                    {f3TotalKrw > 0 && (
+                        <div>
+                            <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>KRW 합계 (멜론)</span>
+                            <div style={{ fontSize: '20px', fontWeight: 700, color: '#22c55e' }}>
+                                ₩{f3TotalKrw.toLocaleString('ko-KR')}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* ─── F4: YouTube RPM 계산기 ─── */}
+            <div className="card" style={{ marginBottom: '20px' }}>
+                <div className="card-header">
+                    <h2 className="card-title">▶️ YouTube RPM 계산기</h2>
+                </div>
+                <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '8px 0 16px' }}>
+                    RPM과 조회수로 예상 수익을 계산하고 월 목표 달성에 필요한 조회수를 역산합니다.
+                </p>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '14px', marginBottom: '16px' }}>
+                    <div className="form-group">
+                        <label className="form-label">RPM ($/1000 조회수)</label>
+                        <input
+                            className="form-input"
+                            type="number"
+                            min={0}
+                            step={0.1}
+                            value={rpm}
+                            onChange={e => setRpm(e.target.value)}
+                            placeholder="예: 2.0"
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label className="form-label">예상 조회수</label>
+                        <input
+                            className="form-input"
+                            type="number"
+                            min={0}
+                            value={ytViews}
+                            onChange={e => setYtViews(e.target.value)}
+                            placeholder="예: 50000"
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label className="form-label">월 목표 수익 (USD)</label>
+                        <input
+                            className="form-input"
+                            type="number"
+                            min={0}
+                            value={monthlyGoalUsd}
+                            onChange={e => setMonthlyGoalUsd(e.target.value)}
+                            placeholder="예: 100"
+                        />
+                    </div>
+                </div>
+
+                {/* 결과 패널 */}
+                <div style={{
+                    padding: '16px',
+                    borderRadius: '8px',
+                    background: 'var(--bg-secondary)',
+                    border: '1px solid var(--border)',
+                }}>
+                    <div style={{ display: 'flex', gap: '32px', flexWrap: 'wrap', marginBottom: '16px' }}>
+                        <div>
+                            <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px' }}>예상 수익</div>
+                            <div style={{ fontSize: '24px', fontWeight: 700, color: 'var(--accent)' }}>
+                                ${estimatedUsd.toFixed(2)}
+                            </div>
+                        </div>
+                        <div>
+                            <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px' }}>목표까지 필요 조회수</div>
+                            <div style={{ fontSize: '24px', fontWeight: 700, color: viewsNeeded > 0 ? '#f59e0b' : 'var(--text-muted)' }}>
+                                {viewsNeeded > 0 ? viewsNeeded.toLocaleString('ko-KR') : '—'}
+                            </div>
+                        </div>
+                        <div>
+                            <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px' }}>달성률</div>
+                            <div style={{ fontSize: '24px', fontWeight: 700, color: progressPct >= 100 ? '#22c55e' : 'var(--text-primary)' }}>
+                                {progressPct.toFixed(1)}%
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* 프로그레스바 */}
+                    <div style={{ marginBottom: '6px', display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: 'var(--text-muted)' }}>
+                        <span>진행률</span>
+                        <span>${estimatedUsd.toFixed(2)} / ${goalVal.toFixed(2)}</span>
+                    </div>
+                    <div style={{
+                        height: '8px',
+                        borderRadius: '4px',
+                        background: 'var(--border)',
+                        overflow: 'hidden',
+                    }}>
+                        <div style={{
+                            height: '100%',
+                            width: `${progressPct}%`,
+                            borderRadius: '4px',
+                            background: progressPct >= 100 ? '#22c55e' : progressPct >= 60 ? '#f59e0b' : 'var(--accent)',
+                            transition: 'width 0.3s ease',
+                        }} />
+                    </div>
                 </div>
             </div>
 

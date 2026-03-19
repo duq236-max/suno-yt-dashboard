@@ -116,7 +116,7 @@ export type DbLyricsHistory = {
     genre: string;
     mood: string;
     theme: string;
-    language: 'ko' | 'en' | 'mixed';
+    language: 'ko' | 'en' | 'ja' | 'zh' | 'mixed';
     style: string;
     lyrics: string;
     model: 'flash' | 'pro';
@@ -211,7 +211,7 @@ export type DbLyricsHistoryInsert = {
     genre: string;
     mood: string;
     theme: string;
-    language: 'ko' | 'en' | 'mixed';
+    language: 'ko' | 'en' | 'ja' | 'zh' | 'mixed';
     style: string;
     lyrics: string;
     model: 'flash' | 'pro';

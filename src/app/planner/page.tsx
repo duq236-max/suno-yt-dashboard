@@ -90,6 +90,14 @@ export default function PlannerPage() {
     const [reportError, setReportError] = useState('');
     const [creativity, setCreativity] = useState({ temperature: 0.7, topP: 0.9, topK: 30 });
 
+    // J3: 플레이리스트 순서 도우미 상태
+    const [playlistSongCount, setPlaylistSongCount] = useState(4);
+    const [playlistBpmRange, setPlaylistBpmRange] = useState('80-120');
+    const [playlistMoodFlow, setPlaylistMoodFlow] = useState<'upbeat_to_down' | 'down_to_up' | 'even'>('even');
+    const [playlistResult, setPlaylistResult] = useState('');
+    const [playlistState, setPlaylistState] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
+    const [playlistError, setPlaylistError] = useState('');
+
     useEffect(() => {
         const data = loadData();
         if (data.channel) {
@@ -159,6 +167,39 @@ export default function PlannerPage() {
         } catch (err) {
             setReportError(err instanceof Error ? err.message : '리포트 생성에 실패했습니다.');
             setReportState('error');
+        }
+    }
+
+    // J3: 플레이리스트 순서 AI 추천 API 호출
+    async function generatePlaylistOrder() {
+        const data = loadData();
+        const apiKey = data.geminiApiKey;
+        if (!apiKey) {
+            setPlaylistError('설정 페이지에서 Gemini API 키를 먼저 입력하세요.');
+            setPlaylistState('error');
+            return;
+        }
+        setPlaylistState('loading');
+        setPlaylistResult('');
+        setPlaylistError('');
+        try {
+            const res = await fetch('/api/gemini/playlist', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    apiKey,
+                    songCount: playlistSongCount,
+                    bpmRange: playlistBpmRange,
+                    moodFlow: playlistMoodFlow,
+                }),
+            });
+            const json = await res.json() as { result?: string; error?: string };
+            if (!res.ok || json.error) throw new Error(json.error ?? '알 수 없는 오류');
+            setPlaylistResult(json.result ?? '');
+            setPlaylistState('done');
+        } catch (err) {
+            setPlaylistError(err instanceof Error ? err.message : '오류가 발생했습니다.');
+            setPlaylistState('error');
         }
     }
 
@@ -474,6 +515,100 @@ export default function PlannerPage() {
                             <button className="btn btn-primary" onClick={finish}>
                                 ✅ 채널 저장하기
                             </button>
+                        )}
+                    </div>
+
+                    {/* J3: 플레이리스트 순서 설계 도우미 */}
+                    <div className="card" style={{ marginTop: '28px', padding: '24px' }}>
+                        <h3 className="card-title" style={{ marginBottom: '4px', fontSize: '15px' }}>
+                            🎵 플레이리스트 순서 AI 추천
+                        </h3>
+                        <p style={{ fontSize: '12.5px', color: 'var(--text-muted)', marginBottom: '20px', marginTop: '4px' }}>
+                            보유 곡의 최적 재생 순서 전략을 Gemini가 제안합니다
+                        </p>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                            {/* 보유 곡 수 */}
+                            <div className="form-group" style={{ margin: 0 }}>
+                                <label className="form-label">보유 곡 수</label>
+                                <input
+                                    type="number"
+                                    className="form-input"
+                                    min={2}
+                                    max={100}
+                                    value={playlistSongCount}
+                                    onChange={(e) => setPlaylistSongCount(Math.max(2, Number(e.target.value)))}
+                                    style={{ fontSize: '14px' }}
+                                />
+                            </div>
+                            {/* 주 BPM 범위 */}
+                            <div className="form-group" style={{ margin: 0 }}>
+                                <label className="form-label">주 BPM 범위</label>
+                                <input
+                                    className="form-input"
+                                    value={playlistBpmRange}
+                                    onChange={(e) => setPlaylistBpmRange(e.target.value)}
+                                    placeholder="예: 80-120"
+                                    style={{ fontSize: '14px' }}
+                                />
+                            </div>
+                        </div>
+
+                        {/* 분위기 흐름 */}
+                        <div style={{ marginBottom: '20px' }}>
+                            <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
+                                분위기 흐름
+                            </div>
+                            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                {([
+                                    { value: 'upbeat_to_down', label: '⬇ 업비트→다운비트' },
+                                    { value: 'down_to_up', label: '⬆ 다운비트→업비트' },
+                                    { value: 'even', label: '➡ 균일' },
+                                ] as const).map(({ value, label }) => (
+                                    <button
+                                        key={value}
+                                        onClick={() => setPlaylistMoodFlow(value)}
+                                        style={{
+                                            padding: '7px 14px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px',
+                                            border: `1.5px solid ${playlistMoodFlow === value ? 'var(--accent)' : 'var(--border)'}`,
+                                            background: playlistMoodFlow === value ? 'rgba(229,62,62,0.1)' : 'var(--bg-secondary)',
+                                            color: playlistMoodFlow === value ? 'var(--accent)' : 'var(--text-muted)',
+                                            fontWeight: playlistMoodFlow === value ? 700 : 400,
+                                            transition: 'all 0.15s',
+                                        }}
+                                    >
+                                        {label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <button
+                            className="btn btn-secondary"
+                            onClick={generatePlaylistOrder}
+                            disabled={playlistState === 'loading'}
+                            style={{ minWidth: '180px' }}
+                        >
+                            {playlistState === 'loading' ? '분석 중...' : '🎧 순서 전략 추천받기'}
+                        </button>
+
+                        {/* 에러 */}
+                        {playlistState === 'error' && (
+                            <div style={{ marginTop: '14px', padding: '12px 14px', background: 'rgba(229,62,62,0.08)', borderRadius: '8px', color: 'var(--accent)', fontSize: '13px' }}>
+                                {playlistError}
+                            </div>
+                        )}
+
+                        {/* 결과 */}
+                        {playlistState === 'done' && playlistResult && (
+                            <div style={{
+                                marginTop: '16px', padding: '16px', background: 'var(--bg-secondary)',
+                                borderRadius: '10px', border: '1px solid var(--border)',
+                                fontSize: '13.5px', color: 'var(--text-secondary)', lineHeight: 1.8,
+                                whiteSpace: 'pre-wrap',
+                            }}>
+                                {playlistResult}
+                            </div>
                         )}
                     </div>
                 </div>

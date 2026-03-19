@@ -11,21 +11,37 @@ function buildLyricsPrompt(params: {
     language: string;
     style: string;
     copyrightDefense: boolean;
+    vocalKeywords?: string;
 }): string {
-    const { genre, mood, theme, language, style, copyrightDefense } = params;
-    const langGuide = language === 'ko' ? '한국어' : language === 'en' ? '영어' : '한국어+영어 혼용';
+    const { genre, mood, theme, language, style, copyrightDefense, vocalKeywords } = params;
+    const langGuide =
+        language === 'ko' ? '한국어' :
+        language === 'en' ? '영어' :
+        language === 'ja' ? '일본어 (ひらがな·カタカナ·漢字 혼용)' :
+        language === 'zh' ? '중국어 간체 (普通話)' :
+        '한국어+영어 혼용';
+    const langInstructions =
+        language === 'ja' ? '일본어 J-Pop 가사 형식, 자연스러운 일본어 시적 표현 사용' :
+        language === 'zh' ? '중국어 C-Pop 가사 형식, 자연스러운 중국어 시적 표현 사용' :
+        language === 'en' ? '영어 팝 가사 형식, 자연스러운 영어 시적 표현 사용' :
+        language === 'ko' ? '한국어 K-Pop/K-Ballad 가사 형식, 자연스러운 한국어 시적 표현 사용' :
+        '한국어와 영어를 자연스럽게 혼용, 후렴구는 영어 권장';
     const defenseNote = copyrightDefense
-        ? `\n저작권 방어 필수: suno_style 필드에 반드시 "No Choir, No Background Vocals, No Musical Theater Style, Straight Voice" 를 포함하세요.`
+        ? `\n저작권 방어 필수: suno_style 및 suno_prompt 필드에 반드시 "No Choir, No Background Vocals, No Musical Theater Style, Straight Voice" 를 포함하세요.`
         : '';
-    return `당신은 Suno AI 전문 작사가입니다.
-다음 조건으로 완성된 가사를 JSON 형식으로 생성해주세요.${defenseNote}
+    const vocalNote = vocalKeywords
+        ? `\n- 보컬 스타일: ${vocalKeywords} (suno_prompt에 반드시 포함)`
+        : '';
+    return `당신은 Suno AI 전문 작사가 겸 프롬프트 엔지니어입니다.
+다음 조건으로 완성된 가사와 Suno 전용 프롬프트를 JSON 형식으로 생성해주세요.${defenseNote}
 
 조건:
 - 장르: ${genre}
 - 분위기: ${mood}
 - 주제/테마: ${theme || '자유'}
 - 언어: ${langGuide}
-- 스타일: ${style || '일반'}
+- 언어 가이드: ${langInstructions}
+- 스타일: ${style || '일반'}${vocalNote}
 
 가사 구조 규칙:
 - [Intro], [Verse 1], [Pre-Chorus], [Chorus], [Verse 2], [Bridge], [Outro] 섹션 사용
@@ -33,12 +49,18 @@ function buildLyricsPrompt(params: {
 - Suno AI에 최적화된 가사 (반복 후렴 강조, 멜로디에 맞는 음절)
 - 전체 가사는 최소 16줄 이상
 
+suno_prompt 규칙 (Suno 웹 UI 스타일 입력창에 그대로 붙여넣는 용도):
+- 장르 태그 + 보컬 스타일 태그 + BPM 범위 + 악기 구성 + 분위기 태그를 영어 콤마 구분으로 나열
+- BPM은 장르에 맞게 숫자 범위로 명시 (예: 80-90 BPM)
+- 30단어 이내의 간결한 영어 태그 문자열
+
 반드시 아래 JSON 형식만 응답하세요. 다른 텍스트는 절대 포함하지 마세요:
 {
   "title": "(곡 제목)",
   "lyrics": "[Intro]\\n(인트로 가사)\\n\\n[Verse 1]\\n(1절 가사)\\n\\n[Chorus]\\n(후렴 가사)\\n\\n[Verse 2]\\n(2절 가사)\\n\\n[Bridge]\\n(브릿지 가사)\\n\\n[Outro]\\n(아웃트로 가사)",
   "mood_tags": ["(분위기 태그1)", "(태그2)", "(태그3)"],
-  "suno_style": "(Suno style prompt: 장르·분위기·악기·BPM 영어 태그들)"
+  "suno_style": "(Suno style prompt: 장르·분위기·악기·BPM 영어 태그들)",
+  "suno_prompt": "(완전한 Suno 전용 프롬프트: 장르+보컬스타일+BPM+악기+분위기 태그 30단어 이내 영어)"
 }`;
 }
 
@@ -61,6 +83,7 @@ export async function POST(req: NextRequest) {
             language?: string;
             style?: string;
             copyrightDefense?: boolean;
+            vocalKeywords?: string;
             creativityParams?: Partial<CreativityParams>;
         };
 
@@ -73,6 +96,7 @@ export async function POST(req: NextRequest) {
             language = 'ko',
             style = '',
             copyrightDefense = false,
+            vocalKeywords = '',
             creativityParams,
         } = body;
 
@@ -90,7 +114,7 @@ export async function POST(req: NextRequest) {
         }
 
         const modelId: GeminiModel = model === 'pro' ? 'gemini-2.5-pro' : 'gemini-2.5-flash';
-        const prompt = buildLyricsPrompt({ genre, mood, theme, language, style, copyrightDefense });
+        const prompt = buildLyricsPrompt({ genre, mood, theme, language, style, copyrightDefense, vocalKeywords });
 
         const res = await fetch(
             `${GEMINI_BASE}/${modelId}:generateContent?key=${apiKey}`,
@@ -120,6 +144,7 @@ export async function POST(req: NextRequest) {
             lyrics?: string;
             mood_tags?: string[];
             suno_style?: string;
+            suno_prompt?: string;
         };
 
         return NextResponse.json({
@@ -127,6 +152,7 @@ export async function POST(req: NextRequest) {
             lyrics: parsed.lyrics ?? '',
             mood_tags: Array.isArray(parsed.mood_tags) ? parsed.mood_tags : [mood],
             suno_style: parsed.suno_style ?? '',
+            suno_prompt: parsed.suno_prompt ?? parsed.suno_style ?? '',
         });
     } catch (err) {
         const message = err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.';

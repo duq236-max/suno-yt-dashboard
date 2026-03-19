@@ -81,7 +81,7 @@ export interface LyricsHistoryItem {
     genre: string;
     mood: string;
     theme: string;
-    language: 'ko' | 'en' | 'mixed';
+    language: 'ko' | 'en' | 'ja' | 'zh' | 'mixed';
     style: string;
     lyrics: string;
     model: 'flash' | 'pro';

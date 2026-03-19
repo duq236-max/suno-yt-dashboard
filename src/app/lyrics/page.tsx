@@ -5,6 +5,8 @@ import Header from '@/components/Header';
 import GenreSelector from '@/components/GenreSelector';
 import MoodSelector from '@/components/MoodSelector';
 import { CreativityPanel } from '@/components/CreativityPanel';
+import CopyrightShield from '@/components/CopyrightShield';
+import { vocalStyles } from '@/data/vocal-styles';
 import {
     loadData,
     loadLyricsHistory,
@@ -17,8 +19,9 @@ import { LyricsHistoryItem } from '@/types';
 
 const LANG_OPTIONS: { value: LyricsHistoryItem['language']; label: string }[] = [
     { value: 'ko', label: '한국어' },
-    { value: 'en', label: '영어' },
-    { value: 'mixed', label: '한영 혼용' },
+    { value: 'en', label: 'English' },
+    { value: 'ja', label: '日本語' },
+    { value: 'zh', label: '中文' },
 ];
 
 interface FormState {
@@ -29,6 +32,7 @@ interface FormState {
     style: string;
     model: 'flash' | 'pro';
     copyrightDefense: boolean;
+    vocalStyleId: string;
 }
 
 const DEFAULT_FORM: FormState = {
@@ -39,13 +43,14 @@ const DEFAULT_FORM: FormState = {
     style: '',
     model: 'flash',
     copyrightDefense: false,
+    vocalStyleId: '',
 };
 
 export default function LyricsPage() {
     const [form, setForm] = useState<FormState>(DEFAULT_FORM);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [result, setResult] = useState<{ title: string; lyrics: string; mood_tags: string[]; suno_style: string } | null>(null);
+    const [result, setResult] = useState<{ title: string; lyrics: string; mood_tags: string[]; suno_style: string; suno_prompt: string } | null>(null);
     const [history, setHistory] = useState<LyricsHistoryItem[]>([]);
     const [selectedHistory, setSelectedHistory] = useState<LyricsHistoryItem | null>(null);
     const [creativity, setCreativity] = useState<{ temperature: number; topP: number; topK: number }>({
@@ -74,6 +79,9 @@ export default function LyricsPage() {
         setResult(null);
 
         try {
+            const selectedVocal = vocalStyles.find(v => v.id === form.vocalStyleId);
+            const vocalKeywords = selectedVocal ? selectedVocal.sunoKeywords.join(', ') : '';
+
             const res = await fetch('/api/gemini/lyrics', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -83,6 +91,7 @@ export default function LyricsPage() {
                     genre: form.genre.join(', '),
                     creativityParams: creativity,
                     copyrightDefense: form.copyrightDefense,
+                    vocalKeywords,
                 }),
             });
 
@@ -92,6 +101,7 @@ export default function LyricsPage() {
                 lyrics?: string;
                 mood_tags?: string[];
                 suno_style?: string;
+                suno_prompt?: string;
             };
 
             if (!res.ok) throw new Error(json.error ?? `API 오류 (${res.status})`);
@@ -101,6 +111,7 @@ export default function LyricsPage() {
                 lyrics: json.lyrics ?? '',
                 mood_tags: json.mood_tags ?? [],
                 suno_style: json.suno_style ?? '',
+                suno_prompt: json.suno_prompt ?? json.suno_style ?? '',
             };
 
             setResult(generated);
@@ -143,6 +154,7 @@ export default function LyricsPage() {
     const displayTitle = selectedHistory?.title ?? result?.title ?? null;
     const displayMoodTags = selectedHistory ? [] : (result?.mood_tags ?? []);
     const displaySunoStyle = selectedHistory ? '' : (result?.suno_style ?? '');
+    const displaySunoPrompt = selectedHistory ? '' : (result?.suno_prompt ?? '');
 
     function showToast(message: string) {
         setToast(message);
@@ -212,6 +224,34 @@ export default function LyricsPage() {
                                 <label className="form-label">장르 (다중선택)</label>
                                 <GenreSelector value={form.genre} onChange={v => updateForm('genre', v)} />
                             </div>
+
+                            {/* 보컬 스타일 (H2) */}
+                            <div className="form-group">
+                                <label className="form-label">보컬 스타일 (선택)</label>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                    {vocalStyles.map(vs => (
+                                        <button
+                                            key={vs.id}
+                                            onClick={() => updateForm('vocalStyleId', form.vocalStyleId === vs.id ? '' : vs.id)}
+                                            style={{
+                                                padding: '8px 12px', borderRadius: '8px', fontSize: '12px',
+                                                fontWeight: form.vocalStyleId === vs.id ? 700 : 500,
+                                                cursor: 'pointer', textAlign: 'left',
+                                                border: `1.5px solid ${form.vocalStyleId === vs.id ? 'var(--accent)' : 'var(--border)'}`,
+                                                background: form.vocalStyleId === vs.id ? 'var(--accent-dim)' : 'var(--bg-secondary)',
+                                                color: form.vocalStyleId === vs.id ? 'var(--accent)' : 'var(--text-secondary)',
+                                                transition: 'all 0.15s ease',
+                                            }}
+                                        >
+                                            <span style={{ fontWeight: 700 }}>{vs.name}</span>
+                                            <span style={{ color: 'var(--text-muted)', marginLeft: '6px', fontSize: '11px' }}>{vs.description}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* 저작권 방어 경고 (G1·G2) */}
+                            <CopyrightShield text={[form.genre.join(' '), form.style, form.theme].join(' ')} />
 
                             {/* 분위기 */}
                             <div className="form-group">
@@ -387,7 +427,7 @@ export default function LyricsPage() {
                                         {/* Suno Style 힌트 */}
                                         {displaySunoStyle && (
                                             <div style={{
-                                                marginBottom: '16px', padding: '10px 14px',
+                                                marginBottom: '12px', padding: '10px 14px',
                                                 background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.3)',
                                                 borderRadius: '8px', fontSize: '12px', color: '#a5b4fc',
                                             }}>
@@ -396,6 +436,41 @@ export default function LyricsPage() {
                                                     onClick={() => handleCopy(displaySunoStyle)}
                                                     style={{ marginLeft: '8px', fontSize: '11px', color: '#818cf8', background: 'none', border: 'none', cursor: 'pointer' }}
                                                 >복사</button>
+                                            </div>
+                                        )}
+
+                                        {/* Suno 프롬프트 (C6) */}
+                                        {displaySunoPrompt && (
+                                            <div style={{ marginBottom: '16px' }}>
+                                                <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '6px' }}>
+                                                    🎯 Suno 프롬프트 (복사 후 Suno 스타일 입력창에 붙여넣기)
+                                                </div>
+                                                <div style={{
+                                                    padding: '12px 14px',
+                                                    background: 'var(--bg-secondary)',
+                                                    border: '1px solid var(--border)',
+                                                    borderRadius: '8px',
+                                                    fontSize: '13px',
+                                                    color: 'var(--text-primary)',
+                                                    fontFamily: 'monospace',
+                                                    lineHeight: 1.6,
+                                                    display: 'flex',
+                                                    justifyContent: 'space-between',
+                                                    alignItems: 'flex-start',
+                                                    gap: '10px',
+                                                }}>
+                                                    <span style={{ flex: 1, wordBreak: 'break-word' }}>{displaySunoPrompt}</span>
+                                                    <button
+                                                        onClick={() => handleCopy(displaySunoPrompt)}
+                                                        style={{
+                                                            flexShrink: 0, padding: '4px 10px', borderRadius: '6px',
+                                                            fontSize: '11px', fontWeight: 600, cursor: 'pointer',
+                                                            border: '1px solid var(--border)',
+                                                            background: 'var(--bg-card)',
+                                                            color: 'var(--text-secondary)',
+                                                        }}
+                                                    >복사</button>
+                                                </div>
                                             </div>
                                         )}
 

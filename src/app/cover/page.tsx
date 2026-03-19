@@ -30,6 +30,9 @@ export default function CoverPage() {
     const [errorMsg, setErrorMsg] = useState('');
     const [copiedField, setCopiedField] = useState<'sd' | 'neg' | null>(null);
     const [creativity, setCreativity] = useState({ temperature: 0.7, topP: 0.9, topK: 30 });
+    const [selectedPresetLabel, setSelectedPresetLabel] = useState('');
+    const [japaneseOverlay, setJapaneseOverlay] = useState('');
+    const [aspectRatio, setAspectRatio] = useState<'16:9' | '9:16'>('16:9');
 
     useEffect(() => {
         const data = loadData();
@@ -51,10 +54,23 @@ export default function CoverPage() {
         setResult(null);
 
         try {
+            // I3: 일본어 오버레이 키워드 합산
+            let finalKeywords = keywords;
+            if (selectedPresetLabel === '🎌 일본 애니' && japaneseOverlay.trim()) {
+                finalKeywords = finalKeywords
+                    ? `${finalKeywords}, japanese text overlay: ${japaneseOverlay.trim()}`
+                    : `japanese text overlay: ${japaneseOverlay.trim()}`;
+            }
+            // I4: Shorts 비율 키워드 합산
+            if (aspectRatio === '9:16') {
+                const shortsKw = 'vertical format, 9:16 ratio, mobile optimized';
+                finalKeywords = finalKeywords ? `${finalKeywords}, ${shortsKw}` : shortsKw;
+            }
+
             const res = await fetch('/api/gemini/cover', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ apiKey, model, channelName, genre, keywords, creativityParams: creativity }),
+                body: JSON.stringify({ apiKey, model, channelName, genre, keywords: finalKeywords, creativityParams: creativity }),
             });
 
             const json = await res.json() as CoverResult & { error?: string };
@@ -99,6 +115,8 @@ export default function CoverPage() {
                                     onClick={() => {
                                         setGenre(preset.genre);
                                         setKeywords(preset.keywords);
+                                        setSelectedPresetLabel(preset.label);
+                                        if (preset.label !== '🎌 일본 애니') setJapaneseOverlay('');
                                     }}
                                 >
                                     {preset.label}
@@ -108,6 +126,55 @@ export default function CoverPage() {
                         <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '8px', marginBottom: 0 }}>
                             프리셋 클릭 시 장르·키워드 자동 입력
                         </p>
+
+                        {/* I3: 일본어 오버레이 입력 — 🎌 일본 애니 선택 시만 표시 */}
+                        {selectedPresetLabel === '🎌 일본 애니' && (
+                            <div style={{ marginTop: '12px', padding: '12px 14px', background: 'rgba(124,58,237,0.06)', borderRadius: '8px', border: '1px solid rgba(124,58,237,0.2)' }}>
+                                <label style={{ fontSize: '11px', color: '#a78bfa', textTransform: 'uppercase', letterSpacing: '0.6px', display: 'block', marginBottom: '6px' }}>
+                                    🎌 일본어 오버레이 텍스트 (선택)
+                                </label>
+                                <input
+                                    className="form-input"
+                                    value={japaneseOverlay}
+                                    onChange={(e) => setJapaneseOverlay(e.target.value)}
+                                    placeholder="예: さよならの予後"
+                                    style={{ fontSize: '13px' }}
+                                />
+                                <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '6px', marginBottom: 0 }}>
+                                    입력 시 keywords에 &quot;japanese text overlay: [텍스트]&quot;로 자동 삽입됩니다
+                                </p>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* I4: YouTube Shorts 비율 토글 */}
+                    <div style={{ marginBottom: '16px', padding: '14px 16px', background: 'var(--bg-secondary)', borderRadius: '10px', border: '1px solid var(--border)' }}>
+                        <div style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '10px' }}>
+                            이미지 비율
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                            {(['16:9', '9:16'] as const).map((ratio) => (
+                                <button
+                                    key={ratio}
+                                    onClick={() => setAspectRatio(ratio)}
+                                    style={{
+                                        padding: '8px 18px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px',
+                                        border: `1.5px solid ${aspectRatio === ratio ? 'var(--accent)' : 'var(--border)'}`,
+                                        background: aspectRatio === ratio ? 'rgba(229,62,62,0.10)' : 'var(--bg-secondary)',
+                                        color: aspectRatio === ratio ? 'var(--accent)' : 'var(--text-muted)',
+                                        fontWeight: aspectRatio === ratio ? 700 : 400,
+                                        transition: 'all 0.15s',
+                                    }}
+                                >
+                                    {ratio === '16:9' ? '📺 16:9 (썸네일)' : '📱 9:16 (Shorts)'}
+                                </button>
+                            ))}
+                        </div>
+                        {aspectRatio === '9:16' && (
+                            <p style={{ fontSize: '12px', color: '#60a5fa', marginTop: '8px', marginBottom: 0 }}>
+                                💡 Shorts 썸네일은 세로형으로 최적화됩니다. keywords에 세로 비율 태그가 자동 추가됩니다.
+                            </p>
+                        )}
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>

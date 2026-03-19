@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { goldenPrompts, type GoldenPrompt } from '@/data/golden-prompts';
 import { vocalStyles, type VocalStyle } from '@/data/vocal-styles';
 
@@ -19,9 +19,33 @@ const GENDER_LABELS: Record<VocalStyle['gender'], string> = {
   neutral: '중성',
 };
 
+type ExtensionStatus = 'unknown' | 'installed' | 'not_installed';
+
 export default function LibraryPage() {
   const [activeTab, setActiveTab] = useState<Tab>('prompts');
   const [copied, setCopied] = useState<Record<string, boolean>>({});
+  const [extensionStatus, setExtensionStatus] = useState<ExtensionStatus>('unknown');
+  const [sentWarning, setSentWarning] = useState<Record<string, boolean>>({});
+
+  // J2: Extension 설치 감지 — ping 후 800ms 내 pong 없으면 미설치로 판단
+  useEffect(() => {
+    const timer = setTimeout(() => setExtensionStatus('not_installed'), 800);
+
+    function onMessage(e: MessageEvent<{ type?: string }>) {
+      if (e.data?.type === 'SUNO_EXTENSION_PONG') {
+        clearTimeout(timer);
+        setExtensionStatus('installed');
+      }
+    }
+
+    window.addEventListener('message', onMessage);
+    window.postMessage({ type: 'SUNO_EXTENSION_PING' }, '*');
+
+    return () => {
+      window.removeEventListener('message', onMessage);
+      clearTimeout(timer);
+    };
+  }, []);
 
   function handleCopy(id: string, text: string) {
     navigator.clipboard.writeText(text).then(() => {
@@ -30,6 +54,16 @@ export default function LibraryPage() {
         setCopied((prev) => ({ ...prev, [id]: false }));
       }, 1500);
     });
+  }
+
+  // J2: Extension으로 프롬프트 전송
+  function handleSendToSuno(id: string, sunoPrompt: string) {
+    if (extensionStatus !== 'installed') {
+      setSentWarning((prev) => ({ ...prev, [id]: true }));
+      setTimeout(() => setSentWarning((prev) => ({ ...prev, [id]: false })), 3000);
+      return;
+    }
+    window.postMessage({ type: 'SUNO_INJECT', prompt: sunoPrompt }, '*');
   }
 
   return (
@@ -129,14 +163,35 @@ export default function LibraryPage() {
                   {p.notes}
                 </div>
 
-                {/* 복사 버튼 */}
-                <button
-                  className="btn btn-secondary btn-sm"
-                  style={{ alignSelf: 'flex-start', marginTop: 'auto' }}
-                  onClick={() => handleCopy(copyId, p.sunoPrompt)}
-                >
-                  {copied[copyId] ? '✓ 복사됨' : 'Suno 프롬프트 복사'}
-                </button>
+                {/* 버튼 행: 복사 + Suno 전송 */}
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', marginTop: 'auto' }}>
+                  <button
+                    className="btn btn-secondary btn-sm"
+                    onClick={() => handleCopy(copyId, p.sunoPrompt)}
+                  >
+                    {copied[copyId] ? '✓ 복사됨' : 'Suno 프롬프트 복사'}
+                  </button>
+                  <button
+                    className="btn btn-ghost btn-sm"
+                    onClick={() => handleSendToSuno(p.id, p.sunoPrompt)}
+                    style={{ fontSize: '12px' }}
+                  >
+                    🚀 Suno로 전송
+                  </button>
+                </div>
+                {sentWarning[p.id] && (
+                  <div style={{ fontSize: '11px', color: 'var(--accent)', marginTop: '4px' }}>
+                    ⚠️ Extension이 설치되어 있지 않습니다.{' '}
+                    <a
+                      href="https://chrome.google.com/webstore"
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{ color: 'var(--accent)', textDecoration: 'underline' }}
+                    >
+                      설치하기
+                    </a>
+                  </div>
+                )}
               </div>
             );
           })}
