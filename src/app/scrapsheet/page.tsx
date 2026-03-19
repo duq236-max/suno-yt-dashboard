@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Header from '@/components/Header';
 import { loadData, saveData, generateId } from '@/lib/storage';
 import { ScrapSheet } from '@/types';
@@ -9,11 +9,7 @@ import Link from 'next/link';
 const GENRES = ['Lo-fi', 'Jazz', 'Classical', 'Ambient', 'EDM', 'Chillhop', 'Piano', 'Nature Sounds', '기타'];
 
 export default function ScrapsheetPage() {
-    const [sheets, setSheets] = useState<ScrapSheet[]>([]);
-
-    useEffect(() => {
-        setSheets(loadData().sheets);
-    }, []);
+    const [sheets, setSheets] = useState<ScrapSheet[]>(() => loadData().sheets);
     const [showNewSheet, setShowNewSheet] = useState(false);
     const [newSheetName, setNewSheetName] = useState('');
     const [newSheetGenre, setNewSheetGenre] = useState('Lo-fi');

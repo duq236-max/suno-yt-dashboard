@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Header from '@/components/Header';
 import DistributionChecklist from '@/components/DistributionChecklist';
 import {
@@ -75,7 +75,7 @@ function fmt(n: number): string {
 }
 
 export default function RevenuePage() {
-    const [entries, setEntries] = useState<RevenueEntry[]>([]);
+    const [entries, setEntries] = useState<RevenueEntry[]>(() => loadRevenue());
     const [form, setForm] = useState<FormState>(DEFAULT_FORM);
     const [filter, setFilter] = useState<Platform | 'all'>('all');
     const [showForm, setShowForm] = useState(false);
@@ -92,17 +92,12 @@ export default function RevenuePage() {
     const [monthlyGoalUsd, setMonthlyGoalUsd] = useState('100');
 
     // ─── F5 음원 등록 상태 ───────────────────────────────────
-    const [songs, setSongs] = useState<Song[]>([]);
+    const [songs, setSongs] = useState<Song[]>(() => loadSongs());
     const [showSongForm, setShowSongForm] = useState(false);
     const [songForm, setSongForm] = useState({
         title: '', genre: '', distributedAt: new Date().toISOString().slice(0, 10),
         platforms: '', isrc: '', status: 'draft' as Song['status'],
     });
-
-    useEffect(() => {
-        setEntries(loadRevenue());
-        setSongs(loadSongs());
-    }, []);
 
     function handleSongSubmit(e: React.FormEvent) {
         e.preventDefault();

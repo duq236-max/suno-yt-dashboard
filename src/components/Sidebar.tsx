@@ -101,6 +101,7 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
       const stored = JSON.parse(localStorage.getItem(RECENT_PAGES_KEY) ?? '[]') as string[];
       const updated = [pathname, ...stored.filter((p) => p !== pathname)].slice(0, RECENT_MAX);
       localStorage.setItem(RECENT_PAGES_KEY, JSON.stringify(updated));
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setRecentPages(updated);
     } catch { /* ignore */ }
   }, [pathname]);

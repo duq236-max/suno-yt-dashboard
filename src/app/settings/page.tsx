@@ -13,16 +13,12 @@ function applyTheme(theme: Theme) {
 
 export default function SettingsPage() {
     const [cleared, setCleared] = useState(false);
-    const [apiKey, setApiKey] = useState('');
+    const [apiKey, setApiKey] = useState(() => loadData().geminiApiKey ?? '');
     const [apiKeySaved, setApiKeySaved] = useState(false);
-    const [theme, setTheme] = useState<Theme>('dark');
-
-    useEffect(() => {
-        setApiKey(loadData().geminiApiKey ?? '');
-        const stored = (localStorage.getItem('theme') ?? 'dark') as Theme;
-        setTheme(stored);
-        applyTheme(stored);
-    }, []);
+    const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem('theme') ?? 'dark') as Theme);
+    // 마운트 시 초기 테마 적용 (setState 없음 — DOM 조작만)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    useEffect(() => { applyTheme(theme); }, []);
 
     function toggleTheme() {
         const next: Theme = theme === 'dark' ? 'light' : 'dark';
