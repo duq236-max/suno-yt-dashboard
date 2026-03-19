@@ -12,6 +12,7 @@ type ExtStatus = 'detecting' | 'installed' | 'not_installed';
 const PING_TYPE = 'SUNO_BATCH_PING';
 const PONG_TYPE = 'SUNO_BATCH_PONG';
 const ADD_TO_QUEUE_TYPE = 'ADD_TO_QUEUE';
+const ADD_TO_QUEUE_RESULT_TYPE = 'ADD_TO_QUEUE_RESULT';
 const DETECT_TIMEOUT_MS = 1000;
 
 // Chrome Web Store URL — 개발 중에는 빈 문자열 (로드 테스트 안내로 대체)
@@ -21,6 +22,7 @@ export default function SendToSunoButton({ lyrics, sunoPrompt }: Props) {
     const [extStatus, setExtStatus] = useState<ExtStatus>('detecting');
     const [showModal, setShowModal] = useState(false);
     const [sent, setSent] = useState(false);
+    const [sendError, setSendError] = useState<string | null>(null);
 
     // Extension 설치 감지: ping → 1초 타임아웃
     useEffect(() => {
@@ -57,13 +59,29 @@ export default function SendToSunoButton({ lyrics, sunoPrompt }: Props) {
         }
 
         if (extStatus === 'installed' && sunoPrompt) {
+            setSendError(null);
+
+            // background 응답을 ADD_TO_QUEUE_RESULT로 확인
+            function handleResult(event: MessageEvent) {
+                if (event.data?.type !== ADD_TO_QUEUE_RESULT_TYPE) return;
+                window.removeEventListener('message', handleResult);
+                if (event.data?.error) {
+                    setSendError('전송 실패: ' + String(event.data.error));
+                    setSent(false);
+                }
+            }
+            window.addEventListener('message', handleResult);
+
             window.postMessage({
                 type: ADD_TO_QUEUE_TYPE,
                 prompts: [sunoPrompt],
                 lyrics,
             }, '*');
             setSent(true);
-            setTimeout(() => setSent(false), 2500);
+            setTimeout(() => {
+                setSent(false);
+                window.removeEventListener('message', handleResult);
+            }, 3000);
         }
     }, [extStatus, sunoPrompt, lyrics]);
 
@@ -77,6 +95,11 @@ export default function SendToSunoButton({ lyrics, sunoPrompt }: Props) {
 
     return (
         <>
+            {sendError && (
+                <span style={{ fontSize: 12, color: 'var(--accent)', marginRight: 8 }}>
+                    {sendError}
+                </span>
+            )}
             <button
                 className="btn btn-primary"
                 onClick={handleClick}
