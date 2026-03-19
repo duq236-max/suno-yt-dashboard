@@ -150,11 +150,10 @@ test.describe('CreativityPanel — /lyrics 통합', () => {
     });
 
     // API 요청 intercept
-    let capturedBody: Record<string, unknown> | null = null;
+    let capturedBody: unknown = null;
     await page.route('/api/gemini/lyrics', async (route) => {
       const request = route.request();
-      const body = request.postDataJSON() as Record<string, unknown>;
-      capturedBody = body;
+      capturedBody = request.postDataJSON() as Record<string, unknown>;
       // 요청을 abort해서 실제 API 호출 없이 검증만
       await route.abort();
     });
@@ -167,8 +166,9 @@ test.describe('CreativityPanel — /lyrics 통합', () => {
       await page.waitForTimeout(500);
 
       if (capturedBody) {
-        expect(capturedBody).toHaveProperty('creativityParams');
-        const cp = capturedBody.creativityParams as Record<string, number>;
+        const body = capturedBody as Record<string, unknown>;
+        expect(body).toHaveProperty('creativityParams');
+        const cp = body.creativityParams as Record<string, number>;
         expect(typeof cp.temperature).toBe('number');
         expect(typeof cp.topP).toBe('number');
         expect(typeof cp.topK).toBe('number');
