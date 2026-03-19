@@ -1,0 +1,1705 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phase 5 마스터 기획서 — Suno YT Dashboard 고도화</title>
+<style>
+  :root {
+    --bg: #0d0d14;
+    --surface: #13131f;
+    --card: #1a1a2e;
+    --border: #2a2a40;
+    --accent: #7c3aed;
+    --accent2: #06b6d4;
+    --accent3: #f59e0b;
+    --green: #10b981;
+    --red: #ef4444;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    line-height: 1.6;
+  }
+  .hero {
+    background: linear-gradient(135deg, #0d0d14 0%, #1a0a2e 50%, #0a1a2e 100%);
+    padding: 60px 40px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 30% 50%, rgba(124,58,237,0.15) 0%, transparent 60%),
+                radial-gradient(ellipse at 70% 50%, rgba(6,182,212,0.1) 0%, transparent 60%);
+  }
+  .hero-badge {
+    display: inline-block;
+    background: rgba(124,58,237,0.2);
+    border: 1px solid rgba(124,58,237,0.4);
+    color: #a78bfa;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 20px;
+  }
+  .hero h1 {
+    font-size: 42px;
+    font-weight: 800;
+    background: linear-gradient(135deg, #fff 0%, #a78bfa 50%, #67e8f9 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 16px;
+    position: relative;
+  }
+  .hero p {
+    font-size: 18px;
+    color: var(--muted);
+    max-width: 700px;
+    margin: 0 auto 30px;
+    position: relative;
+  }
+  .hero-meta {
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+    flex-wrap: wrap;
+    position: relative;
+  }
+  .hero-meta span {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 8px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .hero-meta span b { color: var(--text); }
+  .container { max-width: 1200px; margin: 0 auto; padding: 40px 24px; }
+  .section { margin-bottom: 60px; }
+  .section-title {
+    font-size: 26px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-title .icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .section-desc { color: var(--muted); margin-bottom: 28px; font-size: 15px; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .card-title { font-size: 17px; font-weight: 700; }
+  .badge {
+    font-size: 11px; font-weight: 700;
+    padding: 3px 10px; border-radius: 6px;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .badge-critical { background: rgba(239,68,68,0.2); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+  .badge-high { background: rgba(245,158,11,0.2); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
+  .badge-medium { background: rgba(6,182,212,0.2); color: #67e8f9; border: 1px solid rgba(6,182,212,0.3); }
+  .badge-new { background: rgba(124,58,237,0.2); color: #a78bfa; border: 1px solid rgba(124,58,237,0.3); }
+  .badge-ext { background: rgba(16,185,129,0.2); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.3); }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  @media (max-width: 768px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+  .checklist { list-style: none; }
+  .checklist li {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    cursor: pointer;
+    transition: background 0.15s;
+    border-radius: 6px;
+  }
+  .checklist li:hover { background: rgba(255,255,255,0.03); }
+  .checklist li.done .check-label { text-decoration: line-through; color: var(--muted); }
+  .checklist li input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 20px; height: 20px; min-width: 20px;
+    border: 2px solid var(--border);
+    border-radius: 5px;
+    cursor: pointer;
+    position: relative;
+    background: transparent;
+    transition: all 0.2s;
+    margin-top: 2px;
+  }
+  .checklist li input[type="checkbox"]:checked {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+  .checklist li input[type="checkbox"]:checked::after {
+    content: '\2713';
+    position: absolute;
+    top: -1px; left: 3px;
+    color: white;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .check-label { font-size: 14px; }
+  .check-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .mockup-container {
+    background: #0a0a12;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .mockup-title-bar {
+    background: var(--surface);
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .dot { width: 12px; height: 12px; border-radius: 50%; }
+  .dot-r { background: #ef4444; }
+  .dot-y { background: #f59e0b; }
+  .dot-g { background: #10b981; }
+  .progress-bar {
+    background: var(--border);
+    border-radius: 4px;
+    height: 6px;
+    margin-top: 8px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    border-radius: 4px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    transition: width 0.5s;
+  }
+  .phase-table { width: 100%; border-collapse: collapse; }
+  .phase-table th {
+    text-align: left; padding: 12px 16px;
+    background: var(--surface);
+    font-size: 13px; color: var(--muted);
+    font-weight: 600;
+    border-bottom: 1px solid var(--border);
+  }
+  .phase-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 14px;
+    vertical-align: middle;
+  }
+  .phase-table tr:hover td { background: rgba(255,255,255,0.02); }
+  .flow {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    flex-wrap: wrap;
+    margin: 20px 0;
+  }
+  .flow-step {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 20px;
+    text-align: center;
+    min-width: 130px;
+    flex: 1;
+  }
+  .flow-step .step-num { font-size: 11px; font-weight: 700; color: var(--accent); text-transform: uppercase; margin-bottom: 6px; }
+  .flow-step .step-label { font-size: 13px; font-weight: 600; }
+  .flow-step .step-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .flow-arrow { color: var(--muted); font-size: 20px; padding: 0 8px; flex-shrink: 0; }
+  .divider { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+  .summary-bar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 40px;
+  }
+  .summary-stat {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    text-align: center;
+  }
+  .summary-stat .val {
+    font-size: 32px;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .summary-stat .label { font-size: 13px; color: var(--muted); margin-top: 4px; }
+  @media (max-width: 600px) {
+    .summary-bar { grid-template-columns: 1fr 1fr; }
+    .hero h1 { font-size: 28px; }
+  }
+  .slider-row {
+    display: flex; align-items: center; gap: 16px;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .slider-label { width: 100px; font-size: 13px; font-weight: 600; flex-shrink: 0; }
+  .slider-val { width: 40px; text-align: right; font-size: 13px; color: var(--accent2); font-weight: 700; }
+  input[type=range] {
+    -webkit-appearance: none;
+    flex: 1;
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    outline: none;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    box-shadow: 0 0 8px rgba(124,58,237,0.6);
+    transition: transform 0.1s;
+  }
+  input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+  .arch-box {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+  }
+  .arch-box .arch-icon { font-size: 28px; margin-bottom: 8px; }
+  .arch-box .arch-title { font-size: 14px; font-weight: 700; }
+  .arch-box .arch-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .connection-line {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent);
+    font-size: 13px;
+    gap: 4px;
+  }
+  .priority-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+  .p-critical { background: #ef4444; }
+  .p-high { background: #f59e0b; }
+  .p-medium { background: #06b6d4; }
+  footer {
+    text-align: center;
+    padding: 40px 24px;
+    color: var(--muted);
+    font-size: 13px;
+    border-top: 1px solid var(--border);
+  }
+  .genre-btn, .mood-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .genre-btn.selected, .mood-btn.selected {
+    background: rgba(124,58,237,0.2);
+    border-color: rgba(124,58,237,0.5);
+    color: #a78bfa;
+  }
+  .genre-btn:hover, .mood-btn:hover { border-color: var(--accent); color: var(--text); }
+  .status-done { color: var(--green); font-weight: 600; }
+  .status-wip { color: var(--accent3); font-weight: 600; }
+  .status-todo { color: var(--muted); }
+  #preview-output {
+    display: none;
+    margin-top: 20px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+  }
+  .preview-header { font-size: 12px; color: var(--accent2); font-weight: 700; margin-bottom: 10px; }
+  .preview-body {
+    font-size: 13px;
+    color: #a78bfa;
+    font-family: monospace;
+    line-height: 1.8;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .preview-prompt-label { color: var(--accent2); }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-badge">Phase 5 마스터 기획서</div>
+  <h1>Suno YT Dashboard 고도화 계획</h1>
+  <p>MusePilot 분석 + YouTube 가이드 기반 · 창의적 AI 파라미터 · Chrome Extension 자동화 · UX 간편화</p>
+  <div class="hero-meta">
+    <span>작성일 <b>2026-03-18</b></span>
+    <span>현재 버전 <b>Phase 4 완료</b></span>
+    <span>배포 <b>suno-yt-dashboard.vercel.app</b></span>
+    <span>다음 목표 <b>Phase 5 — AI 고도화 + Extension</b></span>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="summary-bar">
+    <div class="summary-stat"><div class="val">32</div><div class="label">현재 라우트 수</div></div>
+    <div class="summary-stat"><div class="val">7</div><div class="label">신규 기능 계획</div></div>
+    <div class="summary-stat"><div class="val">1</div><div class="label">Chrome Extension</div></div>
+    <div class="summary-stat"><div class="val">∞</div><div class="label">다중 생성 가능 수</div></div>
+  </div>
+
+  <!-- SECTION 1: 현황 분석 -->
+  <div class="section">
+    <div class="section-title">
+      <div class="icon" style="background:rgba(124,58,237,0.2)">📊</div>
+      현재 프로젝트 현황 (Phase 0~4 완료)
+    </div>
+    <div class="section-desc">MusePilot.pro 분석과 YouTube 가이드를 기반으로 우리 프로젝트와 비교한 현황입니다.</div>
+    <div class="card">
+      <table class="phase-table">
+        <thead>
+          <tr>
+            <th>기능 영역</th>
+            <th>MusePilot 보유</th>
+            <th>우리 프로젝트</th>
+            <th>개선 필요도</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>채널 진단 (1-Click)</td>
+            <td>✅ 30초 자동 진단</td>
+            <td><span class="status-wip">⚡ /audit 있음 (수동)</span></td>
+            <td><span class="badge badge-high">HIGH</span></td>
+          </tr>
+          <tr>
+            <td>AI 가사 생성</td>
+            <td>✅ 자동 프롬프트 생성</td>
+            <td><span class="status-done">✅ /lyrics 있음</span></td>
+            <td><span class="badge badge-medium">MEDIUM — 창의성 파라미터 추가</span></td>
+          </tr>
+          <tr>
+            <td>Suno AI 프롬프트 전송</td>
+            <td>✅ 자동화</td>
+            <td><span class="status-todo">❌ 없음 — 수동 복사</span></td>
+            <td><span class="badge badge-critical">CRITICAL</span></td>
+          </tr>
+          <tr>
+            <td>다중 곡 동시 생성</td>
+            <td>✅ 핵심 기능</td>
+            <td><span class="status-todo">❌ 없음</span></td>
+            <td><span class="badge badge-critical">CRITICAL</span></td>
+          </tr>
+          <tr>
+            <td>BrandKit</td>
+            <td>✅ 핵심 기능</td>
+            <td><span class="status-done">✅ /brand-kit 있음</span></td>
+            <td><span class="badge badge-medium">MEDIUM — UI 개선</span></td>
+          </tr>
+          <tr>
+            <td>창의적 수치 조절</td>
+            <td>❓ 미확인</td>
+            <td><span class="status-todo">❌ 없음</span></td>
+            <td><span class="badge badge-high">HIGH — 사용자 요청</span></td>
+          </tr>
+          <tr>
+            <td>YouTube 스케줄 업로드</td>
+            <td>✅ 자동 예약</td>
+            <td><span class="status-wip">⚡ /schedule (캘린더만)</span></td>
+            <td><span class="badge badge-medium">MEDIUM</span></td>
+          </tr>
+          <tr>
+            <td>반응형 모바일 UI</td>
+            <td>✅</td>
+            <td><span class="status-done">✅ 완료</span></td>
+            <td><span class="badge badge-medium">MEDIUM — 추가 개선</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 2: 창의성 파라미터 -->
+  <div class="section">
+    <div class="section-title">
+      <div class="icon" style="background:rgba(245,158,11,0.2)">🎨</div>
+      신규 기능 1 — AI 창의성 파라미터 시스템
+    </div>
+    <div class="section-desc">Gemini API의 temperature/topP/topK 파라미터를 사용자가 직관적으로 조절할 수 있는 슬라이더 UI입니다.</div>
+
+    <div class="mockup-container">
+      <div class="mockup-title-bar">
+        <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
+        <span style="margin-left:8px">AI 창의성 파라미터 패널 — /lyrics, /ideation 페이지 추가 예정 (실제 동작 데모)</span>
+      </div>
+      <div style="padding:24px;background:#0d0d18">
+        <div style="margin-bottom:20px">
+          <div style="font-size:15px;font-weight:700;margin-bottom:4px">⚡ AI 창의성 조절</div>
+          <div style="font-size:12px;color:var(--muted)">수치를 높일수록 더 독창적이고 예측 불가능한 결과를 생성합니다</div>
+        </div>
+        <div class="slider-row">
+          <div class="slider-label">🌡️ 창의성</div>
+          <input type="range" min="0" max="100" value="70" id="sl1" oninput="updateSlider('sl1','sv1',100)">
+          <div class="slider-val" id="sv1">0.70</div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);padding:4px 0 12px 116px">낮음: 안정적·예측가능 / 높음: 창의적·실험적 (Gemini temperature)</div>
+        <div class="slider-row">
+          <div class="slider-label">🎲 다양성</div>
+          <input type="range" min="0" max="100" value="85" id="sl2" oninput="updateSlider('sl2','sv2',100)">
+          <div class="slider-val" id="sv2">0.85</div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);padding:4px 0 12px 116px">단어 선택의 폭 (Gemini topP)</div>
+        <div class="slider-row">
+          <div class="slider-label">📚 어휘 풀</div>
+          <input type="range" min="1" max="40" value="20" id="sl3" oninput="updateSlider('sl3','sv3',1)">
+          <div class="slider-val" id="sv3">20</div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);padding:4px 0 12px 116px">후보 단어 수 (Gemini topK, 1~40)</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:20px">
+          <button onclick="setPreset(20,40,5,'🎯 정밀')" style="background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.3);color:#67e8f9;border-radius:8px;padding:8px 4px;cursor:pointer;font-size:12px;font-weight:600">🎯 정밀</button>
+          <button onclick="setPreset(50,70,15,'⚖️ 균형')" style="background:rgba(124,58,237,0.1);border:1px solid rgba(124,58,237,0.3);color:#a78bfa;border-radius:8px;padding:8px 4px;cursor:pointer;font-size:12px;font-weight:600">⚖️ 균형</button>
+          <button onclick="setPreset(80,90,25,'🔥 창의적')" style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);color:#fbbf24;border-radius:8px;padding:8px 4px;cursor:pointer;font-size:12px;font-weight:600">🔥 창의적</button>
+          <button onclick="setPreset(100,100,40,'🌀 카오스')" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#f87171;border-radius:8px;padding:8px 4px;cursor:pointer;font-size:12px;font-weight:600">🌀 카오스</button>
+        </div>
+        <div id="preset-label" style="text-align:center;margin-top:10px;font-size:13px;color:var(--muted)">현재 프리셋: <b id="preset-name" style="color:var(--accent2)">⚖️ 균형</b></div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-header"><div class="card-title">🔧 기술 구현 방법</div><span class="badge badge-new">Gemini API</span></div>
+        <ul style="font-size:13px;color:var(--muted);line-height:2;padding-left:16px">
+          <li><b style="color:var(--text)">temperature</b> — 0.0~1.0, 창의성 수치 직결</li>
+          <li><b style="color:var(--text)">topP</b> — 0.0~1.0, 다음 단어 선택 확률 임계값</li>
+          <li><b style="color:var(--text)">topK</b> — 1~40, 후보 단어 수 제한</li>
+          <li>API 라우트 POST body에 creativityParams 추가</li>
+          <li>localStorage에 마지막 설정값 저장 (재방문 시 유지)</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">📍 적용 페이지</div><span class="badge badge-high">5개 페이지</span></div>
+        <ul style="font-size:13px;color:var(--muted);line-height:2;padding-left:16px">
+          <li><b style="color:#a78bfa">/lyrics</b> — AI 가사 생성 (최우선)</li>
+          <li><b style="color:#a78bfa">/ideation</b> — 영상 아이디어</li>
+          <li><b style="color:#a78bfa">/planner</b> — 채널 전략</li>
+          <li><b style="color:#a78bfa">/cover</b> — 커버 아트 설명 생성</li>
+          <li><b style="color:#a78bfa">/comments</b> — AI 답글 생성</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 3: 프롬프트 마법사 -->
+  <div class="section">
+    <div class="section-title">
+      <div class="icon" style="background:rgba(16,185,129,0.2)">✍️</div>
+      신규 기능 2 — 대중 친화적 프롬프트 마법사
+    </div>
+    <div class="section-desc">복잡한 프롬프트 작성 없이 단계별로 선택만 해도 완성되는 "프롬프트 빌더" UX입니다.</div>
+
+    <div class="mockup-container">
+      <div class="mockup-title-bar">
+        <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
+        <span style="margin-left:8px">프롬프트 마법사 UI — /lyrics 페이지 개편 시안 (실제 동작 데모)</span>
+      </div>
+      <div style="padding:24px;background:#0d0d18">
+        <div style="display:flex;gap:12px;align-items:center;margin-bottom:20px">
+          <div style="background:var(--accent);color:white;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0">1</div>
+          <div style="font-size:15px;font-weight:700">장르 선택 <span style="font-size:12px;color:var(--muted);font-weight:400">(중복 선택 가능)</span></div>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px">
+          <button class="genre-btn selected" onclick="this.classList.toggle('selected')">🎵 K-Pop</button>
+          <button class="genre-btn" onclick="this.classList.toggle('selected')">🎸 Rock</button>
+          <button class="genre-btn selected" onclick="this.classList.toggle('selected')">🌊 Lo-Fi</button>
+          <button class="genre-btn" onclick="this.classList.toggle('selected')">🎹 Classical</button>
+          <button class="genre-btn" onclick="this.classList.toggle('selected')">🔥 Hip-Hop</button>
+          <button class="genre-btn" onclick="this.classList.toggle('selected')">💫 R&amp;B</button>
+          <button class="genre-btn" onclick="this.classList.toggle('selected')">🌿 Acoustic</button>
+          <button class="genre-btn" onclick="this.classList.toggle('selected')">⚡ Electronic</button>
+          <button class="genre-btn" onclick="this.classList.toggle('selected')">🎺 Jazz</button>
+          <button class="genre-btn" onclick="this.classList.toggle('selected')">🎻 Cinematic</button>
+        </div>
+
+        <div style="display:flex;gap:12px;align-items:center;margin-bottom:20px">
+          <div style="background:var(--accent);color:white;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0">2</div>
+          <div style="font-size:15px;font-weight:700">감정/분위기 선택</div>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px">
+          <button class="mood-btn" onclick="this.classList.toggle('selected')">😊 행복한</button>
+          <button class="mood-btn selected" onclick="this.classList.toggle('selected')">💔 감성적</button>
+          <button class="mood-btn" onclick="this.classList.toggle('selected')">🌙 몽환적</button>
+          <button class="mood-btn selected" onclick="this.classList.toggle('selected')">💪 에너지틱</button>
+          <button class="mood-btn" onclick="this.classList.toggle('selected')">😢 슬픈</button>
+          <button class="mood-btn" onclick="this.classList.toggle('selected')">🔮 신비로운</button>
+          <button class="mood-btn" onclick="this.classList.toggle('selected')">☁️ 평화로운</button>
+          <button class="mood-btn" onclick="this.classList.toggle('selected')">🎪 신나는</button>
+        </div>
+
+        <div style="display:flex;gap:12px;align-items:center;margin-bottom:20px">
+          <div style="background:var(--accent);color:white;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0">3</div>
+          <div style="font-size:15px;font-weight:700">간단한 주제 입력 <span style="font-size:12px;color:var(--muted);font-weight:400">(1~3단어도 OK!)</span></div>
+        </div>
+        <input type="text" placeholder="예: 여름 바다, 이별, 새벽 드라이브..." id="topic-input"
+          style="width:100%;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px 16px;color:var(--text);font-size:14px;margin-bottom:24px;outline:none">
+
+        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+          <button id="gen-btn" onclick="generatePreview()" style="background:linear-gradient(135deg,var(--accent),#9333ea);color:white;border:none;padding:14px 32px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;flex:1;min-width:200px">
+            ✨ AI 가사 + Suno 프롬프트 생성
+          </button>
+          <div style="font-size:12px;color:var(--muted);flex:1">선택한 장르·감정을 기반으로<br>Suno AI 전용 프롬프트까지 자동 완성됩니다</div>
+        </div>
+
+        <div id="preview-output">
+          <div class="preview-header">✅ 생성 완료 — Suno AI 프롬프트</div>
+          <pre class="preview-body" id="preview-body"></pre>
+          <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+            <button onclick="copyLyrics()" style="background:var(--green);color:#000;border:none;padding:8px 16px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer">📋 가사 복사</button>
+            <button style="background:var(--accent2);color:#000;border:none;padding:8px 16px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer">🚀 Suno로 전송 (Extension)</button>
+            <button onclick="generatePreview()" style="background:var(--accent);color:white;border:none;padding:8px 16px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer">🔄 재생성</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 4: Chrome Extension -->
+  <div class="section">
+    <div class="section-title">
+      <div class="icon" style="background:rgba(16,185,129,0.2)">🔌</div>
+      신규 기능 3 — Chrome Extension (suno-batch-extension)
+    </div>
+    <div class="section-desc">대시보드에서 생성한 가사/프롬프트를 Suno AI 사이트에 자동 전송하고, 다중 곡을 동시에 생성하는 핵심 확장 프로그램입니다.</div>
+
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-header">
+        <div class="card-title">🏗️ Extension 아키텍처 다이어그램</div>
+        <span class="badge badge-ext">Manifest V3</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;align-items:center;margin:16px 0">
+        <div class="arch-box" style="border-color:rgba(124,58,237,0.4);background:rgba(124,58,237,0.05)">
+          <div class="arch-icon">🖥️</div>
+          <div class="arch-title">Dashboard</div>
+          <div class="arch-sub">suno-yt-dashboard<br>.vercel.app</div>
+        </div>
+        <div class="connection-line" style="flex-direction:column;font-size:11px">
+          <div>postMessage</div>
+          <div style="font-size:20px">⟷</div>
+          <div>chrome.runtime</div>
+        </div>
+        <div class="arch-box" style="border-color:rgba(16,185,129,0.4);background:rgba(16,185,129,0.05)">
+          <div class="arch-icon">⚙️</div>
+          <div class="arch-title">Background SW</div>
+          <div class="arch-sub">tab-manager<br>queue-processor</div>
+        </div>
+        <div class="connection-line" style="flex-direction:column;font-size:11px">
+          <div>chrome.tabs</div>
+          <div style="font-size:20px">⟶</div>
+          <div>DOM inject</div>
+        </div>
+        <div class="arch-box" style="border-color:rgba(245,158,11,0.4);background:rgba(245,158,11,0.05)">
+          <div class="arch-icon">🎵</div>
+          <div class="arch-title">Suno AI</div>
+          <div class="arch-sub">suno.com<br>다중 탭 자동화</div>
+        </div>
+      </div>
+      <div style="background:var(--surface);border-radius:8px;padding:12px 16px;font-size:13px;color:var(--muted)">
+        <b style="color:var(--text)">동작 흐름:</b>
+        대시보드에서 "Suno로 전송" 클릭 →
+        Extension popup에 프롬프트 큐 저장 →
+        Background Service Worker가 suno.com 탭 N개 자동 생성 →
+        Content Script가 각 탭에 프롬프트 주입 + 생성 버튼 클릭 →
+        완료 감지 후 대시보드에 알림
+      </div>
+    </div>
+
+    <div class="mockup-container">
+      <div class="mockup-title-bar">
+        <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
+        <span style="margin-left:8px">Extension Popup UI — 320x500px 시안</span>
+      </div>
+      <div style="display:flex;justify-content:center;padding:24px;background:#0a0a12">
+        <div style="width:320px;background:var(--card);border-radius:12px;overflow:hidden;border:1px solid var(--border)">
+          <div style="background:linear-gradient(135deg,var(--accent),#06b6d4);padding:16px;display:flex;align-items:center;gap:10px">
+            <div style="font-size:24px">🎵</div>
+            <div>
+              <div style="font-size:14px;font-weight:800;color:white">Suno Batch</div>
+              <div style="font-size:11px;color:rgba(255,255,255,0.7)">다중 생성 Extension</div>
+            </div>
+            <div style="margin-left:auto;background:rgba(255,255,255,0.2);padding:4px 10px;border-radius:6px;font-size:11px;color:white;font-weight:700">대기중 3</div>
+          </div>
+          <div style="padding:12px">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:10px;font-weight:600">📋 생성 큐 (3/5)</div>
+            <div style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);border-radius:8px;padding:10px;margin-bottom:8px">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+                <span style="font-size:12px;font-weight:700">여름 바다 Lo-Fi</span>
+                <span style="font-size:10px;background:rgba(16,185,129,0.2);color:#6ee7b7;padding:2px 6px;border-radius:4px">✅ 완료</span>
+              </div>
+              <div style="font-size:11px;color:var(--muted)">Lo-Fi K-Pop, emotional, 110 BPM</div>
+            </div>
+            <div style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:8px;padding:10px;margin-bottom:8px">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+                <span style="font-size:12px;font-weight:700">새벽 드라이브</span>
+                <span style="font-size:10px;background:rgba(245,158,11,0.2);color:#fbbf24;padding:2px 6px;border-radius:4px">⏳ 생성중</span>
+              </div>
+              <div style="font-size:11px;color:var(--muted)">R&amp;B, dreamy, 90 BPM</div>
+              <div style="background:var(--border);border-radius:3px;height:4px;margin-top:8px;overflow:hidden">
+                <div style="background:linear-gradient(90deg,var(--accent3),#fb923c);width:60%;height:100%;border-radius:3px"></div>
+              </div>
+            </div>
+            <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:8px">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+                <span style="font-size:12px;font-weight:700">이별의 비</span>
+                <span style="font-size:10px;color:var(--muted)">⏸ 대기</span>
+              </div>
+              <div style="font-size:11px;color:var(--muted)">Acoustic, sad, piano</div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px">
+              <button style="background:var(--accent);color:white;border:none;padding:10px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">▶ 전체 시작</button>
+              <button style="background:var(--surface);border:1px solid var(--border);color:var(--muted);padding:10px;border-radius:8px;font-size:13px;cursor:pointer">⏹ 중지</button>
+            </div>
+            <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px;display:flex;justify-content:space-between;font-size:11px;color:var(--muted)">
+              <span>동시 생성: <b style="color:var(--text)">2탭</b></span>
+              <span style="color:var(--accent2);cursor:pointer">+ 큐에 추가</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-title">📁 프로젝트 파일 구조</div><span class="badge badge-ext">신규 프로젝트</span></div>
+      <div style="background:var(--bg);border-radius:8px;padding:16px;font-family:monospace;font-size:13px;line-height:2;color:var(--text)">
+        <span style="color:var(--muted)">scratch/</span><br>
+        <span style="color:var(--muted)">└── </span><b style="color:var(--accent2)">suno-batch-extension/</b><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--muted)">├── </span><span style="color:var(--accent3)">manifest.json</span> <span style="color:var(--muted);font-size:11px">— MV3, permissions: tabs,activeTab,storage</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--muted)">├── </span>popup/<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--muted)">│&nbsp;&nbsp;&nbsp;├── </span><span style="color:var(--accent)">popup.html</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--muted)">│&nbsp;&nbsp;&nbsp;└── </span><span style="color:var(--accent)">popup.ts</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--muted)">├── </span>background/<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--muted)">│&nbsp;&nbsp;&nbsp;├── </span><span style="color:var(--green)">tab-manager.ts</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--muted)">│&nbsp;&nbsp;&nbsp;├── </span><span style="color:var(--green)">queue-processor.ts</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--muted)">│&nbsp;&nbsp;&nbsp;└── </span><span style="color:var(--green)">completion-detector.ts</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--muted)">├── </span>content/<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--muted)">│&nbsp;&nbsp;&nbsp;├── </span><span style="color:var(--accent2)">suno-injector.ts</span> <span style="color:var(--muted);font-size:11px">— DOM 주입 (셀렉터 추상화)</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--muted)">│&nbsp;&nbsp;&nbsp;└── </span><span style="color:var(--accent2)">observer.ts</span> <span style="color:var(--muted);font-size:11px">— MutationObserver 완료 감지</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--muted)">└── </span><span style="color:var(--muted)">shared/types.ts</span>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 5: UX 간편화 -->
+  <div class="section">
+    <div class="section-title">
+      <div class="icon" style="background:rgba(6,182,212,0.2)">🎯</div>
+      신규 기능 4 — 원클릭 빠른 시작 (UX 간편화)
+    </div>
+    <div class="section-desc">MusePilot의 핵심 성공 요인 — 비전문가도 30초 안에 결과를 얻을 수 있는 간편화 흐름입니다.</div>
+
+    <div class="card">
+      <div class="card-title" style="margin-bottom:16px">🚀 원클릭 빠른 시작 플로우</div>
+      <div class="flow">
+        <div class="flow-step">
+          <div class="step-num">Step 1</div>
+          <div class="step-label">🎵 장르 선택</div>
+          <div class="step-sub">클릭 1번</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <div class="step-num">Step 2</div>
+          <div class="step-label">💬 주제 입력</div>
+          <div class="step-sub">1~3 단어</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <div class="step-num">Step 3</div>
+          <div class="step-label">✨ AI 생성</div>
+          <div class="step-sub">버튼 1개</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <div class="step-num">Step 4</div>
+          <div class="step-label">🚀 Suno 전송</div>
+          <div class="step-sub">Extension 자동</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <div class="step-num">Done!</div>
+          <div class="step-label">🎵 음악 완성</div>
+          <div class="step-sub">약 30초</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-header"><div class="card-title">📱 대시보드 퀵 액션 위젯</div><span class="badge badge-new">신규</span></div>
+        <ul style="font-size:13px;color:var(--muted);line-height:2;padding-left:16px">
+          <li>Dashboard 상단에 "오늘 음악 만들기" 퀵 버튼 추가</li>
+          <li>최근 사용한 장르 3개 즐겨찾기 표시</li>
+          <li>"계속 이어서" — 어제 미완성 가사 바로 불러오기</li>
+          <li>오늘 생성한 곡 수 표시 (일일 진행상황)</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">🌐 언어별 가사 생성</div><span class="badge badge-high">HIGH</span></div>
+        <ul style="font-size:13px;color:var(--muted);line-height:2;padding-left:16px">
+          <li>한국어 / English / 일본어 / 중국어 선택</li>
+          <li>각 언어에 최적화된 시 형식 적용</li>
+          <li>동시에 여러 언어 버전 생성 가능</li>
+          <li>글로벌 채널 운영자를 위한 다언어 가사</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 6: 추가 개선 -->
+  <div class="section">
+    <div class="section-title">
+      <div class="icon" style="background:rgba(245,158,11,0.2)">⚡</div>
+      추가 개선 사항 (기존 기능 강화)
+    </div>
+    <div class="section-desc">현재 있는 기능을 MusePilot 수준으로 고도화하는 개선 목록입니다.</div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-header"><div class="card-title">📊 /audit — 채널 진단 강화</div><span class="badge badge-high">HIGH</span></div>
+        <ul style="font-size:13px;color:var(--muted);line-height:2;padding-left:16px">
+          <li>채널 점수 <b style="color:var(--text)">100점 시스템</b></li>
+          <li>개선 우선순위 TOP 3 자동 추출</li>
+          <li>경쟁 채널 벤치마크 비교</li>
+          <li>MusePilot처럼 30초 빠른 진단 모드 추가</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">📝 /lyrics — 가사 이력 관리</div><span class="badge badge-medium">MEDIUM</span></div>
+        <ul style="font-size:13px;color:var(--muted);line-height:2;padding-left:16px">
+          <li>생성한 가사 Supabase 자동 저장</li>
+          <li>가사 버전 관리 (v1, v2, v3...)</li>
+          <li>즐겨찾기 + 태그 기능</li>
+          <li>가사 → Suno 프롬프트 1:1 연결 추적</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">🎬 /cover — AI 이미지 직접 생성</div><span class="badge badge-high">HIGH</span></div>
+        <ul style="font-size:13px;color:var(--muted);line-height:2;padding-left:16px">
+          <li>현재: SD 프롬프트 텍스트만 생성</li>
+          <li>개선: Imagen/DALL-E API로 실제 이미지 생성</li>
+          <li>생성된 커버 아트 갤러리로 저장</li>
+          <li>YouTube 썸네일로 바로 사용 가능한 해상도</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">📅 /schedule — 자동 업로드 연동</div><span class="badge badge-medium">MEDIUM</span></div>
+        <ul style="font-size:13px;color:var(--muted);line-height:2;padding-left:16px">
+          <li>캘린더에서 날짜 클릭 → 업로드 예약</li>
+          <li>YouTube Data API v3 업로드 연동</li>
+          <li>최적 업로드 시간 AI 추천</li>
+          <li>예약 완료 시 이메일/알림 발송</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 7: 체크리스트 -->
+  <div class="section">
+    <div class="section-title">
+      <div class="icon" style="background:rgba(239,68,68,0.2)">✅</div>
+      Phase 5 전체 구현 체크리스트
+    </div>
+    <div class="section-desc">항목을 클릭하면 완료 처리됩니다. 진행 상황이 브라우저에 자동 저장됩니다.</div>
+
+    <div class="card" style="margin-bottom:24px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div style="font-size:14px;font-weight:700">전체 진행률</div>
+        <div id="progress-text" style="font-size:13px;color:var(--muted)">0 / 36 완료</div>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="main-progress" style="width:0%"></div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-title">🔌 A. Chrome Extension (suno-batch-extension)</div><span class="badge badge-critical">CRITICAL</span></div>
+      <ul class="checklist">
+        <li><input type="checkbox"><div><div class="check-label">A1. 신규 프로젝트 생성 — scratch/suno-batch-extension 폴더 구조</div><div class="check-sub">manifest.json, popup/, background/, content/, shared/ 폴더</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">A2. manifest.json 작성 — Manifest V3, permissions 설정</div><div class="check-sub">tabs, activeTab, storage, host_permissions: suno.com</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">A3. Popup UI 구현 — popup.html + popup.ts (큐 관리)</div><div class="check-sub">프롬프트 목록, 상태 표시, 시작/중지 버튼</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">A4. Background Service Worker — tab-manager.ts</div><div class="check-sub">chrome.tabs.create() 다중 탭 생성 및 풀 관리</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">A5. Background Service Worker — queue-processor.ts</div><div class="check-sub">큐 순서 처리, 탭별 프롬프트 배분</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">A6. Content Script — suno-injector.ts (DOM 주입)</div><div class="check-sub">suno.com 입력 필드 자동 채우기, 생성 버튼 클릭</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">A7. Content Script — observer.ts (완료 감지)</div><div class="check-sub">MutationObserver로 생성 완료 상태 감지</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">A8. Dashboard ↔ Extension 통신 구현</div><div class="check-sub">postMessage → chrome.runtime.sendMessage 브리지</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">A9. "Suno로 전송" 버튼 — /lyrics 페이지에 추가</div><div class="check-sub">Extension 미설치 시 안내 메시지 표시</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">A10. Chrome 개발자 모드 로드 테스트</div><div class="check-sub">chrome://extensions → 개발자 모드 → 압축 해제된 확장 프로그램 로드</div></div></li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-title">🎨 B. AI 창의성 파라미터 시스템</div><span class="badge badge-high">HIGH</span></div>
+      <ul class="checklist">
+        <li><input type="checkbox"><div><div class="check-label">B1. CreativityPanel 컴포넌트 생성</div><div class="check-sub">src/components/CreativityPanel.tsx — temperature/topP/topK 슬라이더</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">B2. 4가지 프리셋 구현 (정밀/균형/창의적/카오스)</div><div class="check-sub">버튼 클릭 시 3개 슬라이더 값 일괄 변경</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">B3. /api/gemini/lyrics 라우트 — creativityParams 수신</div><div class="check-sub">GenerativeModel 생성 시 generationConfig 반영</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">B4. /lyrics 페이지에 CreativityPanel 적용</div><div class="check-sub">기존 폼 하단에 접이식(accordion) 패널로 추가</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">B5. /ideation, /planner, /cover, /comments 페이지 적용</div><div class="check-sub">동일 컴포넌트 재사용, API 라우트별 파라미터 전달</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">B6. localStorage에 마지막 설정값 저장</div><div class="check-sub">페이지 재방문 시 이전 설정 자동 복원</div></div></li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-title">✍️ C. 대중 친화적 프롬프트 마법사</div><span class="badge badge-high">HIGH</span></div>
+      <ul class="checklist">
+        <li><input type="checkbox"><div><div class="check-label">C1. GenreSelector 컴포넌트 — 장르 태그 버튼 (10가지)</div><div class="check-sub">K-Pop, Rock, Lo-Fi, Classical, Hip-Hop, R&amp;B, Acoustic, Electronic, Jazz, Cinematic</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">C2. MoodSelector 컴포넌트 — 감정/분위기 버튼 (8가지)</div><div class="check-sub">행복한, 감성적, 몽환적, 에너지틱, 슬픈, 신비로운, 평화로운, 신나는</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">C3. /lyrics 페이지 개편 — 마법사 3단계 UI로 교체</div><div class="check-sub">Step1: 장르 → Step2: 분위기 → Step3: 주제 (1~3 단어)</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">C4. Gemini 프롬프트 엔지니어링 강화</div><div class="check-sub">장르+분위기+주제 → 가사 + Suno 전용 프롬프트 동시 생성</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">C5. 언어 선택 (한국어/English/日本語/中文)</div><div class="check-sub">선택 언어로 가사 생성, 언어별 시 형식 프롬프트 최적화</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">C6. 생성 결과에 "Suno 프롬프트" 섹션 별도 표시</div><div class="check-sub">복사 버튼 + "Suno로 전송" 버튼 (Extension 연동)</div></div></li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-title">🎯 D. UX 간편화 + 대시보드 개선</div><span class="badge badge-medium">MEDIUM</span></div>
+      <ul class="checklist">
+        <li><input type="checkbox"><div><div class="check-label">D1. Dashboard 퀵 액션 위젯 추가</div><div class="check-sub">"오늘 음악 만들기" 버튼, 최근 사용 장르 즐겨찾기 3개</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">D2. /audit — 채널 점수 100점 시스템 추가</div><div class="check-sub">항목별 점수 + 개선 우선순위 TOP 3 자동 추출</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">D3. /lyrics — 가사 이력 Supabase 저장</div><div class="check-sub">생성 시 자동 저장, 조회/즐겨찾기/태그 기능</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">D4. /cover — 실제 이미지 생성 API 연동</div><div class="check-sub">Gemini Imagen 또는 대체 이미지 생성 API</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">D5. /schedule — 최적 업로드 시간 AI 추천</div><div class="check-sub">채널 조회수 데이터 분석 → 최적 시간대 제안</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">D6. 사이드바 — 최근 방문 페이지 하이라이트</div><div class="check-sub">최근 3개 페이지에 "최근" 뱃지 표시</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">D7. 전역 알림 시스템 (Toast)</div><div class="check-sub">Extension 완료 알림, API 오류 알림, 저장 완료 등</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">D8. 다크/라이트 모드 토글</div><div class="check-sub">Settings 페이지에서 테마 변경, localStorage 저장</div></div></li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-title">🧪 E. 테스트 + 배포</div><span class="badge badge-medium">MEDIUM</span></div>
+      <ul class="checklist">
+        <li><input type="checkbox"><div><div class="check-label">E1. CreativityPanel E2E 테스트 — Playwright</div><div class="check-sub">슬라이더 조작 → API 파라미터 변경 검증</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">E2. Extension 수동 통합 테스트</div><div class="check-sub">대시보드 → Extension → suno.com 전체 플로우</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">E3. npm run build — 빌드 검증</div><div class="check-sub">32 routes 유지, TypeScript 에러 0</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">E4. Vercel 재배포 — 새 기능 프로덕션 반영</div><div class="check-sub">vercel --prod 또는 git push → 자동 배포</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">E5. Chrome 웹스토어 게시 준비 (선택)</div><div class="check-sub">스크린샷 5장, 설명문, privacy policy 준비</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">E6. 최종 문서 업데이트 — README + docs/</div><div class="check-sub">Extension 설치 방법, 새 기능 사용법 추가</div></div></li>
+      </ul>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 8: 타임라인 -->
+  <div class="section">
+    <div class="section-title">
+      <div class="icon" style="background:rgba(6,182,212,0.2)">📅</div>
+      추천 구현 순서
+    </div>
+    <div class="card">
+      <table class="phase-table">
+        <thead>
+          <tr><th>우선순위</th><th>작업</th><th>예상 소요</th><th>이유</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="priority-dot p-critical"></span><b>1순위</b></td>
+            <td>B. 창의성 파라미터 시스템 (B1~B6)</td>
+            <td>1 세션</td>
+            <td>기존 코드 최소 수정, 즉각적 사용자 경험 향상</td>
+          </tr>
+          <tr>
+            <td><span class="priority-dot p-critical"></span><b>2순위</b></td>
+            <td>C. 프롬프트 마법사 (C1~C6)</td>
+            <td>1~2 세션</td>
+            <td>비전문가 접근성 대폭 향상, MusePilot 핵심 UX</td>
+          </tr>
+          <tr>
+            <td><span class="priority-dot p-high"></span><b>3순위</b></td>
+            <td>A. Chrome Extension (A1~A10)</td>
+            <td>3~4 세션</td>
+            <td>가장 임팩트 크지만 별도 프로젝트로 시간 소요</td>
+          </tr>
+          <tr>
+            <td><span class="priority-dot p-medium"></span><b>4순위</b></td>
+            <td>D. UX 간편화 (D1~D8)</td>
+            <td>2 세션</td>
+            <td>기존 기능 강화, 점진적 개선</td>
+          </tr>
+          <tr>
+            <td><span class="priority-dot p-medium"></span><b>5순위</b></td>
+            <td>E. 테스트 + 배포 (E1~E6)</td>
+            <td>1 세션</td>
+            <td>각 카테고리 완료 후 마지막으로 진행</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+  <hr class="divider">
+
+  <!-- ══ 영상 분석 인사이트 배너 ══ -->
+  <div style="background:linear-gradient(135deg,rgba(124,58,237,0.15),rgba(6,182,212,0.1));border:1px solid rgba(124,58,237,0.3);border-radius:16px;padding:24px;margin-bottom:48px">
+    <div style="font-size:13px;color:#a78bfa;font-weight:700;margin-bottom:12px;text-transform:uppercase;letter-spacing:1px">📹 영상 분석 인사이트 — 인베이더스쿨 라이브 강의 (2026-03-03)</div>
+    <div style="font-size:22px;font-weight:800;margin-bottom:8px">영상에서 발견한 핵심 전략 6가지</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px">
+      <div style="background:rgba(0,0,0,0.3);border-radius:10px;padding:14px;font-size:13px">
+        <div style="color:#fbbf24;font-weight:700;margin-bottom:6px">💰 이중 수익 구조</div>
+        유튜브 조회수 수익 + 음원 스트리밍 수익(DistroKid)으로 <b>₩12,695,110</b> 음원 수익 달성 사례
+      </div>
+      <div style="background:rgba(0,0,0,0.3);border-radius:10px;padding:14px;font-size:13px">
+        <div style="color:#6ee7b7;font-weight:700;margin-bottom:6px">🛡️ 저작권 방어 프롬프트</div>
+        "No Choir, No Musical Theater Style, Straight Voice" 패턴으로 저작권 클레임 방어
+      </div>
+      <div style="background:rgba(0,0,0,0.3);border-radius:10px;padding:14px;font-size:13px">
+        <div style="color:#67e8f9;font-weight:700;margin-bottom:6px">🎌 일본 애니 스타일 숏폼</div>
+        Blue Rooftop 채널 — 일본 애니 일러스트 + 감성 보컬로 111K 조회수 달성
+      </div>
+      <div style="background:rgba(0,0,0,0.3);border-radius:10px;padding:14px;font-size:13px">
+        <div style="color:#f87171;font-weight:700;margin-bottom:6px">🔁 루프 마스터 전략</div>
+        시청 지속 시간 늘리는 고급 플리 제작 — 루프 구조로 알고리즘 V-매칭 극대화
+      </div>
+      <div style="background:rgba(0,0,0,0.3);border-radius:10px;padding:14px;font-size:13px">
+        <div style="color:#a78bfa;font-weight:700;margin-bottom:6px">🖼️ 나노바나나 썸네일</div>
+        감성형·클릭유도형·TV목업 등 6가지 스타일 AI 썸네일 자동 생성 시스템
+      </div>
+      <div style="background:rgba(0,0,0,0.3);border-radius:10px;padding:14px;font-size:13px">
+        <div style="color:#fbbf24;font-weight:700;margin-bottom:6px">🤖 Suno 클릭 자동화 로직</div>
+        강의 커리큘럼에 "Suno AI &amp; 수노 클릭 자동화 로직" 포함 — Extension 필요성 확인
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SECTION F: 수익화 시스템 ══ -->
+  <div class="section">
+    <div class="section-title">
+      <div class="icon" style="background:rgba(245,158,11,0.2)">💰</div>
+      신규 기능 5 — 이중 수익 추적 시스템 (DistroKid + YouTube)
+    </div>
+    <div class="section-desc">영상에서 확인: 유튜브 채널 수익 + 음원 스트리밍 수익 ₩12,695,110 사례. 두 수익원을 한 대시보드에서 통합 관리합니다.</div>
+
+    <div class="mockup-container">
+      <div class="mockup-title-bar">
+        <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
+        <span style="margin-left:8px">💰 수익 통합 대시보드 — /revenue 신규 페이지 시안</span>
+      </div>
+      <div style="padding:24px;background:#0d0d18">
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px">
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;text-align:center">
+            <div style="font-size:11px;color:var(--muted);margin-bottom:6px">이번달 YouTube 수익</div>
+            <div style="font-size:24px;font-weight:800;color:#fbbf24">₩ 127,500</div>
+            <div style="font-size:11px;color:var(--green);margin-top:4px">▲ 23% 전월 대비</div>
+          </div>
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;text-align:center">
+            <div style="font-size:11px;color:var(--muted);margin-bottom:6px">이번달 음원 수익</div>
+            <div style="font-size:24px;font-weight:800;color:#6ee7b7">₩ 834,220</div>
+            <div style="font-size:11px;color:var(--green);margin-top:4px">DistroKid 연동</div>
+          </div>
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;text-align:center">
+            <div style="font-size:11px;color:var(--muted);margin-bottom:6px">총 등록 음원</div>
+            <div style="font-size:24px;font-weight:800;color:#a78bfa">48곡</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px">Spotify·Apple·YT Music</div>
+          </div>
+          <div style="background:linear-gradient(135deg,rgba(124,58,237,0.2),rgba(6,182,212,0.1));border:1px solid rgba(124,58,237,0.3);border-radius:10px;padding:16px;text-align:center">
+            <div style="font-size:11px;color:var(--muted);margin-bottom:6px">이번달 합산 수익</div>
+            <div style="font-size:24px;font-weight:800;background:linear-gradient(135deg,#fbbf24,#6ee7b7);-webkit-background-clip:text;-webkit-text-fill-color:transparent">₩ 961,720</div>
+            <div style="font-size:11px;color:#a78bfa;margin-top:4px">목표: ₩1,000,000</div>
+          </div>
+        </div>
+
+        <!-- DistroKid 유통 현황 -->
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px">
+          <div style="font-size:14px;font-weight:700;margin-bottom:12px">🎵 DistroKid 유통 현황</div>
+          <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;text-align:center">
+            <div style="background:rgba(29,185,84,0.1);border:1px solid rgba(29,185,84,0.3);border-radius:8px;padding:10px">
+              <div style="font-size:18px">🟢</div>
+              <div style="font-size:12px;font-weight:700;margin:4px 0">Spotify</div>
+              <div style="font-size:11px;color:var(--muted)">1.2M 스트림</div>
+            </div>
+            <div style="background:rgba(255,87,34,0.1);border:1px solid rgba(255,87,34,0.3);border-radius:8px;padding:10px">
+              <div style="font-size:18px">🍎</div>
+              <div style="font-size:12px;font-weight:700;margin:4px 0">Apple Music</div>
+              <div style="font-size:11px;color:var(--muted)">340K 스트림</div>
+            </div>
+            <div style="background:rgba(255,0,0,0.1);border:1px solid rgba(255,0,0,0.3);border-radius:8px;padding:10px">
+              <div style="font-size:18px">▶️</div>
+              <div style="font-size:12px;font-weight:700;margin:4px 0">YT Music</div>
+              <div style="font-size:11px;color:var(--muted)">890K 스트림</div>
+            </div>
+            <div style="background:rgba(0,180,216,0.1);border:1px solid rgba(0,180,216,0.3);border-radius:8px;padding:10px">
+              <div style="font-size:18px">🎵</div>
+              <div style="font-size:12px;font-weight:700;margin:4px 0">멜론/지니</div>
+              <div style="font-size:11px;color:var(--muted)">210K 스트림</div>
+            </div>
+            <div style="background:rgba(124,58,237,0.1);border:1px solid rgba(124,58,237,0.3);border-radius:8px;padding:10px">
+              <div style="font-size:18px">+</div>
+              <div style="font-size:12px;font-weight:700;margin:4px 0">기타 150개</div>
+              <div style="font-size:11px;color:var(--muted)">플랫폼</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 수익화 체크리스트 -->
+        <div style="background:var(--card);border:1px solid rgba(16,185,129,0.3);border-radius:10px;padding:16px">
+          <div style="font-size:14px;font-weight:700;margin-bottom:10px;color:var(--green)">✅ 음원 유통 전 체크리스트</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;color:var(--muted)">
+            <div>☑ 저작권 방어 프롬프트 사용 여부</div>
+            <div>☑ 곡 제목 + 설명 메타데이터 입력</div>
+            <div>☑ 장르/분위기 태그 설정</div>
+            <div>☑ ISRC 코드 발급 확인</div>
+            <div>☑ 커버 아트 1:1 비율 (3000x3000px)</div>
+            <div>☑ DistroKid 업로드 완료</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-header"><div class="card-title">🛡️ 저작권 방어 프롬프트 생성기</div><span class="badge badge-critical">CRITICAL</span></div>
+        <div style="font-size:13px;color:var(--muted);line-height:2">
+          영상에서 강조: 유통 전 반드시 저작권 방어 프롬프트 사용<br>
+          <b style="color:var(--text)">배제 키워드 패턴:</b><br>
+          • No Choir / No Background Vocals<br>
+          • No Musical Theater Style<br>
+          • Straight Voice (에코·리버브 과다 배제)<br>
+          • Original Composition Only<br>
+          • No Sampling<br>
+          → AI가 자동으로 배제 키워드 조합 생성
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">📊 수익 계산기</div><span class="badge badge-new">신규</span></div>
+        <div style="font-size:13px;color:var(--muted);line-height:2">
+          • 스트리밍 수익 예측 (플랫폼별 단가 × 스트림 수)<br>
+          • YouTube RPM × 조회수 → 예상 수익<br>
+          • 영상 1개당 평균 수익 추적<br>
+          • 월별 목표 수익 설정 + 진행률<br>
+          • 음원 1곡 당 ROI 계산 (제작 시간 대비)<br>
+          • DistroKid 연간 구독비 회수 시점 계산
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ══ SECTION G: 보컬 스타일 라이브러리 ══ -->
+  <div class="section">
+    <div class="section-title">
+      <div class="icon" style="background:rgba(124,58,237,0.2)">🎤</div>
+      신규 기능 6 — 보컬 스타일 라이브러리 (겹치지 않는 8가지 톤)
+    </div>
+    <div class="section-desc">YouTube 대중은 유니크하고 특이한 것에 꽂힙니다. 겹치지 않는 보컬 캐릭터를 미리 정의해두고 클릭 한 번으로 프롬프트에 적용합니다.</div>
+
+    <div class="mockup-container">
+      <div class="mockup-title-bar">
+        <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
+        <span style="margin-left:8px">🎤 보컬 스타일 라이브러리 — /lyrics 프롬프트 마법사 통합 시안</span>
+      </div>
+      <div style="padding:24px;background:#0d0d18">
+        <div style="font-size:14px;font-weight:700;margin-bottom:16px">🎤 보컬 캐릭터 선택 <span style="font-size:12px;color:var(--muted);font-weight:400">(클릭 1번으로 Suno 프롬프트 자동 적용)</span></div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px" id="vocal-grid">
+
+          <div class="vocal-card" onclick="selectVocal(this,'일본 감성 귀여운 여자','Japanese-style cute female vocal, soft breathy tone, airy falsetto, J-pop idol, sweet and delicate, reverb light')" style="background:rgba(255,182,193,0.1);border:1px solid rgba(255,182,193,0.3);border-radius:10px;padding:14px;cursor:pointer;transition:all 0.2s">
+            <div style="font-size:24px;margin-bottom:6px">🌸</div>
+            <div style="font-size:13px;font-weight:700;margin-bottom:4px">일본 감성 귀여운 여자</div>
+            <div style="font-size:11px;color:var(--muted)">J-pop idol, soft breathy, airy falsetto</div>
+          </div>
+
+          <div class="vocal-card" onclick="selectVocal(this,'다크 힙합 흑인 남자','Dark hip hop male vocal, deep raspy voice, trap flow, Atlanta style, gritty and aggressive, 808 bass')" style="background:rgba(50,50,80,0.3);border:1px solid rgba(99,99,150,0.4);border-radius:10px;padding:14px;cursor:pointer;transition:all 0.2s">
+            <div style="font-size:24px;margin-bottom:6px">🎤</div>
+            <div style="font-size:13px;font-weight:700;margin-bottom:4px">다크 힙합 (흑인 남자)</div>
+            <div style="font-size:11px;color:var(--muted)">Deep raspy, trap flow, Atlanta style</div>
+          </div>
+
+          <div class="vocal-card" onclick="selectVocal(this,'한국 감성 발라드 남자','Modern Korean Ballad, Male Solo Vocal, No Choir, No Background Vocals, Straight Voice, Grand Piano, Subdued Emotion, No Vibrato')" style="background:rgba(30,144,255,0.1);border:1px solid rgba(30,144,255,0.3);border-radius:10px;padding:14px;cursor:pointer;transition:all 0.2s">
+            <div style="font-size:24px;margin-bottom:6px">🌙</div>
+            <div style="font-size:13px;font-weight:700;margin-bottom:4px">한국 감성 발라드 남자</div>
+            <div style="font-size:11px;color:var(--muted)">Straight Voice, No Vibrato, Grand Piano</div>
+          </div>
+
+          <div class="vocal-card" onclick="selectVocal(this,'다크 K-pop 여자','Dark K-pop, Intense Female Vocals, Synth-heavy, Powerful belt, Energetic, Edgy electronic production, BPM 105')" style="background:rgba(139,0,139,0.15);border:1px solid rgba(139,0,139,0.4);border-radius:10px;padding:14px;cursor:pointer;transition:all 0.2s">
+            <div style="font-size:24px;margin-bottom:6px">⚡</div>
+            <div style="font-size:13px;font-weight:700;margin-bottom:4px">다크 K-pop 여자</div>
+            <div style="font-size:11px;color:var(--muted)">Intense, Synth-heavy, Powerful belt</div>
+          </div>
+
+          <div class="vocal-card" onclick="selectVocal(this,'Neo-Soul R&B 남자','Neo-Soul R&B, Husky Male Vocals, Romantic Ballad, Dreamy Synth, Smooth falsetto breaks, Soulful, Intimate')" style="background:rgba(139,90,43,0.15);border:1px solid rgba(200,150,80,0.4);border-radius:10px;padding:14px;cursor:pointer;transition:all 0.2s">
+            <div style="font-size:24px;margin-bottom:6px">🔥</div>
+            <div style="font-size:13px;font-weight:700;margin-bottom:4px">Neo-Soul R&amp;B 남자</div>
+            <div style="font-size:11px;color:var(--muted)">Husky, Dreamy Synth, Soulful falsetto</div>
+          </div>
+
+          <div class="vocal-card" onclick="selectVocal(this,'몽환적 Lo-Fi 여자','Lo-Fi female vocal, dreamy and hazy, slight cassette warmth, whisper-soft delivery, bedroom pop, nostalgic')" style="background:rgba(100,149,237,0.1);border:1px solid rgba(100,149,237,0.3);border-radius:10px;padding:14px;cursor:pointer;transition:all 0.2s">
+            <div style="font-size:24px;margin-bottom:6px">☁️</div>
+            <div style="font-size:13px;font-weight:700;margin-bottom:4px">몽환적 Lo-Fi 여자</div>
+            <div style="font-size:11px;color:var(--muted)">Whisper-soft, cassette warmth, bedroom pop</div>
+          </div>
+
+          <div class="vocal-card" onclick="selectVocal(this,'붐뱁 소울 남자','Boom bap soul hip hop, raspy male voice, sentimental, Grand piano, New York underground, 90s vibe, 100 BPM')" style="background:rgba(255,140,0,0.1);border:1px solid rgba(255,140,0,0.3);border-radius:10px;padding:14px;cursor:pointer;transition:all 0.2s">
+            <div style="font-size:24px;margin-bottom:6px">🎹</div>
+            <div style="font-size:13px;font-weight:700;margin-bottom:4px">붐뱁 소울 남자</div>
+            <div style="font-size:11px;color:var(--muted)">Raspy, Grand Piano, NY underground 90s</div>
+          </div>
+
+          <div class="vocal-card" onclick="selectVocal(this,'시네마틱 웅장 여자','Cinematic orchestral female soprano, powerful and majestic, no lyrics, wordless vocals, film score style, epic')" style="background:rgba(210,180,140,0.1);border:1px solid rgba(210,180,140,0.3);border-radius:10px;padding:14px;cursor:pointer;transition:all 0.2s">
+            <div style="font-size:24px;margin-bottom:6px">🎻</div>
+            <div style="font-size:13px;font-weight:700;margin-bottom:4px">시네마틱 웅장 여자</div>
+            <div style="font-size:11px;color:var(--muted)">Soprano, wordless, film score, epic</div>
+          </div>
+        </div>
+
+        <div id="vocal-selected" style="display:none;margin-top:16px;background:var(--card);border:1px solid rgba(124,58,237,0.4);border-radius:10px;padding:14px">
+          <div style="font-size:12px;color:#a78bfa;font-weight:700;margin-bottom:6px">✅ 선택된 보컬 스타일 — Suno 프롬프트에 자동 추가됩니다</div>
+          <div id="vocal-prompt-text" style="font-size:12px;color:var(--muted);font-family:monospace;line-height:1.6"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ══ SECTION H: 썸네일 스타일 시스템 ══ -->
+  <div class="section">
+    <div class="section-title">
+      <div class="icon" style="background:rgba(16,185,129,0.2)">🖼️</div>
+      신규 기능 7 — 유튜브 썸네일 스타일 시스템 (나노바나나 방식)
+    </div>
+    <div class="section-desc">영상에서 확인: 나노바나나 툴로 감성형·클릭유도형·TV목업 등 6가지 스타일 AI 썸네일 생성. 우리 /cover 페이지를 이 방식으로 고도화합니다.</div>
+
+    <!-- 썸네일 스타일 비교 -->
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-header"><div class="card-title">🎨 6가지 썸네일 스타일 (클릭해서 프롬프트 확인)</div><span class="badge badge-new">/cover 페이지 통합</span></div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:8px">
+
+        <!-- 일본 애니 스타일 -->
+        <div onclick="showThumb('anime')" style="cursor:pointer;border:2px solid transparent;border-radius:12px;overflow:hidden;transition:all 0.2s" id="thumb-anime">
+          <div style="background:linear-gradient(135deg,#1a0533,#0a1a3e,#2a0a3e);height:120px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative">
+            <div style="font-size:36px">🌸</div>
+            <div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,0.8));padding:8px;text-align:center">
+              <div style="font-size:10px;color:rgba(255,255,255,0.6)">さよならの予後</div>
+              <div style="font-size:12px;font-weight:700;color:white">Before We Say Goodbye</div>
+            </div>
+          </div>
+          <div style="background:var(--card);padding:10px;border-bottom-left-radius:10px;border-bottom-right-radius:10px">
+            <div style="font-size:13px;font-weight:700">🎌 일본 애니 감성</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px">Blue Rooftop 스타일, 111K 조회수</div>
+          </div>
+        </div>
+
+        <!-- 힙합 감성 스타일 -->
+        <div onclick="showThumb('hiphop')" style="cursor:pointer;border:2px solid transparent;border-radius:12px;overflow:hidden;transition:all 0.2s" id="thumb-hiphop">
+          <div style="background:linear-gradient(135deg,#0a0a0a,#1a0a0a,#0a0a1a);height:120px;display:flex;flex-direction:column;align-items:center;justify-content:center">
+            <div style="font-size:36px">🔥</div>
+            <div style="font-size:12px;font-weight:700;color:#fbbf24;margin-top:4px">DARK SIDE</div>
+            <div style="font-size:10px;color:rgba(255,255,255,0.5)">Vol. 01</div>
+          </div>
+          <div style="background:var(--card);padding:10px">
+            <div style="font-size:13px;font-weight:700">🎤 힙합 감성풍</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px">Dark aesthetic, 거칠고 강렬한 이미지</div>
+          </div>
+        </div>
+
+        <!-- 자연풍 Lo-Fi -->
+        <div onclick="showThumb('nature')" style="cursor:pointer;border:2px solid transparent;border-radius:12px;overflow:hidden;transition:all 0.2s" id="thumb-nature">
+          <div style="background:linear-gradient(135deg,#0a1a0a,#0a2a1a,#1a2a0a);height:120px;display:flex;flex-direction:column;align-items:center;justify-content:center">
+            <div style="font-size:36px">🌿</div>
+            <div style="font-size:12px;font-weight:700;color:#6ee7b7;margin-top:4px">Morning Dew</div>
+            <div style="font-size:10px;color:rgba(255,255,255,0.5)">lo-fi session</div>
+          </div>
+          <div style="background:var(--card);padding:10px">
+            <div style="font-size:13px;font-weight:700">🌿 자연·힐링풍</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px">Lo-Fi aesthetic, 자연 배경, 감성적</div>
+          </div>
+        </div>
+
+        <!-- 인간 모델 스타일 -->
+        <div onclick="showThumb('model')" style="cursor:pointer;border:2px solid transparent;border-radius:12px;overflow:hidden;transition:all 0.2s" id="thumb-model">
+          <div style="background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460);height:120px;display:flex;flex-direction:column;align-items:center;justify-content:center">
+            <div style="font-size:36px">👤</div>
+            <div style="font-size:12px;font-weight:700;color:#67e8f9;margin-top:4px">Midnight Story</div>
+          </div>
+          <div style="background:var(--card);padding:10px">
+            <div style="font-size:13px;font-weight:700">👤 인간 모델</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px">실사 모델, 시네마틱 조명, 감성 인물</div>
+          </div>
+        </div>
+
+        <!-- TV 목업 스타일 -->
+        <div onclick="showThumb('tv')" style="cursor:pointer;border:2px solid transparent;border-radius:12px;overflow:hidden;transition:all 0.2s" id="thumb-tv">
+          <div style="background:linear-gradient(135deg,#2a2a2a,#1a1a1a);height:120px;display:flex;flex-direction:column;align-items:center;justify-content:center">
+            <div style="font-size:32px">📺</div>
+            <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-top:4px">공간 TV 목업</div>
+            <div style="font-size:11px;color:white;font-weight:700">Premium Lounge</div>
+          </div>
+          <div style="background:var(--card);padding:10px">
+            <div style="font-size:13px;font-weight:700">📺 공간 TV 목업</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px">나노바나나 스타일, 거실·카페·침실 배경</div>
+          </div>
+        </div>
+
+        <!-- 클릭유도형 -->
+        <div onclick="showThumb('click')" style="cursor:pointer;border:2px solid transparent;border-radius:12px;overflow:hidden;transition:all 0.2s" id="thumb-click">
+          <div style="background:linear-gradient(135deg,#7c0000,#b30000,#ff0000);height:120px;display:flex;flex-direction:column;align-items:center;justify-content:center">
+            <div style="font-size:32px">‼️</div>
+            <div style="font-size:14px;font-weight:900;color:white;margin-top:2px">이 노래 들으면</div>
+            <div style="font-size:12px;color:#fbbf24;font-weight:700">못 멈춰요</div>
+          </div>
+          <div style="background:var(--card);padding:10px">
+            <div style="font-size:13px;font-weight:700">‼️ 클릭유도형</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px">강렬한 텍스트, 클릭 자극, 고조회수 패턴</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 선택된 썸네일 프롬프트 -->
+      <div id="thumb-prompt-box" style="display:none;margin-top:16px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px">
+        <div style="font-size:12px;color:var(--accent2);font-weight:700;margin-bottom:8px" id="thumb-style-name">선택된 스타일</div>
+        <div style="font-size:12px;color:var(--muted);font-family:monospace;line-height:1.8" id="thumb-prompt-content"></div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button onclick="copyThumbPrompt()" style="background:var(--accent);color:white;border:none;padding:7px 14px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer">📋 Midjourney 프롬프트 복사</button>
+          <button onclick="copyThumbPrompt()" style="background:rgba(6,182,212,0.2);color:#67e8f9;border:1px solid rgba(6,182,212,0.3);padding:7px 14px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer">🎨 DALL-E 프롬프트 복사</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ══ SECTION I: 황금 Suno 프롬프트 라이브러리 ══ -->
+  <div class="section">
+    <div class="section-title">
+      <div class="icon" style="background:rgba(245,158,11,0.2)">⭐</div>
+      신규 기능 8 — 황금 Suno 프롬프트 라이브러리 (영상 실증 예시 포함)
+    </div>
+    <div class="section-desc">영상에서 실제로 사용된 프롬프트들을 분석하여 고퀄리티 음원 생성을 위한 황금 레퍼런스 라이브러리를 구축합니다.</div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-title">📚 검증된 Suno 프롬프트 레시피 (영상 실증)</div><span class="badge badge-high">HIGH</span></div>
+
+      <div style="margin-top:8px">
+        <!-- 프롬프트 카드들 -->
+        <div style="background:rgba(50,50,80,0.3);border:1px solid rgba(99,99,200,0.3);border-radius:10px;padding:14px;margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+            <div>
+              <span style="font-size:13px;font-weight:700">🎹 붐뱁 소울 힙합</span>
+              <span style="font-size:11px;color:var(--muted);margin-left:8px">→ "Midnight Echoes" 실제 사용</span>
+            </div>
+            <span class="badge badge-ext">검증됨</span>
+          </div>
+          <div style="font-size:12px;color:#a78bfa;font-family:monospace;line-height:1.6;background:rgba(0,0,0,0.3);padding:10px;border-radius:6px">boom bap soul hip hop, grand piano, raspy male voice, sentimental, 100 bpm</div>
+        </div>
+
+        <div style="background:rgba(139,0,139,0.1);border:1px solid rgba(139,0,139,0.3);border-radius:10px;padding:14px;margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+            <div>
+              <span style="font-size:13px;font-weight:700">⚡ 다크 K-pop</span>
+              <span style="font-size:11px;color:var(--muted);margin-left:8px">→ "어둠 속한 줄기 빛" 실제 사용</span>
+            </div>
+            <span class="badge badge-ext">검증됨</span>
+          </div>
+          <div style="font-size:12px;color:#c084fc;font-family:monospace;line-height:1.6;background:rgba(0,0,0,0.3);padding:10px;border-radius:6px">Dark K-pop, Intense, Female Vocals, Synth-heavy, Energetic BPM: 105</div>
+        </div>
+
+        <div style="background:rgba(30,60,100,0.3);border:1px solid rgba(60,100,200,0.3);border-radius:10px;padding:14px;margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+            <div>
+              <span style="font-size:13px;font-weight:700">🌙 한국 발라드 (저작권 방어 포함)</span>
+              <span style="font-size:11px;color:var(--muted);margin-left:8px">→ "영원한 그리움" 실제 사용</span>
+            </div>
+            <span class="badge badge-ext">검증됨</span>
+          </div>
+          <div style="font-size:12px;color:#93c5fd;font-family:monospace;line-height:1.6;background:rgba(0,0,0,0.3);padding:10px;border-radius:6px">Modern Korean Ballad, Male Solo Vocal, No Choir, No Background Vocals, No Musical Theater Style, Straight Voice, Grand Piano, Subdued Emotion</div>
+        </div>
+
+        <div style="background:rgba(100,50,0,0.3);border:1px solid rgba(200,120,0,0.3);border-radius:10px;padding:14px;margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+            <div>
+              <span style="font-size:13px;font-weight:700">🔥 Neo-Soul R&amp;B</span>
+              <span style="font-size:11px;color:var(--muted);margin-left:8px">→ "First Glimpse" 실제 사용</span>
+            </div>
+            <span class="badge badge-ext">검증됨</span>
+          </div>
+          <div style="font-size:12px;color:#fbbf24;font-family:monospace;line-height:1.6;background:rgba(0,0,0,0.3);padding:10px;border-radius:6px">Neo-Soul R&amp;B, Romantic Ballad, Husky Male Vocals, Dreamy Synth, Smooth falsetto breaks, 95 BPM</div>
+        </div>
+
+        <div style="background:rgba(255,182,193,0.08);border:1px solid rgba(255,182,193,0.25);border-radius:10px;padding:14px;margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+            <div>
+              <span style="font-size:13px;font-weight:700">🌸 K-pop 발라드 여성 (감성형)</span>
+              <span style="font-size:11px;color:var(--muted);margin-left:8px">→ "Fluttering Pages" 실제 사용</span>
+            </div>
+            <span class="badge badge-ext">검증됨</span>
+          </div>
+          <div style="font-size:12px;color:#f9a8d4;font-family:monospace;line-height:1.6;background:rgba(0,0,0,0.3);padding:10px;border-radius:6px">K-pop, romantic ballad, female vocal, grand piano, emotional, 95 BPM, sentimental</div>
+        </div>
+
+        <div style="background:rgba(0,80,0,0.2);border:1px solid rgba(0,180,0,0.3);border-radius:10px;padding:14px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+            <div>
+              <span style="font-size:13px;font-weight:700">💎 발라드 고급형 (No Vibrato 저작권 방어)</span>
+              <span style="font-size:11px;color:var(--muted);margin-left:8px">→ "영원한 그리움 고급버전"</span>
+            </div>
+            <span class="badge badge-ext">검증됨</span>
+          </div>
+          <div style="font-size:12px;color:#6ee7b7;font-family:monospace;line-height:1.6;background:rgba(0,0,0,0.3);padding:10px;border-radius:6px">Sophisticated Modern Ballad, Male Solo, Deep and Solid Vocal, No Vibrato, Straight Voice, Airy but Firm, Subdued Emotion, Grand Piano, Cinematic</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ══ SECTION J: 유튜브 알고리즘 V-매칭 ══ -->
+  <div class="section">
+    <div class="section-title">
+      <div class="icon" style="background:rgba(239,68,68,0.2)">📈</div>
+      신규 기능 9 — 유튜브 V-매칭 전략 + 루프 마스터 최적화
+    </div>
+    <div class="section-desc">영상 3강 커리큘럼에서 발견: "유튜브 V-매칭 전략", "시청 지속 시간 늘리는 루프 마스터 프로", "유튜브가 좋아하는 로직"을 대시보드에 가이드로 통합합니다.</div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-header"><div class="card-title">🔄 루프 마스터 — 시청 지속 시간 최적화</div><span class="badge badge-high">HIGH</span></div>
+        <div style="font-size:13px;color:var(--muted);line-height:2">
+          <b style="color:var(--text)">영상에서 확인된 전략:</b><br>
+          • 플리(플레이리스트) 루프 구조 설계 — 끊임없이 재생되도록<br>
+          • 곡 간 BPM 흐름 설계 (빠름→느림→빠름 패턴)<br>
+          • 첫 30초 강렬한 훅(Hook) 배치로 이탈률 감소<br>
+          • <b style="color:var(--text)">/planner 페이지에 루프 설계 도우미 추가</b><br>
+          • Gemini가 최적 곡 순서 자동 추천
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">🎯 V-매칭 전략 분석기</div><span class="badge badge-high">HIGH</span></div>
+        <div style="font-size:13px;color:var(--muted);line-height:2">
+          <b style="color:var(--text)">V-매칭 = Viewer-Matching:</b><br>
+          • 채널 분위기와 AI 생성 음악 스타일 일관성 유지<br>
+          • 시청자 구독 패턴 분석 → 맞춤 장르 추천<br>
+          • 숏폼(Shorts) + 롱폼(Playlist) 동시 운영 전략<br>
+          • <b style="color:var(--text)">/audit 페이지에 V-매칭 점수 추가</b><br>
+          • 기존 채널 콘텐츠와 AI 음악 매칭도 측정
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-title">📱 숏폼(Shorts) 플리 운영 전략</div><span class="badge badge-new">트렌드</span></div>
+      <div class="flow">
+        <div class="flow-step">
+          <div class="step-num">콘텐츠</div>
+          <div class="step-label">🎌 일본 애니 숏폼</div>
+          <div class="step-sub">さよならの予後 스타일<br>111K views 사례</div>
+        </div>
+        <div class="flow-arrow">+</div>
+        <div class="flow-step">
+          <div class="step-num">음악</div>
+          <div class="step-label">🎵 Suno AI 생성</div>
+          <div class="step-sub">감성 보컬<br>30~60초 최적화</div>
+        </div>
+        <div class="flow-arrow">+</div>
+        <div class="flow-step">
+          <div class="step-num">유통</div>
+          <div class="step-label">💿 DistroKid 등록</div>
+          <div class="step-sub">ISRC 발급<br>150+ 플랫폼 동시 유통</div>
+        </div>
+        <div class="flow-arrow">=</div>
+        <div class="flow-step" style="border-color:rgba(245,158,11,0.4);background:rgba(245,158,11,0.05)">
+          <div class="step-num">수익</div>
+          <div class="step-label">💰 이중 수익</div>
+          <div class="step-sub">조회수 + 스트리밍<br>₩12M+ 사례</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ══ 추가 체크리스트 F~J ══ -->
+  <div class="section">
+    <div class="section-title">
+      <div class="icon" style="background:rgba(16,185,129,0.2)">✅</div>
+      추가 구현 체크리스트 (영상 기반 신규 기능 F~J)
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-title">💰 F. 수익화 시스템 (DistroKid + 음원 유통)</div><span class="badge badge-critical">CRITICAL</span></div>
+      <ul class="checklist">
+        <li><input type="checkbox"><div><div class="check-label">F1. /revenue 신규 페이지 생성 — 수익 통합 대시보드</div><div class="check-sub">YouTube 수익 + DistroKid 음원 수익 통합 표시</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">F2. 음원 유통 전 체크리스트 컴포넌트</div><div class="check-sub">저작권 방어 프롬프트 확인, ISRC, 커버아트 규격 등 6개 항목</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">F3. DistroKid 수익 수동 입력 + 추적 기능</div><div class="check-sub">플랫폼별(Spotify/Apple/YT Music/멜론) 스트리밍 수 입력 및 계산</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">F4. 수익 계산기 — RPM × 조회수, 스트리밍 단가 × 스트림수</div><div class="check-sub">월별 목표 설정 + 진행률 프로그레스바</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">F5. 음원 등록 현황 테이블 — 곡 목록, 유통 상태, 수익</div><div class="check-sub">Supabase에 songs 테이블 추가, ISRC/유통플랫폼/수익 컬럼</div></div></li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-title">🛡️ G. 저작권 방어 프롬프트 생성기</div><span class="badge badge-critical">CRITICAL</span></div>
+      <ul class="checklist">
+        <li><input type="checkbox"><div><div class="check-label">G1. CopyrightShield 컴포넌트 생성</div><div class="check-sub">src/components/CopyrightShield.tsx — 배제 키워드 자동 추가 UI</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">G2. 저작권 위험도 체크 로직</div><div class="check-sub">프롬프트에 특정 아티스트명/스타일명 감지 시 경고 표시</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">G3. 안전 배제 키워드 자동 삽입</div><div class="check-sub">"No Choir, No Background Vocals, No Musical Theater Style, Straight Voice" 자동 추가</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">G4. /lyrics 페이지 — DistroKid 유통 목적 토글</div><div class="check-sub">토글 ON 시 저작권 방어 프롬프트 자동 강화</div></div></li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-title">🎤 H. 보컬 스타일 라이브러리</div><span class="badge badge-high">HIGH</span></div>
+      <ul class="checklist">
+        <li><input type="checkbox"><div><div class="check-label">H1. VocalStyleLibrary 컴포넌트 생성 — 8가지 보컬 프리셋</div><div class="check-sub">일본 귀여운 여자, 다크 힙합, 한국 발라드, 다크 K-pop, Neo-Soul R&amp;B, Lo-Fi 여자, 붐뱁 소울, 시네마틱 소프라노</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">H2. /lyrics 프롬프트 마법사 Step 1.5에 보컬 선택 추가</div><div class="check-sub">장르 선택 → 보컬 스타일 선택 → 분위기 선택 → 주제 입력</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">H3. 커스텀 보컬 프리셋 저장 기능</div><div class="check-sub">사용자가 즐겨쓰는 보컬 조합 저장, 최대 5개</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">H4. 보컬 스타일 + 장르 조합 추천 AI</div><div class="check-sub">선택한 장르에 어울리는 보컬 자동 추천 (Gemini)</div></div></li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-title">🖼️ I. 유튜브 썸네일 스타일 시스템</div><span class="badge badge-high">HIGH</span></div>
+      <ul class="checklist">
+        <li><input type="checkbox"><div><div class="check-label">I1. ThumbnailStyleSelector 컴포넌트 — 6가지 스타일</div><div class="check-sub">일본 애니, 힙합 감성, 자연·힐링, 인간 모델, TV 목업, 클릭유도형</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">I2. /cover 페이지 개편 — 스타일 선택 → AI 프롬프트 자동 생성</div><div class="check-sub">Midjourney/DALL-E/Imagen 호환 프롬프트 동시 생성</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">I3. 일본어 텍스트 오버레이 옵션</div><div class="check-sub">애니 스타일에 한국어·일본어 자막 오버레이 텍스트 자동 생성</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">I4. YouTube Shorts 최적화 (9:16 비율) 지원</div><div class="check-sub">Shorts 썸네일 전용 프롬프트 생성, 세로형 비율</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">I5. 썸네일 갤러리 — 생성 이력 저장 + 즐겨찾기</div><div class="check-sub">Supabase thumbnails 테이블, 스타일별 필터</div></div></li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-title">⭐ J. 황금 프롬프트 라이브러리 + 루프 전략</div><span class="badge badge-medium">MEDIUM</span></div>
+      <ul class="checklist">
+        <li><input type="checkbox"><div><div class="check-label">J1. 황금 레퍼런스 라이브러리 페이지 (/prompts)</div><div class="check-sub">검증된 Suno 프롬프트 6종 + 사용자 추가 가능</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">J2. 프롬프트 복사 → 바로 Extension 전송 버튼</div><div class="check-sub">라이브러리에서 클릭 한 번으로 Suno에 주입</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">J3. 루프 마스터 — /planner 에 플리 순서 설계 도우미 추가</div><div class="check-sub">Gemini가 BPM·분위기 흐름을 분석해 최적 재생 순서 추천</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">J4. V-매칭 점수 — /audit 에 채널-음악 일관성 점수 추가</div><div class="check-sub">기존 채널 영상 분위기 vs AI 음악 스타일 매칭도 측정</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">J5. 숏폼 전용 30~60초 가사 생성 모드</div><div class="check-sub">YouTube Shorts 최적 길이, 강렬한 훅 자동 배치</div></div></li>
+      </ul>
+    </div>
+  </div>
+
+<style>
+.vocal-card:hover { border-color: rgba(124,58,237,0.6) !important; transform: translateY(-2px); box-shadow: 0 4px 20px rgba(124,58,237,0.2); }
+.vocal-card.selected { border-color: rgba(124,58,237,0.8) !important; box-shadow: 0 0 0 2px rgba(124,58,237,0.4); }
+#thumb-anime:hover,#thumb-hiphop:hover,#thumb-nature:hover,#thumb-model:hover,#thumb-tv:hover,#thumb-click:hover { border-color: rgba(6,182,212,0.6) !important; transform: translateY(-2px); }
+</style>
+
+<script>
+// ── 보컬 스타일 선택 ──
+function selectVocal(el, name, prompt) {
+  document.querySelectorAll('.vocal-card').forEach(function(c) { c.classList.remove('selected'); });
+  el.classList.add('selected');
+  document.getElementById('vocal-selected').style.display = 'block';
+  document.getElementById('vocal-prompt-text').textContent = name + ' → ' + prompt;
+}
+
+// ── 썸네일 프롬프트 데이터 ──
+var thumbPrompts = {
+  anime: {
+    name: '🎌 일본 애니 감성 스타일',
+    prompt: 'Anime illustration style, a melancholic young man standing at a night train station, cherry blossom petals falling, neon city lights reflection, watercolor background, Japanese subtitle text overlay "さよならの予後", cinematic composition, 16:9, Studio Ghibli mood, soft glowing atmosphere'
+  },
+  hiphop: {
+    name: '🎤 힙합 감성 다크 스타일',
+    prompt: 'Dark hip hop aesthetic thumbnail, moody dramatic lighting, urban streetwear, smoke and neon, dark cinematic color grading, bold typography overlay, graffiti elements, midnight city skyline, raw energy, high contrast black and gold, 16:9'
+  },
+  nature: {
+    name: '🌿 자연·힐링 Lo-Fi 스타일',
+    prompt: 'Lo-fi aesthetic, cozy nature scene, morning mist over forest, soft warm sunlight through leaves, vintage film grain texture, minimal clean composition, calming color palette of sage green and warm beige, person silhouette from behind, 16:9'
+  },
+  model: {
+    name: '👤 인간 모델 시네마틱',
+    prompt: 'Cinematic portrait photography, young woman with melancholic expression, dramatic side lighting, shallow depth of field, blue-toned night atmosphere, rain bokeh background, editorial fashion quality, emotional storytelling, 16:9'
+  },
+  tv: {
+    name: '📺 공간 TV 목업 (나노바나나 스타일)',
+    prompt: 'A wide-angle shot of a minimalist luxury living room, large OLED TV mounted on textured stone wall displaying music album art, white velvet sofa, designer marble table, floor-to-ceiling windows with city skyline at sunset, photorealistic, cinematic lighting, 16:9'
+  },
+  click: {
+    name: '‼️ 클릭유도형 고조회수 패턴',
+    prompt: 'YouTube thumbnail click-bait style, bold dramatic text overlay in Korean, high contrast vivid colors, shocked or emotional expression, bright yellow and red accent, urgency design, large readable font, thumbnail optimized composition, eye-catching visual hook, 16:9'
+  }
+};
+
+function showThumb(type) {
+  var d = thumbPrompts[type];
+  if (!d) return;
+  document.getElementById('thumb-style-name').textContent = d.name;
+  document.getElementById('thumb-prompt-content').textContent = d.prompt;
+  document.getElementById('thumb-prompt-box').style.display = 'block';
+  // highlight selected
+  ['anime','hiphop','nature','model','tv','click'].forEach(function(t) {
+    var el = document.getElementById('thumb-' + t);
+    if (el) el.style.borderColor = t === type ? 'rgba(6,182,212,0.8)' : 'transparent';
+  });
+}
+
+function copyThumbPrompt() {
+  var text = document.getElementById('thumb-prompt-content').textContent;
+  navigator.clipboard.writeText(text).then(function() {
+    alert('프롬프트가 클립보드에 복사되었습니다!');
+  });
+}
+</script>
+
+<footer>
+  <div>Phase 5 마스터 기획서 · Suno YT Dashboard 고도화</div>
+  <div style="margin-top:8px;font-size:12px">작성일: 2026-03-18 · 인베이더스쿨 라이브 영상 분석 + MusePilot.pro 분석 기반 · 체크박스 상태는 브라우저 로컬스토리지에 저장됩니다</div>
+</footer>
+
+<script>
+// ── 입력 이스케이프 함수 (XSS 방지) ──
+function escapeText(str) {
+  var div = document.createElement('div');
+  div.appendChild(document.createTextNode(str));
+  return div.innerHTML;
+}
+
+// ── Slider ──
+function updateSlider(id, valId, divisor) {
+  var raw = parseInt(document.getElementById(id).value, 10);
+  var val = divisor === 1 ? raw : (raw / divisor).toFixed(2);
+  document.getElementById(valId).textContent = val;
+}
+function setPreset(t, p, k, label) {
+  document.getElementById('sl1').value = t;
+  document.getElementById('sl2').value = p;
+  document.getElementById('sl3').value = k;
+  document.getElementById('sv1').textContent = (t / 100).toFixed(2);
+  document.getElementById('sv2').textContent = (p / 100).toFixed(2);
+  document.getElementById('sv3').textContent = k;
+  document.getElementById('preset-name').textContent = label;
+}
+
+// ── Preview (XSS-safe: textContent 사용) ──
+function generatePreview() {
+  var genres = Array.from(document.querySelectorAll('.genre-btn.selected'))
+    .map(function(b) { return b.textContent.trim(); }).join(', ');
+  var moods = Array.from(document.querySelectorAll('.mood-btn.selected'))
+    .map(function(b) { return b.textContent.trim(); }).join(', ');
+  // topic은 사용자 입력 — textContent로 안전하게 처리
+  var topicRaw = document.getElementById('topic-input').value || '여름 바다';
+  var genresStr = genres || 'Lo-Fi K-Pop';
+  var moodsStr = moods || 'emotional';
+
+  var lyricsText = '[Verse 1]\n'
+    + topicRaw + ' 위로 / 바람이 불어와\n'
+    + '너의 목소리가 / 물결처럼 퍼져\n'
+    + '길고 긴 이 밤에 / 별빛만 남아서\n'
+    + '우리의 이야기를 / 조용히 쓰네\n\n'
+    + '[Chorus]\n'
+    + topicRaw + '처럼 / 너는 내 곁에\n'
+    + '파도처럼 밀려와 / 내 마음을 채워\n\n'
+    + '[Suno AI 프롬프트]\n'
+    + genresStr + ', ' + moodsStr + ', dreamy vocals, 110 BPM, reverb guitar, nostalgic';
+
+  document.getElementById('preview-body').textContent = lyricsText;
+  document.getElementById('preview-output').style.display = 'block';
+}
+
+function copyLyrics() {
+  var text = document.getElementById('preview-body').textContent;
+  navigator.clipboard.writeText(text).then(function() {
+    alert('가사가 클립보드에 복사되었습니다!');
+  });
+}
+
+// ── Checklist (localStorage 저장) ──
+var STORAGE_KEY = 'phase5_checklist_v1';
+
+function getCheckId(li) {
+  var label = li.querySelector('.check-label');
+  return label ? label.textContent.trim().substring(0, 30) : '';
+}
+
+function loadChecklist() {
+  var saved = {};
+  try { saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch(e) {}
+  document.querySelectorAll('.checklist li').forEach(function(li) {
+    var cb = li.querySelector('input[type="checkbox"]');
+    var id = getCheckId(li);
+    if (cb && saved[id]) {
+      cb.checked = true;
+      li.classList.add('done');
+    }
+  });
+  updateProgress();
+}
+
+function saveChecklist() {
+  var data = {};
+  document.querySelectorAll('.checklist li').forEach(function(li) {
+    var cb = li.querySelector('input[type="checkbox"]');
+    var id = getCheckId(li);
+    if (cb && id) data[id] = cb.checked;
+  });
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+function updateProgress() {
+  var all = document.querySelectorAll('.checklist li').length;
+  var done = document.querySelectorAll('.checklist li input:checked').length;
+  var pct = all > 0 ? Math.round(done / all * 100) : 0;
+  document.getElementById('progress-text').textContent = done + ' / ' + all + ' 완료 (' + pct + '%)';
+  document.getElementById('main-progress').style.width = pct + '%';
+}
+
+// 체크박스 이벤트 — li 클릭 + checkbox change 둘 다 처리
+document.querySelectorAll('.checklist li').forEach(function(li) {
+  li.addEventListener('click', function(e) {
+    if (e.target.tagName === 'INPUT') return; // checkbox 자체 클릭은 change 이벤트로 처리
+    var cb = li.querySelector('input[type="checkbox"]');
+    if (cb) { cb.checked = !cb.checked; li.classList.toggle('done', cb.checked); saveChecklist(); updateProgress(); }
+  });
+  var cb = li.querySelector('input[type="checkbox"]');
+  if (cb) {
+    cb.addEventListener('change', function() {
+      li.classList.toggle('done', this.checked);
+      saveChecklist();
+      updateProgress();
+    });
+  }
+});
+
+loadChecklist();
+</script>
+</body>
+</html>

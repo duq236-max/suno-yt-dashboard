@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+
+Disallow: /api/
+
+Sitemap: https://suno-yt-dashboard.vercel.app/sitemap.xml

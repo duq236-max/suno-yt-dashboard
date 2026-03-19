@@ -1,0 +1,160 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import Header from '@/components/Header';
+import Link from 'next/link';
+import { loadData, updateGeminiApiKey } from '@/lib/storage';
+
+export default function SettingsPage() {
+    const [cleared, setCleared] = useState(false);
+    const [apiKey, setApiKey] = useState('');
+    const [apiKeySaved, setApiKeySaved] = useState(false);
+
+    useEffect(() => {
+        setApiKey(loadData().geminiApiKey ?? '');
+    }, []);
+
+    function clearAll() {
+        if (!confirm('모든 데이터를 초기화하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) return;
+        localStorage.removeItem('suno-yt-data');
+        setCleared(true);
+        setTimeout(() => window.location.href = '/dashboard', 1500);
+    }
+
+    function saveApiKey() {
+        updateGeminiApiKey(apiKey.trim());
+        setApiKeySaved(true);
+        setTimeout(() => setApiKeySaved(false), 2500);
+    }
+
+    return (
+        <>
+            <Header title="계정 설정" />
+            <div className="page-content">
+                <div className="page-header">
+                    <div>
+                        <div className="page-title">⚙️ 계정 설정</div>
+                        <div className="page-subtitle">앱 데이터 및 환경 설정을 관리하세요</div>
+                    </div>
+                </div>
+
+                <div style={{ maxWidth: '520px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+
+                    {/* ─── Gemini API 키 ─── */}
+                    <div className="card" style={{ borderColor: 'rgba(99, 102, 241, 0.25)', background: 'rgba(99, 102, 241, 0.04)' }}>
+                        <div className="card-title" style={{ marginBottom: '8px', color: '#818cf8' }}>🤖 Gemini API 키</div>
+                        <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '14px', lineHeight: 1.7 }}>
+                            AI 프롬프트 자동 생성에 사용됩니다.{' '}
+                            <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer"
+                                style={{ color: '#818cf8', textDecoration: 'none' }}>
+                                aistudio.google.com ↗
+                            </a>
+                            {' '}에서 무료로 발급받으세요.
+                        </p>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                            <input
+                                className="form-input"
+                                type="password"
+                                placeholder="AIza..."
+                                value={apiKey}
+                                onChange={e => setApiKey(e.target.value)}
+                                style={{ flex: 1 }}
+                            />
+                            <button
+                                className="btn btn-primary btn-sm"
+                                onClick={saveApiKey}
+                                style={{
+                                    background: apiKeySaved ? '#22c55e' : undefined,
+                                    transition: 'background 0.3s',
+                                    whiteSpace: 'nowrap',
+                                }}
+                            >
+                                {apiKeySaved ? '✅ 저장됨' : '저장'}
+                            </button>
+                        </div>
+                        <div style={{ marginTop: '8px', padding: '8px 12px', background: 'var(--bg-secondary)', borderRadius: '6px', fontSize: '11px', color: 'var(--text-muted)', lineHeight: 1.6 }}>
+                            🆓 Flash (gemini-1.5-flash) — 무료 · 분당 15회 / 일 1,500회<br />
+                            🔥 Pro (gemini-1.5-pro) — 유료 · 더 정교하고 창의적
+                        </div>
+                    </div>
+
+                    {/* 앱 정보 */}
+                    <div className="card">
+                        <div className="card-title" style={{ marginBottom: '14px' }}>📱 앱 정보</div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                            {[
+                                { label: '버전', value: 'v2.0.0 (Phase 2)' },
+                                { label: '저장 방식', value: 'localStorage (로컬 브라우저)' },
+                                { label: '데이터 위치', value: '이 브라우저에만 저장됩니다' },
+                            ].map((row) => (
+                                <div key={row.label} style={{
+                                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                    padding: '10px 14px', background: 'var(--bg-secondary)',
+                                    borderRadius: '8px', border: '1px solid var(--border)',
+                                }}>
+                                    <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{row.label}</span>
+                                    <span style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 500 }}>{row.value}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* 빠른 이동 */}
+                    <div className="card">
+                        <div className="card-title" style={{ marginBottom: '14px' }}>🔗 빠른 이동</div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            {[
+                                { href: 'https://suno.com', label: '🎵 Suno AI 열기', external: true },
+                                { href: 'https://studio.youtube.com', label: '📹 YouTube Studio 열기', external: true },
+                                { href: 'https://aistudio.google.com/app/apikey', label: '🔑 Gemini API 키 발급', external: true },
+                                { href: '/planner', label: '💡 채널기획 수정', external: false },
+                                { href: '/scrapsheet', label: '✂️ 스크랩시트로 이동', external: false },
+                            ].map((item) => (
+                                item.external ? (
+                                    <a key={item.label} href={item.href} target="_blank" rel="noopener noreferrer"
+                                        className="btn btn-ghost" style={{ justifyContent: 'flex-start' }}>
+                                        {item.label} ↗
+                                    </a>
+                                ) : (
+                                    <Link key={item.label} href={item.href} className="btn btn-ghost" style={{ justifyContent: 'flex-start' }}>
+                                        {item.label}
+                                    </Link>
+                                )
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* 추후 예정 */}
+                    <div className="card" style={{ borderColor: 'rgba(251, 191, 36, 0.2)', background: 'rgba(251, 191, 36, 0.03)' }}>
+                        <div className="card-title" style={{ marginBottom: '14px', color: '#fbbf24' }}>🚧 추후 예정 (Phase 3~4)</div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            {[
+                                '🤖 Chrome 익스텐션 — Suno AI 자동 주입 (B안)',
+                                '📡 YouTube OAuth 실제 연동 — 실시간 통계 자동 수집',
+                                '💾 데이터 백업/복원 (JSON 내보내기)',
+                                '🎬 영상 제목/설명 자동 생성',
+                            ].map((f) => (
+                                <div key={f} style={{
+                                    padding: '10px 14px', background: 'var(--bg-secondary)',
+                                    borderRadius: '8px', fontSize: '13px', color: 'var(--text-muted)',
+                                    border: '1px solid var(--border)',
+                                }}>{f}</div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* 위험 구역 */}
+                    <div className="card" style={{ borderColor: 'rgba(229, 62, 62, 0.2)' }}>
+                        <div className="card-title" style={{ marginBottom: '8px', color: 'var(--accent)' }}>⚠️ 위험 구역</div>
+                        <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '14px', lineHeight: 1.6 }}>
+                            모든 데이터(채널기획, 스크랩시트, 유튜브 채널, 스케쥴)를 초기화합니다. 되돌릴 수 없습니다.
+                        </p>
+                        <button className="btn btn-danger" onClick={clearAll} disabled={cleared}>
+                            {cleared ? '✅ 초기화 완료, 이동 중...' : '🗑️ 전체 데이터 초기화'}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </>
+    );
+}
