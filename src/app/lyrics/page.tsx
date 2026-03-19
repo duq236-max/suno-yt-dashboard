@@ -6,6 +6,7 @@ import GenreSelector from '@/components/GenreSelector';
 import MoodSelector from '@/components/MoodSelector';
 import { CreativityPanel } from '@/components/CreativityPanel';
 import CopyrightShield from '@/components/CopyrightShield';
+import SendToSunoButton from '@/components/SendToSunoButton';
 import { vocalStyles } from '@/data/vocal-styles';
 import {
     loadData,
@@ -245,27 +246,6 @@ export default function LyricsPage() {
         } finally {
             setVocalRecommending(false);
         }
-    }
-
-    function handleSendToSuno() {
-        type ChromeWindow = Window & { chrome?: { runtime?: { id?: string } } };
-        const hasChromeRuntime = typeof window !== 'undefined' &&
-            'chrome' in window &&
-            !!(window as ChromeWindow).chrome?.runtime?.id;
-
-        if (!hasChromeRuntime) {
-            showToast('Extension이 설치되지 않았습니다. Chrome 웹스토어에서 설치해주세요.');
-            return;
-        }
-
-        window.dispatchEvent(new CustomEvent('SUNO_YT_INJECT_EVENT', {
-            detail: {
-                lyrics: displayLyrics ?? '',
-                prompt: displaySunoStyle,
-                title: displayTitle ?? '',
-                timestamp: Date.now(),
-            },
-        }));
     }
 
     return (
@@ -621,12 +601,10 @@ export default function LyricsPage() {
                                                 >
                                                     {copied ? '✅ 복사됨!' : '📋 가사 복사'}
                                                 </button>
-                                                <button
-                                                    className="btn btn-primary btn-sm"
-                                                    onClick={handleSendToSuno}
-                                                >
-                                                    🚀 Suno로 전송
-                                                </button>
+                                                <SendToSunoButton
+                                                    lyrics={displayLyrics ?? ''}
+                                                    sunoPrompt={displaySunoPrompt}
+                                                />
                                             </div>
                                         </div>
 
