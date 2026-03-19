@@ -28,6 +28,7 @@ interface FormState {
     language: LyricsHistoryItem['language'];
     style: string;
     model: 'flash' | 'pro';
+    copyrightDefense: boolean;
 }
 
 const DEFAULT_FORM: FormState = {
@@ -37,6 +38,7 @@ const DEFAULT_FORM: FormState = {
     language: 'ko',
     style: '',
     model: 'flash',
+    copyrightDefense: false,
 };
 
 export default function LyricsPage() {
@@ -79,7 +81,8 @@ export default function LyricsPage() {
                     apiKey,
                     ...form,
                     genre: form.genre.join(', '),
-                    creativityParams: creativity
+                    creativityParams: creativity,
+                    copyrightDefense: form.copyrightDefense,
                 }),
             });
 
@@ -249,6 +252,23 @@ export default function LyricsPage() {
                                 <label className="form-label">추가 스타일 지시 (선택)</label>
                                 <input className="form-input" placeholder="예: 서정적, 단어 반복 강조, 짧은 문장" value={form.style}
                                     onChange={e => updateForm('style', e.target.value)} />
+                            </div>
+
+                            {/* 저작권 방어 */}
+                            <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+                                    <input
+                                        type="checkbox"
+                                        checked={form.copyrightDefense}
+                                        onChange={e => updateForm('copyrightDefense', e.target.checked)}
+                                    />
+                                    <span style={{ fontSize: '13px' }}>
+                                        🛡️ 저작권 방어 키워드 자동 삽입
+                                        <span style={{ color: 'var(--text-muted)', marginLeft: '6px' }}>
+                                            (No Choir · No Background Vocals · No Musical Theater Style · Straight Voice)
+                                        </span>
+                                    </span>
+                                </label>
                             </div>
 
                             <CreativityPanel value={creativity} onChange={setCreativity} />

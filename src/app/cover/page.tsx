@@ -8,6 +8,15 @@ import { CreativityPanel } from '@/components/CreativityPanel';
 
 const GENRES = ['Lo-fi Hip-hop', 'Jazz', 'Classical Piano', 'Ambient', 'EDM', 'Chillhop', '수면 음악', '카페 BGM', '명상 음악', 'Nature Sounds'];
 
+const STYLE_PRESETS = [
+    { label: '🎌 일본 애니', genre: 'J-Pop Anime', keywords: 'anime illustration, pastel colors, japanese text overlay, cute character' },
+    { label: '🔥 힙합 어반', genre: 'Hip-Hop Trap', keywords: 'urban street, neon lights, dark background, graffiti, bold typography' },
+    { label: '🌿 자연 힐링', genre: 'Lo-Fi Ambient', keywords: 'nature scenery, soft morning light, peaceful forest, watercolor style' },
+    { label: '👤 인물 클로즈업', genre: 'K-Pop Ballad', keywords: 'close-up portrait, emotional expression, cinematic lighting, bokeh' },
+    { label: '📺 TV 목업', genre: 'Cinematic', keywords: 'vintage TV screen, retro CRT monitor, glowing screen, dark room' },
+    { label: '👆 클릭 유도형', genre: 'Pop', keywords: 'high contrast, bright colors, bold text, arrow graphic, excited face' },
+];
+
 type GenerateState = 'idle' | 'loading' | 'done' | 'error';
 
 export default function CoverPage() {
@@ -79,6 +88,28 @@ export default function CoverPage() {
             <div className="page-content">
                 {/* ─── 입력 패널 ─── */}
                 <div className="card" style={{ marginBottom: '24px', padding: '24px' }}>
+                    {/* 스타일 프리셋 */}
+                    <div className="card" style={{ marginBottom: '16px', padding: '16px', background: 'var(--bg-secondary)' }}>
+                        <h3 className="card-title" style={{ marginBottom: '12px', fontSize: '13px' }}>스타일 프리셋</h3>
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                            {STYLE_PRESETS.map(preset => (
+                                <button
+                                    key={preset.label}
+                                    className="btn btn-ghost btn-sm"
+                                    onClick={() => {
+                                        setGenre(preset.genre);
+                                        setKeywords(preset.keywords);
+                                    }}
+                                >
+                                    {preset.label}
+                                </button>
+                            ))}
+                        </div>
+                        <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '8px', marginBottom: 0 }}>
+                            프리셋 클릭 시 장르·키워드 자동 입력
+                        </p>
+                    </div>
+
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
                         {/* 채널명 */}
                         <div className="form-group" style={{ margin: 0 }}>

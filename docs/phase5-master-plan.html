@@ -876,11 +876,11 @@
     <div class="card">
       <div class="card-header"><div class="card-title">🎨 B. AI 창의성 파라미터 시스템</div><span class="badge badge-high">HIGH</span></div>
       <ul class="checklist">
-        <li><input type="checkbox"><div><div class="check-label">B1. CreativityPanel 컴포넌트 생성</div><div class="check-sub">src/components/CreativityPanel.tsx — temperature/topP/topK 슬라이더</div></div></li>
-        <li><input type="checkbox"><div><div class="check-label">B2. 4가지 프리셋 구현 (정밀/균형/창의적/카오스)</div><div class="check-sub">버튼 클릭 시 3개 슬라이더 값 일괄 변경</div></div></li>
-        <li><input type="checkbox"><div><div class="check-label">B3. /api/gemini/lyrics 라우트 — creativityParams 수신</div><div class="check-sub">GenerativeModel 생성 시 generationConfig 반영</div></div></li>
-        <li><input type="checkbox"><div><div class="check-label">B4. /lyrics 페이지에 CreativityPanel 적용</div><div class="check-sub">기존 폼 하단에 접이식(accordion) 패널로 추가</div></div></li>
-        <li><input type="checkbox"><div><div class="check-label">B5. /ideation, /planner, /cover, /comments 페이지 적용</div><div class="check-sub">동일 컴포넌트 재사용, API 라우트별 파라미터 전달</div></div></li>
+        <li data-default-checked="true"><input type="checkbox"><div><div class="check-label">B1. CreativityPanel 컴포넌트 생성</div><div class="check-sub">src/components/CreativityPanel.tsx — temperature/topP/topK 슬라이더</div></div></li>
+        <li data-default-checked="true"><input type="checkbox"><div><div class="check-label">B2. 4가지 프리셋 구현 (정밀/균형/창의적/카오스)</div><div class="check-sub">버튼 클릭 시 3개 슬라이더 값 일괄 변경</div></div></li>
+        <li data-default-checked="true"><input type="checkbox"><div><div class="check-label">B3. /api/gemini/lyrics 라우트 — creativityParams 수신</div><div class="check-sub">GenerativeModel 생성 시 generationConfig 반영</div></div></li>
+        <li data-default-checked="true"><input type="checkbox"><div><div class="check-label">B4. /lyrics 페이지에 CreativityPanel 적용</div><div class="check-sub">기존 폼 하단에 접이식(accordion) 패널로 추가</div></div></li>
+        <li data-default-checked="true"><input type="checkbox"><div><div class="check-label">B5. /ideation, /planner, /cover, /comments 페이지 적용</div><div class="check-sub">동일 컴포넌트 재사용, API 라우트별 파라미터 전달</div></div></li>
         <li><input type="checkbox"><div><div class="check-label">B6. localStorage에 마지막 설정값 저장</div><div class="check-sub">페이지 재방문 시 이전 설정 자동 복원</div></div></li>
       </ul>
     </div>
@@ -888,9 +888,9 @@
     <div class="card">
       <div class="card-header"><div class="card-title">✍️ C. 대중 친화적 프롬프트 마법사</div><span class="badge badge-high">HIGH</span></div>
       <ul class="checklist">
-        <li><input type="checkbox"><div><div class="check-label">C1. GenreSelector 컴포넌트 — 장르 태그 버튼 (10가지)</div><div class="check-sub">K-Pop, Rock, Lo-Fi, Classical, Hip-Hop, R&amp;B, Acoustic, Electronic, Jazz, Cinematic</div></div></li>
-        <li><input type="checkbox"><div><div class="check-label">C2. MoodSelector 컴포넌트 — 감정/분위기 버튼 (8가지)</div><div class="check-sub">행복한, 감성적, 몽환적, 에너지틱, 슬픈, 신비로운, 평화로운, 신나는</div></div></li>
-        <li><input type="checkbox"><div><div class="check-label">C3. /lyrics 페이지 개편 — 마법사 3단계 UI로 교체</div><div class="check-sub">Step1: 장르 → Step2: 분위기 → Step3: 주제 (1~3 단어)</div></div></li>
+        <li data-default-checked="true"><input type="checkbox"><div><div class="check-label">C1. GenreSelector 컴포넌트 — 장르 태그 버튼 (10가지)</div><div class="check-sub">K-Pop, Rock, Lo-Fi, Classical, Hip-Hop, R&amp;B, Acoustic, Electronic, Jazz, Cinematic</div></div></li>
+        <li data-default-checked="true"><input type="checkbox"><div><div class="check-label">C2. MoodSelector 컴포넌트 — 감정/분위기 버튼 (8가지)</div><div class="check-sub">행복한, 감성적, 몽환적, 에너지틱, 슬픈, 신비로운, 평화로운, 신나는</div></div></li>
+        <li data-default-checked="true"><input type="checkbox"><div><div class="check-label">C3. /lyrics 페이지 개편 — 마법사 3단계 UI로 교체</div><div class="check-sub">Step1: 장르 → Step2: 분위기 → Step3: 주제 (1~3 단어)</div></div></li>
         <li><input type="checkbox"><div><div class="check-label">C4. Gemini 프롬프트 엔지니어링 강화</div><div class="check-sub">장르+분위기+주제 → 가사 + Suno 전용 프롬프트 동시 생성</div></div></li>
         <li><input type="checkbox"><div><div class="check-label">C5. 언어 선택 (한국어/English/日本語/中文)</div><div class="check-sub">선택 언어로 가사 생성, 언어별 시 형식 프롬프트 최적화</div></div></li>
         <li><input type="checkbox"><div><div class="check-label">C6. 생성 결과에 "Suno 프롬프트" 섹션 별도 표시</div><div class="check-sub">복사 버튼 + "Suno로 전송" 버튼 (Extension 연동)</div></div></li>
@@ -920,6 +920,59 @@
         <li><input type="checkbox"><div><div class="check-label">E4. Vercel 재배포 — 새 기능 프로덕션 반영</div><div class="check-sub">vercel --prod 또는 git push → 자동 배포</div></div></li>
         <li><input type="checkbox"><div><div class="check-label">E5. Chrome 웹스토어 게시 준비 (선택)</div><div class="check-sub">스크린샷 5장, 설명문, privacy policy 준비</div></div></li>
         <li><input type="checkbox"><div><div class="check-label">E6. 최종 문서 업데이트 — README + docs/</div><div class="check-sub">Extension 설치 방법, 새 기능 사용법 추가</div></div></li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-title">💰 F. 수익화 시스템 (DistroKid + 음원 유통)</div><span class="badge badge-critical">CRITICAL</span></div>
+      <ul class="checklist">
+        <li data-default-checked="true"><input type="checkbox"><div><div class="check-label">F1. /revenue 신규 페이지 생성 — 수익 통합 대시보드</div><div class="check-sub">YouTube 수익 + DistroKid 음원 수익 통합 표시</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">F2. 음원 유통 전 체크리스트 컴포넌트</div><div class="check-sub">저작권 방어 프롬프트 확인, ISRC, 커버아트 규격 등 6개 항목</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">F3. DistroKid 수익 수동 입력 + 추적 기능</div><div class="check-sub">플랫폼별(Spotify/Apple/YT Music/멜론) 스트리밍 수 입력 및 계산</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">F4. 수익 계산기 — RPM × 조회수, 스트리밍 단가 × 스트림수</div><div class="check-sub">월별 목표 설정 + 진행률 프로그레스바</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">F5. 음원 등록 현황 테이블 — 곡 목록, 유통 상태, 수익</div><div class="check-sub">Supabase에 songs 테이블 추가, ISRC/유통플랫폼/수익 컬럼</div></div></li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-title">🛡️ G. 저작권 방어 프롬프트 생성기</div><span class="badge badge-critical">CRITICAL</span></div>
+      <ul class="checklist">
+        <li><input type="checkbox"><div><div class="check-label">G1. CopyrightShield 컴포넌트 생성</div><div class="check-sub">src/components/CopyrightShield.tsx — 배제 키워드 자동 추가 UI</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">G2. 저작권 위험도 체크 로직</div><div class="check-sub">프롬프트에 특정 아티스트명/스타일명 감지 시 경고 표시</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">G3. 안전 배제 키워드 자동 삽입</div><div class="check-sub">"No Choir, No Background Vocals, No Musical Theater Style, Straight Voice" 자동 추가</div></div></li>
+        <li data-default-checked="true"><input type="checkbox"><div><div class="check-label">G4. /lyrics 페이지 — DistroKid 유통 목적 토글</div><div class="check-sub">토글 ON 시 저작권 방어 프롬프트 자동 강화</div></div></li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-title">🎤 H. 보컬 스타일 라이브러리</div><span class="badge badge-high">HIGH</span></div>
+      <ul class="checklist">
+        <li data-default-checked="true"><input type="checkbox"><div><div class="check-label">H1. VocalStyleLibrary 컴포넌트 생성 — 8가지 보컬 프리셋</div><div class="check-sub">일본 귀여운 여자, 다크 힙합, 한국 발라드, 다크 K-pop, Neo-Soul R&amp;B, Lo-Fi 여자, 붐뱁 소울, 시네마틱 소프라노</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">H2. /lyrics 프롬프트 마법사 Step 1.5에 보컬 선택 추가</div><div class="check-sub">장르 선택 → 보컬 스타일 선택 → 분위기 선택 → 주제 입력</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">H3. 커스텀 보컬 프리셋 저장 기능</div><div class="check-sub">사용자가 즐겨쓰는 보컬 조합 저장, 최대 5개</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">H4. 보컬 스타일 + 장르 조합 추천 AI</div><div class="check-sub">선택한 장르에 어울리는 보컬 자동 추천 (Gemini)</div></div></li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-title">🖼️ I. 유튜브 썸네일 스타일 시스템</div><span class="badge badge-high">HIGH</span></div>
+      <ul class="checklist">
+        <li data-default-checked="true"><input type="checkbox"><div><div class="check-label">I1. ThumbnailStyleSelector 컴포넌트 — 6가지 스타일</div><div class="check-sub">일본 애니, 힙합 감성, 자연·힐링, 인간 모델, TV 목업, 클릭유도형</div></div></li>
+        <li data-default-checked="true"><input type="checkbox"><div><div class="check-label">I2. /cover 페이지 개편 — 스타일 선택 → AI 프롬프트 자동 생성</div><div class="check-sub">Midjourney/DALL-E/Imagen 호환 프롬프트 동시 생성</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">I3. 일본어 텍스트 오버레이 옵션</div><div class="check-sub">애니 스타일에 한국어·일본어 자막 오버레이 텍스트 자동 생성</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">I4. YouTube Shorts 최적화 (9:16 비율) 지원</div><div class="check-sub">Shorts 썸네일 전용 프롬프트 생성, 세로형 비율</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">I5. 썸네일 갤러리 — 생성 이력 저장 + 즐겨찾기</div><div class="check-sub">Supabase thumbnails 테이블, 스타일별 필터</div></div></li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-title">⭐ J. 황금 프롬프트 라이브러리 + 루프 전략</div><span class="badge badge-medium">MEDIUM</span></div>
+      <ul class="checklist">
+        <li data-default-checked="true"><input type="checkbox"><div><div class="check-label">J1. 황금 레퍼런스 라이브러리 페이지 (/library)</div><div class="check-sub">검증된 Suno 프롬프트 6종 + 보컬 스타일 8종, 탭 UI + 복사 기능</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">J2. 프롬프트 복사 → 바로 Extension 전송 버튼</div><div class="check-sub">라이브러리에서 클릭 한 번으로 Suno에 주입</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">J3. 루프 마스터 — /planner 에 플리 순서 설계 도우미 추가</div><div class="check-sub">Gemini가 BPM·분위기 흐름을 분석해 최적 재생 순서 추천</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">J4. V-매칭 점수 — /audit 에 채널-음악 일관성 점수 추가</div><div class="check-sub">기존 채널 영상 분위기 vs AI 음악 스타일 매칭도 측정</div></div></li>
+        <li><input type="checkbox"><div><div class="check-label">J5. 숏폼 전용 30~60초 가사 생성 모드</div><div class="check-sub">YouTube Shorts 최적 길이, 강렬한 훅 자동 배치</div></div></li>
       </ul>
     </div>
   </div>
@@ -1453,68 +1506,6 @@
     </div>
   </div>
 
-  <hr class="divider">
-
-  <!-- ══ 추가 체크리스트 F~J ══ -->
-  <div class="section">
-    <div class="section-title">
-      <div class="icon" style="background:rgba(16,185,129,0.2)">✅</div>
-      추가 구현 체크리스트 (영상 기반 신규 기능 F~J)
-    </div>
-
-    <div class="card">
-      <div class="card-header"><div class="card-title">💰 F. 수익화 시스템 (DistroKid + 음원 유통)</div><span class="badge badge-critical">CRITICAL</span></div>
-      <ul class="checklist">
-        <li><input type="checkbox"><div><div class="check-label">F1. /revenue 신규 페이지 생성 — 수익 통합 대시보드</div><div class="check-sub">YouTube 수익 + DistroKid 음원 수익 통합 표시</div></div></li>
-        <li><input type="checkbox"><div><div class="check-label">F2. 음원 유통 전 체크리스트 컴포넌트</div><div class="check-sub">저작권 방어 프롬프트 확인, ISRC, 커버아트 규격 등 6개 항목</div></div></li>
-        <li><input type="checkbox"><div><div class="check-label">F3. DistroKid 수익 수동 입력 + 추적 기능</div><div class="check-sub">플랫폼별(Spotify/Apple/YT Music/멜론) 스트리밍 수 입력 및 계산</div></div></li>
-        <li><input type="checkbox"><div><div class="check-label">F4. 수익 계산기 — RPM × 조회수, 스트리밍 단가 × 스트림수</div><div class="check-sub">월별 목표 설정 + 진행률 프로그레스바</div></div></li>
-        <li><input type="checkbox"><div><div class="check-label">F5. 음원 등록 현황 테이블 — 곡 목록, 유통 상태, 수익</div><div class="check-sub">Supabase에 songs 테이블 추가, ISRC/유통플랫폼/수익 컬럼</div></div></li>
-      </ul>
-    </div>
-
-    <div class="card">
-      <div class="card-header"><div class="card-title">🛡️ G. 저작권 방어 프롬프트 생성기</div><span class="badge badge-critical">CRITICAL</span></div>
-      <ul class="checklist">
-        <li><input type="checkbox"><div><div class="check-label">G1. CopyrightShield 컴포넌트 생성</div><div class="check-sub">src/components/CopyrightShield.tsx — 배제 키워드 자동 추가 UI</div></div></li>
-        <li><input type="checkbox"><div><div class="check-label">G2. 저작권 위험도 체크 로직</div><div class="check-sub">프롬프트에 특정 아티스트명/스타일명 감지 시 경고 표시</div></div></li>
-        <li><input type="checkbox"><div><div class="check-label">G3. 안전 배제 키워드 자동 삽입</div><div class="check-sub">"No Choir, No Background Vocals, No Musical Theater Style, Straight Voice" 자동 추가</div></div></li>
-        <li><input type="checkbox"><div><div class="check-label">G4. /lyrics 페이지 — DistroKid 유통 목적 토글</div><div class="check-sub">토글 ON 시 저작권 방어 프롬프트 자동 강화</div></div></li>
-      </ul>
-    </div>
-
-    <div class="card">
-      <div class="card-header"><div class="card-title">🎤 H. 보컬 스타일 라이브러리</div><span class="badge badge-high">HIGH</span></div>
-      <ul class="checklist">
-        <li><input type="checkbox"><div><div class="check-label">H1. VocalStyleLibrary 컴포넌트 생성 — 8가지 보컬 프리셋</div><div class="check-sub">일본 귀여운 여자, 다크 힙합, 한국 발라드, 다크 K-pop, Neo-Soul R&amp;B, Lo-Fi 여자, 붐뱁 소울, 시네마틱 소프라노</div></div></li>
-        <li><input type="checkbox"><div><div class="check-label">H2. /lyrics 프롬프트 마법사 Step 1.5에 보컬 선택 추가</div><div class="check-sub">장르 선택 → 보컬 스타일 선택 → 분위기 선택 → 주제 입력</div></div></li>
-        <li><input type="checkbox"><div><div class="check-label">H3. 커스텀 보컬 프리셋 저장 기능</div><div class="check-sub">사용자가 즐겨쓰는 보컬 조합 저장, 최대 5개</div></div></li>
-        <li><input type="checkbox"><div><div class="check-label">H4. 보컬 스타일 + 장르 조합 추천 AI</div><div class="check-sub">선택한 장르에 어울리는 보컬 자동 추천 (Gemini)</div></div></li>
-      </ul>
-    </div>
-
-    <div class="card">
-      <div class="card-header"><div class="card-title">🖼️ I. 유튜브 썸네일 스타일 시스템</div><span class="badge badge-high">HIGH</span></div>
-      <ul class="checklist">
-        <li><input type="checkbox"><div><div class="check-label">I1. ThumbnailStyleSelector 컴포넌트 — 6가지 스타일</div><div class="check-sub">일본 애니, 힙합 감성, 자연·힐링, 인간 모델, TV 목업, 클릭유도형</div></div></li>
-        <li><input type="checkbox"><div><div class="check-label">I2. /cover 페이지 개편 — 스타일 선택 → AI 프롬프트 자동 생성</div><div class="check-sub">Midjourney/DALL-E/Imagen 호환 프롬프트 동시 생성</div></div></li>
-        <li><input type="checkbox"><div><div class="check-label">I3. 일본어 텍스트 오버레이 옵션</div><div class="check-sub">애니 스타일에 한국어·일본어 자막 오버레이 텍스트 자동 생성</div></div></li>
-        <li><input type="checkbox"><div><div class="check-label">I4. YouTube Shorts 최적화 (9:16 비율) 지원</div><div class="check-sub">Shorts 썸네일 전용 프롬프트 생성, 세로형 비율</div></div></li>
-        <li><input type="checkbox"><div><div class="check-label">I5. 썸네일 갤러리 — 생성 이력 저장 + 즐겨찾기</div><div class="check-sub">Supabase thumbnails 테이블, 스타일별 필터</div></div></li>
-      </ul>
-    </div>
-
-    <div class="card">
-      <div class="card-header"><div class="card-title">⭐ J. 황금 프롬프트 라이브러리 + 루프 전략</div><span class="badge badge-medium">MEDIUM</span></div>
-      <ul class="checklist">
-        <li><input type="checkbox"><div><div class="check-label">J1. 황금 레퍼런스 라이브러리 페이지 (/prompts)</div><div class="check-sub">검증된 Suno 프롬프트 6종 + 사용자 추가 가능</div></div></li>
-        <li><input type="checkbox"><div><div class="check-label">J2. 프롬프트 복사 → 바로 Extension 전송 버튼</div><div class="check-sub">라이브러리에서 클릭 한 번으로 Suno에 주입</div></div></li>
-        <li><input type="checkbox"><div><div class="check-label">J3. 루프 마스터 — /planner 에 플리 순서 설계 도우미 추가</div><div class="check-sub">Gemini가 BPM·분위기 흐름을 분석해 최적 재생 순서 추천</div></div></li>
-        <li><input type="checkbox"><div><div class="check-label">J4. V-매칭 점수 — /audit 에 채널-음악 일관성 점수 추가</div><div class="check-sub">기존 채널 영상 분위기 vs AI 음악 스타일 매칭도 측정</div></div></li>
-        <li><input type="checkbox"><div><div class="check-label">J5. 숏폼 전용 30~60초 가사 생성 모드</div><div class="check-sub">YouTube Shorts 최적 길이, 강렬한 훅 자동 배치</div></div></li>
-      </ul>
-    </div>
-  </div>
 
 <style>
 .vocal-card:hover { border-color: rgba(124,58,237,0.6) !important; transform: translateY(-2px); box-shadow: 0 4px 20px rgba(124,58,237,0.2); }
@@ -1651,12 +1642,18 @@ function getCheckId(li) {
 }
 
 function loadChecklist() {
-  var saved = {};
-  try { saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch(e) {}
+  var saved = null;
+  try {
+    var raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) saved = JSON.parse(raw);
+  } catch(e) {}
+  // localStorage 데이터가 없으면(첫 방문) data-default-checked 속성으로 초기 상태 설정
+  var hasStoredData = saved !== null;
   document.querySelectorAll('.checklist li').forEach(function(li) {
     var cb = li.querySelector('input[type="checkbox"]');
     var id = getCheckId(li);
-    if (cb && saved[id]) {
+    var shouldCheck = hasStoredData ? !!saved[id] : li.dataset.defaultChecked === 'true';
+    if (cb && shouldCheck) {
       cb.checked = true;
       li.classList.add('done');
     }

@@ -10,11 +10,15 @@ function buildLyricsPrompt(params: {
     theme: string;
     language: string;
     style: string;
+    copyrightDefense: boolean;
 }): string {
-    const { genre, mood, theme, language, style } = params;
+    const { genre, mood, theme, language, style, copyrightDefense } = params;
     const langGuide = language === 'ko' ? '한국어' : language === 'en' ? '영어' : '한국어+영어 혼용';
+    const defenseNote = copyrightDefense
+        ? `\n저작권 방어 필수: suno_style 필드에 반드시 "No Choir, No Background Vocals, No Musical Theater Style, Straight Voice" 를 포함하세요.`
+        : '';
     return `당신은 Suno AI 전문 작사가입니다.
-다음 조건으로 완성된 가사를 JSON 형식으로 생성해주세요.
+다음 조건으로 완성된 가사를 JSON 형식으로 생성해주세요.${defenseNote}
 
 조건:
 - 장르: ${genre}
@@ -56,6 +60,7 @@ export async function POST(req: NextRequest) {
             theme?: string;
             language?: string;
             style?: string;
+            copyrightDefense?: boolean;
             creativityParams?: Partial<CreativityParams>;
         };
 
@@ -67,6 +72,7 @@ export async function POST(req: NextRequest) {
             theme = '',
             language = 'ko',
             style = '',
+            copyrightDefense = false,
             creativityParams,
         } = body;
 
@@ -84,7 +90,7 @@ export async function POST(req: NextRequest) {
         }
 
         const modelId: GeminiModel = model === 'pro' ? 'gemini-2.5-pro' : 'gemini-2.5-flash';
-        const prompt = buildLyricsPrompt({ genre, mood, theme, language, style });
+        const prompt = buildLyricsPrompt({ genre, mood, theme, language, style, copyrightDefense });
 
         const res = await fetch(
             `${GEMINI_BASE}/${modelId}:generateContent?key=${apiKey}`,

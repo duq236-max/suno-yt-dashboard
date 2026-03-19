@@ -47,6 +47,7 @@ const navItems: { section: string; items: NavItem[] }[] = [
       { href: '/ideation', icon: '🧠', label: 'Ideation', badge: 'NEW', badgeType: 'new' },
       { href: '/lyrics', icon: '📝', label: 'Lyrics', badge: 'NEW', badgeType: 'new' },
       { href: '/cover', icon: '🎨', label: 'Cover Generator', badge: 'NEW', badgeType: 'new' },
+      { href: '/library', icon: '📚', label: '프롬프트 라이브러리', badge: 'NEW', badgeType: 'new' },
     ],
   },
   {
