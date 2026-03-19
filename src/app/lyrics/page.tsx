@@ -170,14 +170,12 @@ export default function LyricsPage() {
 
     function handleStarHistory(e: React.MouseEvent, id: string) {
         e.stopPropagation();
-        setHistory(prev => {
-            const updated = toggleLyricsHistoryStarred(id);
-            if (selectedHistory?.id === id) {
-                const found = updated.find(i => i.id === id);
-                if (found) setSelectedHistory(found);
-            }
-            return updated;
-        });
+        const updated = toggleLyricsHistoryStarred(id);
+        setHistory(updated);
+        if (selectedHistory?.id === id) {
+            const found = updated.find(i => i.id === id);
+            if (found) setSelectedHistory(found);
+        }
     }
 
     function handleLoadHistory(item: LyricsHistoryItem) {
