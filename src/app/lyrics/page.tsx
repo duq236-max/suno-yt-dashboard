@@ -12,6 +12,7 @@ import {
     loadLyricsHistory,
     addLyricsHistory,
     deleteLyricsHistory,
+    toggleLyricsHistoryStarred,
     getCustomVocals,
     saveCustomVocal,
     deleteCustomVocal,
@@ -142,6 +143,7 @@ export default function LyricsPage() {
                 language: form.language,
                 style: form.style,
                 lyrics: generated.lyrics,
+                suno_prompt: generated.suno_prompt || undefined,
                 model: form.model,
                 createdAt: new Date().toISOString(),
             };
@@ -166,11 +168,36 @@ export default function LyricsPage() {
         if (selectedHistory?.id === id) setSelectedHistory(null);
     }
 
+    function handleStarHistory(e: React.MouseEvent, id: string) {
+        e.stopPropagation();
+        setHistory(prev => {
+            const updated = toggleLyricsHistoryStarred(id);
+            if (selectedHistory?.id === id) {
+                const found = updated.find(i => i.id === id);
+                if (found) setSelectedHistory(found);
+            }
+            return updated;
+        });
+    }
+
+    function handleLoadHistory(item: LyricsHistoryItem) {
+        setForm(prev => ({
+            ...prev,
+            genre: item.genre ? item.genre.split(', ').filter(Boolean) : prev.genre,
+            mood: item.mood || prev.mood,
+            theme: item.theme || prev.theme,
+            language: item.language,
+            style: item.style || prev.style,
+        }));
+        setSelectedHistory(item);
+        showToast(`📂 "${item.title}" 설정을 폼에 불러왔습니다.`);
+    }
+
     const displayLyrics = selectedHistory?.lyrics ?? result?.lyrics ?? null;
     const displayTitle = selectedHistory?.title ?? result?.title ?? null;
     const displayMoodTags = selectedHistory ? [] : (result?.mood_tags ?? []);
     const displaySunoStyle = selectedHistory ? '' : (result?.suno_style ?? '');
-    const displaySunoPrompt = selectedHistory ? '' : (result?.suno_prompt ?? '');
+    const displaySunoPrompt = selectedHistory?.suno_prompt ?? result?.suno_prompt ?? '';
 
     function showToast(message: string) {
         setToast(message);
@@ -496,7 +523,14 @@ export default function LyricsPage() {
                         {history.length > 0 && (
                             <div className="card" style={{ padding: '16px' }}>
                                 <div className="card-header" style={{ marginBottom: '12px' }}>
-                                    <div className="card-title">📋 생성 히스토리 ({history.length})</div>
+                                    <div className="card-title">
+                                        📋 생성 히스토리 ({history.length})
+                                        {history.some(i => i.starred) && (
+                                            <span style={{ marginLeft: '6px', fontSize: '11px', color: '#fbbf24' }}>
+                                                ★ {history.filter(i => i.starred).length}
+                                            </span>
+                                        )}
+                                    </div>
                                     <button
                                         onClick={() => setSelectedHistory(null)}
                                         style={{ fontSize: '11px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}
@@ -509,7 +543,7 @@ export default function LyricsPage() {
                                             onClick={() => setSelectedHistory(item)}
                                             style={{
                                                 padding: '10px 12px', borderRadius: '8px', cursor: 'pointer',
-                                                border: `1.5px solid ${selectedHistory?.id === item.id ? 'var(--accent)' : 'var(--border)'}`,
+                                                border: `1.5px solid ${selectedHistory?.id === item.id ? 'var(--accent)' : item.starred ? 'rgba(251,191,36,0.4)' : 'var(--border)'}`,
                                                 background: selectedHistory?.id === item.id ? 'var(--accent-dim)' : 'var(--bg-secondary)',
                                                 transition: 'all 0.15s ease',
                                             }}
@@ -517,16 +551,34 @@ export default function LyricsPage() {
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                                                 <div style={{ flex: 1, minWidth: 0 }}>
                                                     <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                        {item.starred && <span style={{ color: '#fbbf24', marginRight: '4px' }}>★</span>}
                                                         {item.title}
                                                     </div>
                                                     <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
                                                         {item.genre} · {item.mood} · {formatDatetime(item.createdAt)}
                                                     </div>
                                                 </div>
-                                                <button
-                                                    onClick={e => { e.stopPropagation(); handleDeleteHistory(item.id); }}
-                                                    style={{ marginLeft: '8px', fontSize: '12px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', flexShrink: 0 }}
-                                                >🗑️</button>
+                                                <div style={{ display: 'flex', gap: '2px', marginLeft: '8px', flexShrink: 0 }}>
+                                                    <button
+                                                        onClick={e => handleStarHistory(e, item.id)}
+                                                        title={item.starred ? '즐겨찾기 해제' : '즐겨찾기 추가'}
+                                                        style={{
+                                                            fontSize: '13px', background: 'none', border: 'none', cursor: 'pointer',
+                                                            color: item.starred ? '#fbbf24' : 'var(--text-muted)',
+                                                            opacity: item.starred ? 1 : 0.5,
+                                                        }}
+                                                    >{item.starred ? '★' : '☆'}</button>
+                                                    <button
+                                                        onClick={e => { e.stopPropagation(); handleLoadHistory(item); }}
+                                                        title="폼에 불러오기"
+                                                        style={{ fontSize: '11px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}
+                                                    >📥</button>
+                                                    <button
+                                                        onClick={e => { e.stopPropagation(); handleDeleteHistory(item.id); }}
+                                                        title="삭제"
+                                                        style={{ fontSize: '12px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}
+                                                    >🗑️</button>
+                                                </div>
                                             </div>
                                         </div>
                                     ))}

@@ -112,6 +112,14 @@ export function deleteLyricsHistory(id: string): LyricsHistoryItem[] {
     return updated;
 }
 
+export function toggleLyricsHistoryStarred(id: string): LyricsHistoryItem[] {
+    const updated = loadLyricsHistory().map(i =>
+        i.id === id ? { ...i, starred: !i.starred } : i
+    );
+    saveLyricsHistory(updated);
+    return updated;
+}
+
 // ─── Revenue ─────────────────────────────────────────────────
 export function loadRevenue(): RevenueEntry[] {
     return loadData().revenue ?? [];

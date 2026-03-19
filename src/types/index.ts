@@ -84,8 +84,10 @@ export interface LyricsHistoryItem {
     language: 'ko' | 'en' | 'ja' | 'zh' | 'mixed';
     style: string;
     lyrics: string;
+    suno_prompt?: string;
     model: 'flash' | 'pro';
     createdAt: string;
+    starred?: boolean;
 }
 
 // Cover Generator — Gemini 썸네일/커버 프롬프트 결과
