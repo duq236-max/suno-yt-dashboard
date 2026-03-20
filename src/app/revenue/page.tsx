@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import DistributionChecklist from '@/components/DistributionChecklist';
 import {
@@ -11,7 +11,7 @@ import {
     addSong,
     deleteSong,
     generateId,
-} from '@/lib/storage';
+} from '@/lib/supabase-storage';
 import { RevenueEntry, Song } from '@/types';
 
 type Platform = RevenueEntry['platform'];
@@ -75,7 +75,7 @@ function fmt(n: number): string {
 }
 
 export default function RevenuePage() {
-    const [entries, setEntries] = useState<RevenueEntry[]>(() => loadRevenue());
+    const [entries, setEntries] = useState<RevenueEntry[]>([]);
     const [form, setForm] = useState<FormState>(DEFAULT_FORM);
     const [filter, setFilter] = useState<Platform | 'all'>('all');
     const [showForm, setShowForm] = useState(false);
@@ -92,14 +92,19 @@ export default function RevenuePage() {
     const [monthlyGoalUsd, setMonthlyGoalUsd] = useState('100');
 
     // ─── F5 음원 등록 상태 ───────────────────────────────────
-    const [songs, setSongs] = useState<Song[]>(() => loadSongs());
+    const [songs, setSongs] = useState<Song[]>([]);
     const [showSongForm, setShowSongForm] = useState(false);
     const [songForm, setSongForm] = useState({
         title: '', genre: '', distributedAt: new Date().toISOString().slice(0, 10),
         platforms: '', isrc: '', status: 'draft' as Song['status'],
     });
 
-    function handleSongSubmit(e: React.FormEvent) {
+    useEffect(() => {
+        loadRevenue().then(setEntries).catch(() => { });
+        loadSongs().then(setSongs).catch(() => { });
+    }, []);
+
+    async function handleSongSubmit(e: React.FormEvent) {
         e.preventDefault();
         if (!songForm.title.trim() || !songForm.genre.trim()) return;
         const song: Song = {
@@ -111,13 +116,15 @@ export default function RevenuePage() {
             isrc: songForm.isrc.trim() || undefined,
             status: songForm.status,
         };
-        setSongs(addSong(song));
+        const updated = await addSong(song);
+        setSongs(updated);
         setSongForm({ title: '', genre: '', distributedAt: new Date().toISOString().slice(0, 10), platforms: '', isrc: '', status: 'draft' });
         setShowSongForm(false);
     }
 
-    function handleSongDelete(id: string) {
-        setSongs(deleteSong(id));
+    async function handleSongDelete(id: string) {
+        const updated = await deleteSong(id);
+        setSongs(updated);
     }
 
     // ─── F3 계산 ────────────────────────────────────────────
@@ -155,7 +162,7 @@ export default function RevenuePage() {
         setForm(prev => ({ ...prev, [key]: value }));
     }
 
-    function handleSubmit(e: React.FormEvent) {
+    async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
         const amount = parseInt(form.amount.replace(/,/g, ''), 10);
         if (!form.title.trim() || isNaN(amount) || amount <= 0) return;
@@ -172,14 +179,14 @@ export default function RevenuePage() {
             createdAt: new Date().toISOString(),
         };
 
-        const updated = addRevenueEntry(entry);
+        const updated = await addRevenueEntry(entry);
         setEntries(updated);
         setForm(DEFAULT_FORM);
         setShowForm(false);
     }
 
-    function handleDelete(id: string) {
-        const updated = deleteRevenueEntry(id);
+    async function handleDelete(id: string) {
+        const updated = await deleteRevenueEntry(id);
         setEntries(updated);
         setDeleteId(null);
     }

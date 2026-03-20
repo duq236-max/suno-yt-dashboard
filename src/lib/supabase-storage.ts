@@ -19,6 +19,8 @@ import type {
     YoutubeChannel,
     BrandKit,
     LyricsHistoryItem,
+    RevenueEntry,
+    Song,
 } from '@/types';
 import {
     supabase,
@@ -31,6 +33,8 @@ import {
     type DbBrandKit,
     type DbLyricsHistory,
     type DbUserStats,
+    type DbRevenueEntry,
+    type DbSong,
 } from './supabase';
 
 // ──────────────────────────────────────────────────────────
@@ -743,4 +747,192 @@ export async function migrateFromLocalStorage(): Promise<{
         console.error('migrateFromLocalStorage error:', message);
         return { migrated: false, error: message };
     }
+}
+
+// ──────────────────────────────────────────────────────────
+// toggleLyricsHistoryStarred
+// starred는 DB에 컬럼이 없어 localStorage로 관리 (starred IDs 목록)
+// ──────────────────────────────────────────────────────────
+const STARRED_KEY = 'lyrics-starred-ids';
+
+function getStarredIds(): Set<string> {
+    if (typeof window === 'undefined') return new Set();
+    try {
+        const raw = localStorage.getItem(STARRED_KEY);
+        return new Set(raw ? (JSON.parse(raw) as string[]) : []);
+    } catch {
+        return new Set();
+    }
+}
+
+function saveStarredIds(ids: Set<string>): void {
+    if (typeof window !== 'undefined') {
+        localStorage.setItem(STARRED_KEY, JSON.stringify([...ids]));
+    }
+}
+
+export function applyStarred(items: LyricsHistoryItem[]): LyricsHistoryItem[] {
+    const starred = getStarredIds();
+    return items.map((item) => ({ ...item, starred: starred.has(item.id) }));
+}
+
+export function toggleLyricsHistoryStarred(
+    id: string,
+    currentItems: LyricsHistoryItem[]
+): LyricsHistoryItem[] {
+    const ids = getStarredIds();
+    if (ids.has(id)) {
+        ids.delete(id);
+    } else {
+        ids.add(id);
+    }
+    saveStarredIds(ids);
+    return currentItems.map((item) =>
+        item.id === id ? { ...item, starred: ids.has(id) } : item
+    );
+}
+
+// ──────────────────────────────────────────────────────────
+// Revenue (수익 관리) — revenue_entries 테이블
+// ──────────────────────────────────────────────────────────
+function toRevenueEntry(row: DbRevenueEntry): RevenueEntry {
+    return {
+        id: row.id,
+        title: row.title,
+        platform: row.platform,
+        amount: row.amount,
+        views: row.views ?? undefined,
+        streams: row.streams ?? undefined,
+        period: row.period,
+        genre: row.genre ?? undefined,
+        createdAt: row.created_at,
+    };
+}
+
+export async function loadRevenue(): Promise<RevenueEntry[]> {
+    const userId = await getCurrentUserId();
+    if (!userId) return [];
+
+    const { data, error } = await supabase
+        .from('revenue_entries')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+    if (error) {
+        console.error('loadRevenue error:', error.message);
+        return [];
+    }
+    return (data ?? []).map((row) => toRevenueEntry(row as unknown as DbRevenueEntry));
+}
+
+export async function addRevenueEntry(entry: RevenueEntry): Promise<RevenueEntry[]> {
+    const userId = await getCurrentUserId();
+    if (!userId) return [];
+
+    const { error } = await supabase.from('revenue_entries').insert({
+        id: entry.id,
+        user_id: userId,
+        title: entry.title,
+        platform: entry.platform,
+        amount: entry.amount,
+        views: entry.views ?? null,
+        streams: entry.streams ?? null,
+        period: entry.period,
+        genre: entry.genre ?? null,
+    });
+
+    if (error) {
+        console.error('addRevenueEntry error:', error.message);
+        throw new Error(`수익 저장 실패: ${error.message}`);
+    }
+    return loadRevenue();
+}
+
+export async function deleteRevenueEntry(id: string): Promise<RevenueEntry[]> {
+    const userId = await getCurrentUserId();
+    if (!userId) return [];
+
+    const { error } = await supabase
+        .from('revenue_entries')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', userId);
+
+    if (error) {
+        console.error('deleteRevenueEntry error:', error.message);
+        throw new Error(`수익 삭제 실패: ${error.message}`);
+    }
+    return loadRevenue();
+}
+
+// ──────────────────────────────────────────────────────────
+// Songs (음원 등록 현황) — songs 테이블
+// ──────────────────────────────────────────────────────────
+function toSong(row: DbSong): Song {
+    return {
+        id: row.id,
+        title: row.title,
+        genre: row.genre,
+        distributedAt: row.distributed_at,
+        platforms: row.platforms,
+        isrc: row.isrc ?? undefined,
+        status: row.status,
+    };
+}
+
+export async function loadSongs(): Promise<Song[]> {
+    const userId = await getCurrentUserId();
+    if (!userId) return [];
+
+    const { data, error } = await supabase
+        .from('songs')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+    if (error) {
+        console.error('loadSongs error:', error.message);
+        return [];
+    }
+    return (data ?? []).map((row) => toSong(row as unknown as DbSong));
+}
+
+export async function addSong(song: Song): Promise<Song[]> {
+    const userId = await getCurrentUserId();
+    if (!userId) return [];
+
+    const { error } = await supabase.from('songs').insert({
+        id: song.id,
+        user_id: userId,
+        title: song.title,
+        genre: song.genre,
+        distributed_at: song.distributedAt,
+        platforms: song.platforms,
+        isrc: song.isrc ?? null,
+        status: song.status,
+    });
+
+    if (error) {
+        console.error('addSong error:', error.message);
+        throw new Error(`음원 저장 실패: ${error.message}`);
+    }
+    return loadSongs();
+}
+
+export async function deleteSong(id: string): Promise<Song[]> {
+    const userId = await getCurrentUserId();
+    if (!userId) return [];
+
+    const { error } = await supabase
+        .from('songs')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', userId);
+
+    if (error) {
+        console.error('deleteSong error:', error.message);
+        throw new Error(`음원 삭제 실패: ${error.message}`);
+    }
+    return loadSongs();
 }

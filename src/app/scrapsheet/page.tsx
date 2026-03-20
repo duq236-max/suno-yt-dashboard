@@ -1,27 +1,30 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Header from '@/components/Header';
-import { loadData, saveData, generateId } from '@/lib/storage';
+import { loadData, saveData, generateId } from '@/lib/supabase-storage';
 import { ScrapSheet } from '@/types';
 import Link from 'next/link';
 
 const GENRES = ['Lo-fi', 'Jazz', 'Classical', 'Ambient', 'EDM', 'Chillhop', 'Piano', 'Nature Sounds', '기타'];
 
 export default function ScrapsheetPage() {
-    const [sheets, setSheets] = useState<ScrapSheet[]>(() => loadData().sheets);
+    const [sheets, setSheets] = useState<ScrapSheet[]>([]);
     const [showNewSheet, setShowNewSheet] = useState(false);
     const [newSheetName, setNewSheetName] = useState('');
     const [newSheetGenre, setNewSheetGenre] = useState('Lo-fi');
 
-    function persist(updated: ScrapSheet[]) {
-        const data = loadData();
-        data.sheets = updated;
-        saveData(data);
+    useEffect(() => {
+        loadData().then((data) => setSheets(data.sheets)).catch(() => { });
+    }, []);
+
+    async function persist(updated: ScrapSheet[]) {
+        const data = await loadData();
+        await saveData({ ...data, sheets: updated });
         setSheets(updated);
     }
 
-    function createSheet() {
+    async function createSheet() {
         if (!newSheetName.trim()) return;
         const sheet: ScrapSheet = {
             id: generateId(),
@@ -30,14 +33,14 @@ export default function ScrapsheetPage() {
             items: [],
             createdAt: new Date().toISOString(),
         };
-        persist([...sheets, sheet]);
+        await persist([...sheets, sheet]);
         setNewSheetName('');
         setShowNewSheet(false);
     }
 
-    function deleteSheet(id: string) {
+    async function deleteSheet(id: string) {
         if (!confirm('이 시트를 삭제하시겠습니까?')) return;
-        persist(sheets.filter((s) => s.id !== id));
+        await persist(sheets.filter((s) => s.id !== id));
     }
 
     return (

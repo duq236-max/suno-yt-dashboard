@@ -14,11 +14,14 @@ import {
     addLyricsHistory,
     deleteLyricsHistory,
     toggleLyricsHistoryStarred,
+    applyStarred,
+    generateId,
+    formatDatetime,
+} from '@/lib/supabase-storage';
+import {
     getCustomVocals,
     saveCustomVocal,
     deleteCustomVocal,
-    generateId,
-    formatDatetime,
 } from '@/lib/storage';
 import { LyricsHistoryItem, CustomVocal } from '@/types';
 
@@ -71,7 +74,9 @@ export default function LyricsPage() {
     const [estimatedDuration, setEstimatedDuration] = useState<number | null>(null);
 
     useEffect(() => {
-        setHistory(loadLyricsHistory());
+        loadLyricsHistory()
+            .then((items) => setHistory(applyStarred(items)))
+            .catch(() => { });
         setCustomVocals(getCustomVocals());
     }, []);
 
@@ -80,7 +85,8 @@ export default function LyricsPage() {
     }
 
     async function handleGenerate() {
-        const apiKey = loadData().geminiApiKey;
+        const data = await loadData();
+        const apiKey = data.geminiApiKey;
         if (!apiKey) {
             setError('먼저 설정 페이지에서 Gemini API 키를 입력해주세요.');
             return;
@@ -148,7 +154,9 @@ export default function LyricsPage() {
                 model: form.model,
                 createdAt: new Date().toISOString(),
             };
-            setHistory(addLyricsHistory(historyItem));
+            await addLyricsHistory(historyItem);
+            const updated = await loadLyricsHistory();
+            setHistory(applyStarred(updated));
         } catch (err) {
             setError(err instanceof Error ? err.message : '알 수 없는 오류');
         } finally {
@@ -163,15 +171,17 @@ export default function LyricsPage() {
         }).catch(() => { });
     }
 
-    function handleDeleteHistory(id: string) {
+    async function handleDeleteHistory(id: string) {
         if (!confirm('이 가사를 히스토리에서 삭제할까요?')) return;
-        setHistory(deleteLyricsHistory(id));
+        await deleteLyricsHistory(id);
+        const updated = await loadLyricsHistory();
+        setHistory(applyStarred(updated));
         if (selectedHistory?.id === id) setSelectedHistory(null);
     }
 
     function handleStarHistory(e: React.MouseEvent, id: string) {
         e.stopPropagation();
-        const updated = toggleLyricsHistoryStarred(id);
+        const updated = toggleLyricsHistoryStarred(id, history);
         setHistory(updated);
         if (selectedHistory?.id === id) {
             const found = updated.find(i => i.id === id);
@@ -224,7 +234,8 @@ export default function LyricsPage() {
     }
 
     async function handleRecommendVocal() {
-        const apiKey = loadData().geminiApiKey;
+        const data = await loadData();
+        const apiKey = data.geminiApiKey;
         if (!apiKey) { showToast('Gemini API 키를 먼저 설정해주세요.'); return; }
         if (form.genre.length === 0) { showToast('장르를 먼저 선택해주세요.'); return; }
         setVocalRecommending(true);
