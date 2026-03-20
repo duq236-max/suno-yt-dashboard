@@ -3,6 +3,7 @@ import { GeistSans } from 'geist/font/sans';
 import './globals.css';
 import AppShell from '@/components/AppShell';
 import Providers from '@/components/Providers';
+import { Analytics } from '@vercel/analytics/react';
 
 export const metadata: Metadata = {
   title: 'Suno YT Manager — 유튜브 채널 반자동화 대시보드',
@@ -20,6 +21,7 @@ export default function RootLayout({
         <Providers>
           <AppShell>{children}</AppShell>
         </Providers>
+        <Analytics />
       </body>
     </html>
   );

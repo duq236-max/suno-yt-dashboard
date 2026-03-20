@@ -123,6 +123,31 @@ export type DbLyricsHistory = {
     created_at: string;
 };
 
+export type DbRevenueEntry = {
+    id: string;
+    user_id: string;
+    title: string;
+    platform: 'youtube' | 'distrokid' | 'spotify' | 'apple_music' | 'other';
+    amount: number;
+    views: number | null;
+    streams: number | null;
+    period: string;
+    genre: string | null;
+    created_at: string;
+};
+
+export type DbSong = {
+    id: string;
+    user_id: string;
+    title: string;
+    genre: string;
+    distributed_at: string;
+    platforms: string[];
+    isrc: string | null;
+    status: 'draft' | 'distributed' | 'earning';
+    created_at: string;
+};
+
 // ──────────────────────────────────────────────────────────
 // Insert 타입 — 각 테이블의 명시적 인터페이스
 // (supabase-js v2 제네릭 타입 추론을 위해 구체적 타입 사용)
@@ -217,6 +242,29 @@ export type DbLyricsHistoryInsert = {
     model: 'flash' | 'pro';
 }
 
+export type DbRevenueEntryInsert = {
+    id?: string;
+    user_id: string;
+    title: string;
+    platform: 'youtube' | 'distrokid' | 'spotify' | 'apple_music' | 'other';
+    amount: number;
+    views?: number | null;
+    streams?: number | null;
+    period: string;
+    genre?: string | null;
+}
+
+export type DbSongInsert = {
+    id?: string;
+    user_id: string;
+    title: string;
+    genre: string;
+    distributed_at: string;
+    platforms: string[];
+    isrc?: string | null;
+    status: 'draft' | 'distributed' | 'earning';
+}
+
 type Rel = {
     foreignKeyName: string;
     columns: string[];
@@ -271,6 +319,18 @@ export type Database = {
                 Row: DbLyricsHistory;
                 Insert: DbLyricsHistoryInsert;
                 Update: Partial<DbLyricsHistoryInsert>;
+                Relationships: Rel[];
+            };
+            revenue_entries: {
+                Row: DbRevenueEntry;
+                Insert: DbRevenueEntryInsert;
+                Update: Partial<DbRevenueEntryInsert>;
+                Relationships: Rel[];
+            };
+            songs: {
+                Row: DbSong;
+                Insert: DbSongInsert;
+                Update: Partial<DbSongInsert>;
                 Relationships: Rel[];
             };
         };
