@@ -13,8 +13,11 @@ import {
 } from 'recharts';
 import StatCard from '@/components/StatCard';
 import Image from 'next/image';
-import { loadData } from '@/lib/storage';
+import { loadData, loadRevenue } from '@/lib/storage';
 import type { StatsSummary, ChannelStats } from '@/types';
+import GenreChart from '@/components/GenreChart';
+import RevenuePieChart from '@/components/RevenuePieChart';
+import type { RevenuePieSlice } from '@/components/RevenuePieChart';
 
 // 숫자 포맷 (1200000 → 1.2M)
 function fmtNum(n: number): string {
@@ -38,10 +41,59 @@ function buildChartData(channels: ChannelStats[]): Record<string, number | strin
 
 const CHART_COLORS = ['#e53e3e', '#3182ce', '#38a169', '#d69e2e', '#805ad5'];
 
+// 플랫폼 레이블 매핑
+const PLATFORM_LABEL: Record<string, string> = {
+  youtube: 'YouTube',
+  distrokid: 'DistroKid',
+  spotify: 'Spotify',
+  apple_music: 'Apple Music',
+  other: '기타',
+};
+
+const PLATFORM_COLORS: Record<string, string> = {
+  youtube: '#e53e3e',
+  distrokid: '#3182ce',
+  spotify: '#38a169',
+  apple_music: '#805ad5',
+  other: '#d69e2e',
+};
+
 export default function StatisticsPage() {
   const [summary, setSummary] = useState<StatsSummary | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // 장르별 프롬프트 수 집계 (scrap sheets)
+  const genreData = (() => {
+    const sheets = loadData().sheets ?? [];
+    const counts: Record<string, number> = {};
+    sheets.forEach((sheet) => {
+      (sheet.items ?? []).forEach((item) => {
+        const g = item.genre || '기타';
+        counts[g] = (counts[g] ?? 0) + 1;
+      });
+    });
+    return Object.entries(counts)
+      .map(([genre, count]) => ({ genre, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+  })();
+
+  // 플랫폼별 수익 집계
+  const revenuePieData: RevenuePieSlice[] = (() => {
+    const entries = loadRevenue();
+    const totals: Record<string, number> = {};
+    entries.forEach((e) => {
+      totals[e.platform] = (totals[e.platform] ?? 0) + e.amount;
+    });
+    return Object.entries(totals)
+      .filter(([, v]) => v > 0)
+      .map(([platform, value]) => ({
+        name: PLATFORM_LABEL[platform] ?? platform,
+        value,
+        color: PLATFORM_COLORS[platform] ?? '#888',
+      }));
+  })();
 
   const fetchStats = useCallback(async () => {
     const appData = loadData();
@@ -187,6 +239,32 @@ export default function StatisticsPage() {
               ))}
             </AreaChart>
           </ResponsiveContainer>
+        </div>
+      )}
+
+      {/* ── 중간 하단: 장르 + 수익 2열 차트 ── */}
+      {!loading && (
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+            gap: '16px',
+            marginBottom: '24px',
+          }}
+        >
+          <div className="card">
+            <div className="card-header">
+              <h2 className="card-title">장르별 프롬프트 수</h2>
+            </div>
+            <GenreChart data={genreData} />
+          </div>
+
+          <div className="card">
+            <div className="card-header">
+              <h2 className="card-title">플랫폼별 수익 비율</h2>
+            </div>
+            <RevenuePieChart data={revenuePieData} />
+          </div>
         </div>
       )}
 

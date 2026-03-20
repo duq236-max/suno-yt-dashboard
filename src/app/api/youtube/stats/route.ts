@@ -1,14 +1,18 @@
 import { google } from 'googleapis';
 import { NextRequest, NextResponse } from 'next/server';
 import type { ChannelStats, StatsSummary } from '@/types';
+import { supabase, getCurrentUserId } from '@/lib/supabase';
 
 const youtube = google.youtube({
   version: 'v3',
   auth: process.env.YOUTUBE_API_KEY,
 });
 
+// 6시간 캐시 TTL (ms)
+const CACHE_TTL_MS = 6 * 60 * 60 * 1000;
+
 // GET /api/youtube/stats?channelIds=UCaaa,UCbbb,UCccc
-// 여러 채널 통계를 병렬로 조회해서 집계 반환
+// 여러 채널 통계를 병렬로 조회해서 집계 반환 (6시간 Supabase 캐싱)
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
   const raw = searchParams.get('channelIds') ?? '';
@@ -23,12 +27,77 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    // 모든 채널 병렬 조회
+    const userId = await getCurrentUserId();
+
+    // ── 1. DB 캐시 확인 (channel_url에 channelId 포함 여부로 매칭) ──
+    if (userId) {
+      const urlPatterns = channelIds.map((id) => `%${id}%`);
+      const cacheChecks = await Promise.all(
+        urlPatterns.map((pat) =>
+          supabase
+            .from('youtube_channels')
+            .select('*')
+            .eq('user_id', userId)
+            .like('channel_url', pat)
+            .is('deleted_at', null)
+            .single()
+        )
+      );
+
+      const now = Date.now();
+      const freshRows = cacheChecks
+        .filter((r) => r.data !== null)
+        .map((r) => r.data!)
+        .filter((row) => now - new Date(row.updated_at).getTime() < CACHE_TTL_MS);
+
+      if (freshRows.length === channelIds.length) {
+        const channels: ChannelStats[] = freshRows.map((row, i) => ({
+          channelId: channelIds[i],
+          channelName: row.channel_name,
+          thumbnailUrl: row.thumbnail_url ?? undefined,
+          subscriberCount: row.subscriber_count ?? 0,
+          totalViews: row.total_views ?? 0,
+          videoCount: 0,
+          engagementRate: row.avg_engagement ?? 0,
+          weeklyViews: [], // 캐시에는 weeklyViews 미저장 — 빈 배열 폴백
+        }));
+
+        const summary: StatsSummary = {
+          totalSubscribers: channels.reduce((s, c) => s + c.subscriberCount, 0),
+          totalViews: channels.reduce((s, c) => s + c.totalViews, 0),
+          totalVideos: channels.reduce((s, c) => s + c.videoCount, 0),
+          channelCount: channels.length,
+          channels,
+        };
+        return NextResponse.json({ ...summary, cached: true });
+      }
+    }
+
+    // ── 2. YouTube API 호출 ──────────────────────────────────────
     const results = await Promise.allSettled(channelIds.map(fetchChannelStats));
 
     const channels: ChannelStats[] = results
       .filter((r): r is PromiseFulfilledResult<ChannelStats> => r.status === 'fulfilled')
       .map((r) => r.value);
+
+    // ── 3. DB 캐시 갱신 (update existing rows by channel_url) ───
+    if (userId && channels.length > 0) {
+      await Promise.allSettled(
+        channels.map((ch) =>
+          supabase
+            .from('youtube_channels')
+            .update({
+              thumbnail_url: ch.thumbnailUrl ?? null,
+              subscriber_count: ch.subscriberCount,
+              total_views: ch.totalViews,
+              avg_engagement: ch.engagementRate,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('user_id', userId)
+            .like('channel_url', `%${ch.channelId}%`)
+        )
+      );
+    }
 
     const summary: StatsSummary = {
       totalSubscribers: channels.reduce((s, c) => s + c.subscriberCount, 0),
