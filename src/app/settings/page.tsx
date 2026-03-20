@@ -4,8 +4,10 @@ import { useEffect, useState } from 'react';
 import Header from '@/components/Header';
 import Link from 'next/link';
 import { loadData, updateGeminiApiKey } from '@/lib/storage';
+import { pingExtension, type PingResult } from '@/lib/ping-test';
 
 type Theme = 'dark' | 'light';
+type ExtConnStatus = 'detecting' | 'connected' | 'disconnected';
 
 function applyTheme(theme: Theme) {
     document.documentElement.setAttribute('data-theme', theme);
@@ -16,9 +18,29 @@ export default function SettingsPage() {
     const [apiKey, setApiKey] = useState(() => loadData().geminiApiKey ?? '');
     const [apiKeySaved, setApiKeySaved] = useState(false);
     const [theme, setTheme] = useState<Theme>(() => (typeof window !== 'undefined' ? (localStorage.getItem('theme') ?? 'dark') : 'dark') as Theme);
+    const [extStatus, setExtStatus] = useState<ExtConnStatus>('detecting');
+    const [extLatency, setExtLatency] = useState<number | null>(null);
+
     // 마운트 시 초기 테마 적용 (setState 없음 — DOM 조작만)
     // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => { applyTheme(theme); }, []);
+
+    // 마운트 시 Extension 연결 감지
+    useEffect(() => {
+        detectExtension();
+    }, []);
+
+    async function detectExtension() {
+        setExtStatus('detecting');
+        setExtLatency(null);
+        const result: PingResult = await pingExtension(1200);
+        if (result.connected) {
+            setExtStatus('connected');
+            setExtLatency(result.latencyMs);
+        } else {
+            setExtStatus('disconnected');
+        }
+    }
 
     function toggleTheme() {
         const next: Theme = theme === 'dark' ? 'light' : 'dark';
@@ -98,6 +120,45 @@ export default function SettingsPage() {
                                     {theme === 'dark' ? '🌙' : '☀️'}
                                 </span>
                             </button>
+                        </div>
+                    </div>
+
+                    {/* ─── Extension 연결 상태 ─── */}
+                    <div className="card" style={{ borderColor: extStatus === 'connected' ? 'rgba(34,197,94,0.3)' : extStatus === 'disconnected' ? 'rgba(229,62,62,0.2)' : 'var(--border)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                            <div className="card-title" style={{ color: extStatus === 'connected' ? '#22c55e' : extStatus === 'disconnected' ? 'var(--accent)' : 'var(--text-muted)' }}>
+                                🔌 Extension 연결 상태
+                            </div>
+                            <button
+                                type="button"
+                                className="btn btn-ghost btn-sm"
+                                onClick={detectExtension}
+                                disabled={extStatus === 'detecting'}
+                                style={{ fontSize: '11px' }}
+                            >
+                                {extStatus === 'detecting' ? '감지 중…' : '↻ 재감지'}
+                            </button>
+                        </div>
+                        <div style={{
+                            display: 'flex', alignItems: 'center', gap: '10px',
+                            padding: '10px 14px', borderRadius: '8px',
+                            background: extStatus === 'connected' ? 'rgba(34,197,94,0.06)' : extStatus === 'disconnected' ? 'rgba(229,62,62,0.06)' : 'var(--bg-secondary)',
+                            border: '1px solid var(--border)',
+                        }}>
+                            <span style={{ fontSize: '18px' }}>
+                                {extStatus === 'detecting' ? '⏳' : extStatus === 'connected' ? '✅' : '❌'}
+                            </span>
+                            <div>
+                                <div style={{ fontSize: '13px', fontWeight: 600, color: extStatus === 'connected' ? '#22c55e' : extStatus === 'disconnected' ? 'var(--accent)' : 'var(--text-muted)' }}>
+                                    {extStatus === 'detecting' && 'Extension 감지 중…'}
+                                    {extStatus === 'connected' && `연결됨${extLatency !== null ? ` (${extLatency}ms)` : ''}`}
+                                    {extStatus === 'disconnected' && 'Extension 미설치 또는 비활성화'}
+                                </div>
+                                <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                                    {extStatus === 'connected' && 'suno-batch-extension 이 대시보드와 정상 통신 중입니다'}
+                                    {extStatus === 'disconnected' && 'suno-batch-extension/dist 폴더를 chrome://extensions 에서 로드하세요'}
+                                </div>
+                            </div>
                         </div>
                     </div>
 
