@@ -435,6 +435,32 @@ async function updateSheetItems(
 }
 
 // ──────────────────────────────────────────────────────────
+// upsertSheet — 단일 시트 저장 (다른 시트에 영향 없음)
+// ──────────────────────────────────────────────────────────
+export async function upsertSheet(sheet: ScrapSheet): Promise<void> {
+    const userId = await getCurrentUserId();
+    if (!userId) return;
+
+    const { error: sheetError } = await supabase
+        .from('scrap_sheets')
+        .upsert(
+            {
+                id: sheet.id,
+                user_id: userId,
+                name: sheet.name,
+                channel_name: sheet.channelName ?? null,
+                genre: sheet.genre ?? null,
+                deleted_at: null,
+            },
+            { onConflict: 'id' }
+        );
+
+    if (sheetError) throw new Error(`시트 저장 실패: ${sheetError.message}`);
+
+    await updateSheetItems(sheet.id, userId, sheet.items);
+}
+
+// ──────────────────────────────────────────────────────────
 // updateSchedule
 // ──────────────────────────────────────────────────────────
 export async function updateSchedule(schedule: ScheduleConfig): Promise<void> {

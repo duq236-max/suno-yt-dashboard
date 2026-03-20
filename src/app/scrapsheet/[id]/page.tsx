@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Header from '@/components/Header';
-import { loadData, saveData, generateId, formatDatetime } from '@/lib/storage';
+import { loadData, upsertSheet, generateId, formatDatetime } from '@/lib/supabase-storage';
 import { ScrapSheet, ScrapItem, ScrapStatus } from '@/types';
 
 const GENRES = ['Lo-fi', 'Jazz', 'Classical', 'Ambient', 'EDM', 'Chillhop', 'Piano', 'Nature Sounds',
@@ -52,10 +52,11 @@ export default function ScrapsheetDetailPage() {
     const [aiError, setAiError] = useState<string | null>(null);
 
     useEffect(() => {
-        const data = loadData();
-        const found = data.sheets.find(s => s.id === id);
-        if (!found) { router.push('/scrapsheet'); return; }
-        setSheet(found);
+        loadData().then(data => {
+            const found = data.sheets.find(s => s.id === id);
+            if (!found) { router.push('/scrapsheet'); return; }
+            setSheet(found);
+        });
     }, [id, router]);
 
     // ✅ Hook 규칙: useMemo는 early return 전에 선언 (sheet가 null이면 빈 배열 반환)
@@ -78,11 +79,9 @@ export default function ScrapsheetDetailPage() {
         );
     }
 
-    function persistSheet(updated: ScrapSheet) {
-        const data = loadData();
-        data.sheets = data.sheets.map(s => s.id === updated.id ? updated : s);
-        saveData(data);
+    async function persistSheet(updated: ScrapSheet) {
         setSheet(updated);
+        await upsertSheet(updated);
     }
 
     function openAdd() {
@@ -184,7 +183,7 @@ export default function ScrapsheetDetailPage() {
     }
 
     async function handleAiGenerate() {
-        const apiKey = loadData().geminiApiKey;
+        const apiKey = (await loadData()).geminiApiKey;
         if (!apiKey) {
             alert('먼저 설정 페이지에서 Gemini API 키를 입력해주세요.');
             setShowAiModal(null);

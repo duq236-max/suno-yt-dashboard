@@ -4,7 +4,8 @@ import { useEffect, useState, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import Header from '@/components/Header';
 import StatCard from '@/components/StatCard';
-import { loadData, saveData, generateId, formatNumber, loadLyricsHistory } from '@/lib/storage';
+import { loadData, updateYoutubeChannels, generateId, formatNumber } from '@/lib/supabase-storage';
+import { loadLyricsHistory } from '@/lib/storage';
 import { fetchYoutubeChannel, fetchYoutubeAnalytics, YoutubeAnalytics, YoutubeChannelInfo } from '@/lib/youtube';
 import { AppData, YoutubeChannel } from '@/types';
 import Link from 'next/link';
@@ -28,7 +29,11 @@ const EMPTY_YT: Omit<YoutubeChannel, 'id' | 'connectedAt'> = {
 };
 
 export default function DashboardPage() {
-    const [data, setData] = useState<AppData | null>(() => loadData());
+    const [data, setData] = useState<AppData | null>(null);
+
+    useEffect(() => {
+        loadData().then(setData);
+    }, []);
     const [lyricsCount] = useState(() => loadLyricsHistory().length);
     const [showYtModal, setShowYtModal] = useState(false);
     const [ytForm, setYtForm] = useState(EMPTY_YT);
@@ -228,7 +233,7 @@ export default function DashboardPage() {
         setShowYtModal(true);
     }
 
-    function saveYtChannel() {
+    async function saveYtChannel() {
         if (!ytForm.channelName.trim()) return;
         const updated = [...(data!.youtubeChannels ?? [])];
         if (editingYtId) {
@@ -238,17 +243,17 @@ export default function DashboardPage() {
             updated.push({ id: generateId(), ...ytForm, channelId: pendingChannelId ?? undefined, connectedAt: new Date().toISOString() });
         }
         const newData = { ...data!, youtubeChannels: updated };
-        saveData(newData);
         setData(newData);
         setShowYtModal(false);
+        await updateYoutubeChannels(updated);
     }
 
-    function deleteYtChannel(id: string) {
+    async function deleteYtChannel(id: string) {
         if (!confirm('채널을 삭제하시겠습니까?')) return;
         const updated = (data!.youtubeChannels ?? []).filter(c => c.id !== id);
         const newData = { ...data!, youtubeChannels: updated };
-        saveData(newData);
         setData(newData);
+        await updateYoutubeChannels(updated);
     }
 
     const numField = (key: keyof typeof ytForm, label: string) => (
