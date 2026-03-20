@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import Header from '@/components/Header';
 import { loadData, generateId, addThumbnailHistory, loadThumbnailHistory, toggleThumbnailFavorite } from '@/lib/storage';
 import type { CoverResult, ThumbnailHistoryItem } from '@/types';
@@ -396,16 +397,17 @@ export default function CoverPage() {
                             )}
                             {generatedImageUrl && (
                                 <>
-                                    <img
-                                        src={generatedImageUrl}
-                                        alt="Generated thumbnail"
-                                        style={{
-                                            width: '100%', borderRadius: '8px',
-                                            display: imageLoadState === 'done' ? 'block' : 'none',
-                                        }}
-                                        onLoad={() => setImageLoadState('done')}
-                                        onError={() => setImageLoadState('error')}
-                                    />
+                                    <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', borderRadius: '8px', overflow: 'hidden', display: imageLoadState === 'done' ? 'block' : 'none' }}>
+                                        <Image
+                                            src={generatedImageUrl}
+                                            alt="Generated thumbnail"
+                                            fill
+                                            style={{ objectFit: 'cover' }}
+                                            onLoad={() => setImageLoadState('done')}
+                                            onError={() => setImageLoadState('error')}
+                                            unoptimized
+                                        />
+                                    </div>
                                     {imageLoadState === 'error' && (
                                         <div style={{ padding: '16px', color: 'var(--accent)', fontSize: '13px', background: 'rgba(229,62,62,0.08)', borderRadius: '8px' }}>
                                             이미지 생성에 실패했습니다. 잠시 후 다시 시도해주세요.
@@ -509,12 +511,15 @@ export default function CoverPage() {
                                     border: '1px solid var(--border)', background: 'var(--bg-secondary)',
                                     position: 'relative',
                                 }}>
-                                    <img
-                                        src={item.imageUrl}
-                                        alt={item.style}
-                                        style={{ width: '100%', aspectRatio: '16/9', objectFit: 'cover', display: 'block' }}
-                                        loading="lazy"
-                                    />
+                                    <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9' }}>
+                                        <Image
+                                            src={item.imageUrl}
+                                            alt={item.style}
+                                            fill
+                                            style={{ objectFit: 'cover' }}
+                                            unoptimized
+                                        />
+                                    </div>
                                     <div style={{ padding: '8px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                         <span style={{ fontSize: '11px', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '110px' }}>
                                             {item.style || '커스텀'}
