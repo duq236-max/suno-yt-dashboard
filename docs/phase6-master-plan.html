@@ -1,0 +1,1279 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phase 6 마스터 기획서 — Suno YT Dashboard 클라우드 전환</title>
+<style>
+  :root {
+    --bg: #0d0d14;
+    --surface: #13131f;
+    --card: #1a1a2e;
+    --border: #2a2a40;
+    --accent: #7c3aed;
+    --accent2: #06b6d4;
+    --accent3: #f59e0b;
+    --green: #10b981;
+    --red: #ef4444;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    line-height: 1.6;
+  }
+  .hero {
+    background: linear-gradient(135deg, #0d0d14 0%, #0a1a30 50%, #0d1a0a 100%);
+    padding: 60px 40px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 30% 50%, rgba(6,182,212,0.12) 0%, transparent 60%),
+                radial-gradient(ellipse at 70% 50%, rgba(16,185,129,0.1) 0%, transparent 60%);
+  }
+  .hero-badge {
+    display: inline-block;
+    background: rgba(6,182,212,0.2);
+    border: 1px solid rgba(6,182,212,0.4);
+    color: #67e8f9;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 20px;
+    position: relative;
+  }
+  .hero h1 {
+    font-size: 42px;
+    font-weight: 800;
+    background: linear-gradient(135deg, #fff 0%, #67e8f9 40%, #6ee7b7 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 16px;
+    position: relative;
+  }
+  .hero p {
+    font-size: 18px;
+    color: var(--muted);
+    max-width: 760px;
+    margin: 0 auto 30px;
+    position: relative;
+  }
+  .hero-meta {
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+    flex-wrap: wrap;
+    position: relative;
+  }
+  .hero-meta span {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 8px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .hero-meta span b { color: var(--text); }
+  .container { max-width: 1200px; margin: 0 auto; padding: 40px 24px; }
+  .section { margin-bottom: 60px; }
+  .section-title {
+    font-size: 26px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-title .icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .section-desc { color: var(--muted); margin-bottom: 28px; font-size: 15px; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .card-title { font-size: 17px; font-weight: 700; }
+  .badge {
+    font-size: 11px; font-weight: 700;
+    padding: 3px 10px; border-radius: 6px;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .badge-critical { background: rgba(239,68,68,0.2); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+  .badge-high { background: rgba(245,158,11,0.2); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
+  .badge-medium { background: rgba(6,182,212,0.2); color: #67e8f9; border: 1px solid rgba(6,182,212,0.3); }
+  .badge-new { background: rgba(124,58,237,0.2); color: #a78bfa; border: 1px solid rgba(124,58,237,0.3); }
+  .badge-done { background: rgba(16,185,129,0.2); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.3); }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  @media (max-width: 768px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+  .checklist { list-style: none; }
+  .checklist li {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    cursor: pointer;
+    transition: background 0.15s;
+    border-radius: 6px;
+  }
+  .checklist li:hover { background: rgba(255,255,255,0.03); }
+  .checklist li.done .check-label { text-decoration: line-through; color: var(--muted); }
+  .checklist li input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 20px; height: 20px; min-width: 20px;
+    border: 2px solid var(--border);
+    border-radius: 5px;
+    cursor: pointer;
+    position: relative;
+    background: transparent;
+    transition: all 0.2s;
+    margin-top: 2px;
+  }
+  .checklist li input[type="checkbox"]:checked {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+  .checklist li input[type="checkbox"]:checked::after {
+    content: '\2713';
+    position: absolute;
+    top: -1px; left: 3px;
+    color: white;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .check-label { font-size: 14px; }
+  .check-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .progress-bar {
+    background: var(--border);
+    border-radius: 4px;
+    height: 6px;
+    margin-top: 8px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    border-radius: 4px;
+    background: linear-gradient(90deg, var(--accent2), var(--green));
+    transition: width 0.5s;
+  }
+  .phase-table { width: 100%; border-collapse: collapse; }
+  .phase-table th {
+    text-align: left; padding: 12px 16px;
+    background: var(--surface);
+    font-size: 13px; color: var(--muted);
+    font-weight: 600;
+    border-bottom: 1px solid var(--border);
+  }
+  .phase-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 14px;
+    vertical-align: middle;
+  }
+  .phase-table tr:hover td { background: rgba(255,255,255,0.02); }
+  .flow {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    flex-wrap: wrap;
+    margin: 20px 0;
+  }
+  .flow-step {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 20px;
+    text-align: center;
+    min-width: 130px;
+    flex: 1;
+  }
+  .flow-step .step-num { font-size: 11px; font-weight: 700; color: var(--accent2); text-transform: uppercase; margin-bottom: 6px; }
+  .flow-step .step-label { font-size: 13px; font-weight: 600; }
+  .flow-step .step-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .flow-arrow { color: var(--muted); font-size: 20px; padding: 0 8px; flex-shrink: 0; }
+  .divider { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+  .summary-bar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 40px;
+  }
+  .summary-stat {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    text-align: center;
+  }
+  .summary-stat .val {
+    font-size: 32px;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--accent2), var(--green));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .summary-stat .label { font-size: 13px; color: var(--muted); margin-top: 4px; }
+  @media (max-width: 600px) {
+    .summary-bar { grid-template-columns: 1fr 1fr; }
+    .hero h1 { font-size: 28px; }
+  }
+  .arch-box {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+  }
+  .arch-box .arch-icon { font-size: 28px; margin-bottom: 8px; }
+  .arch-box .arch-title { font-size: 14px; font-weight: 700; }
+  .arch-box .arch-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .connection-line {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent2);
+    font-size: 13px;
+    gap: 4px;
+  }
+  .status-done { color: var(--green); font-weight: 600; }
+  .status-wip { color: var(--accent3); font-weight: 600; }
+  .status-todo { color: var(--muted); }
+  .infra-tag {
+    display: inline-block;
+    background: rgba(6,182,212,0.1);
+    border: 1px solid rgba(6,182,212,0.3);
+    color: #67e8f9;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-left: 6px;
+  }
+  .mockup-container {
+    background: #0a0a12;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .mockup-title-bar {
+    background: var(--surface);
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .dot { width: 12px; height: 12px; border-radius: 50%; }
+  .dot-r { background: #ef4444; }
+  .dot-y { background: #f59e0b; }
+  .dot-g { background: #10b981; }
+  .dep-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    font-size: 13px;
+  }
+  .dep-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+  .dep-name { font-weight: 700; color: var(--text); }
+  .dep-desc { color: var(--muted); font-size: 12px; }
+  .dep-badge { margin-left: auto; flex-shrink: 0; }
+  footer {
+    text-align: center;
+    padding: 40px 24px;
+    color: var(--muted);
+    font-size: 13px;
+    border-top: 1px solid var(--border);
+  }
+  .terminal-box {
+    background: #0a0f0a;
+    border: 1px solid rgba(16,185,129,0.3);
+    border-radius: 10px;
+    padding: 16px 20px;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    line-height: 1.8;
+    color: #6ee7b7;
+    margin-bottom: 12px;
+  }
+  .terminal-box .t-prompt { color: #4ade80; }
+  .terminal-box .t-cmd { color: var(--text); }
+  .terminal-box .t-comment { color: #475569; }
+  .warning-box {
+    background: rgba(245,158,11,0.08);
+    border: 1px solid rgba(245,158,11,0.3);
+    border-radius: 10px;
+    padding: 16px 20px;
+    font-size: 13px;
+    color: #fbbf24;
+    margin-bottom: 16px;
+  }
+  .warning-box b { color: #fde68a; }
+  .info-box {
+    background: rgba(6,182,212,0.08);
+    border: 1px solid rgba(6,182,212,0.25);
+    border-radius: 10px;
+    padding: 14px 18px;
+    font-size: 13px;
+    color: #67e8f9;
+    margin-bottom: 12px;
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-badge">Phase 6 마스터 기획서</div>
+  <h1>Suno YT Dashboard 클라우드 전환</h1>
+  <p>localStorage → Supabase DB · Google OAuth 로그인 · YouTube API 실연동 · Recharts 차트 · 진짜 멀티유저 서비스</p>
+  <div class="hero-meta">
+    <span>작성일 <b>2026-03-19</b></span>
+    <span>현재 버전 <b>Phase 5 완료 (55/55)</b></span>
+    <span>배포 <b>suno-yt-dashboard.vercel.app</b></span>
+    <span>다음 목표 <b>Phase 6 — 클라우드 인프라 + 실연동</b></span>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="summary-bar">
+    <div class="summary-stat"><div class="val">34</div><div class="label">Phase 6 구현 항목</div></div>
+    <div class="summary-stat"><div class="val">6</div><div class="label">주요 기능 그룹</div></div>
+    <div class="summary-stat"><div class="val">3</div><div class="label">외부 API 연동</div></div>
+    <div class="summary-stat"><div class="val">∞</div><div class="label">멀티유저 확장성</div></div>
+  </div>
+
+  <!-- SECTION 1: Phase 5 → 6 전환 이유 -->
+  <div class="section">
+    <div class="section-title">
+      <div class="icon" style="background:rgba(6,182,212,0.2)">📊</div>
+      Phase 5 완료 현황 → Phase 6 목표
+    </div>
+    <div class="section-desc">Phase 5까지 55개 항목 100% 완료. 이제 "작동하는 앱"에서 "실제 서비스"로 도약할 차례입니다.</div>
+
+    <div class="warning-box">
+      <b>⚠️ Phase 5의 핵심 한계:</b> 모든 데이터가 <b>브라우저 localStorage</b>에만 저장됩니다.
+      브라우저 캐시 삭제 → 데이터 전부 삭제. 다른 기기에서 로그인 → 데이터 없음. Phase 6에서 Supabase로 해결합니다.
+    </div>
+
+    <div class="card">
+      <table class="phase-table">
+        <thead>
+          <tr>
+            <th>기능 영역</th>
+            <th>Phase 5 현재 상태</th>
+            <th>Phase 6 목표</th>
+            <th>우선순위</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>데이터 저장</td>
+            <td><span class="status-wip">⚡ localStorage (휘발성)</span></td>
+            <td><span class="status-done">✅ Supabase PostgreSQL (영구)</span></td>
+            <td><span class="badge badge-critical">CRITICAL</span></td>
+          </tr>
+          <tr>
+            <td>사용자 인증</td>
+            <td><span class="status-todo">❌ 로그인 UI만 있음 (미동작)</span></td>
+            <td><span class="status-done">✅ Google OAuth + NextAuth.js v5</span></td>
+            <td><span class="badge badge-critical">CRITICAL</span></td>
+          </tr>
+          <tr>
+            <td>YouTube 통계</td>
+            <td><span class="status-todo">❌ 수동 입력만 가능</span></td>
+            <td><span class="status-done">✅ YouTube Data API v3 실연동</span></td>
+            <td><span class="badge badge-high">HIGH</span></td>
+          </tr>
+          <tr>
+            <td>통계 차트</td>
+            <td><span class="status-todo">❌ 차트 없음 (숫자만)</span></td>
+            <td><span class="status-done">✅ Recharts AreaChart + BarChart</span></td>
+            <td><span class="badge badge-high">HIGH</span></td>
+          </tr>
+          <tr>
+            <td>폰트 시스템</td>
+            <td><span class="status-wip">⚡ Inter 폰트 (임시)</span></td>
+            <td><span class="status-done">✅ Geist 폰트 (Next.js 공식)</span></td>
+            <td><span class="badge badge-medium">MEDIUM</span></td>
+          </tr>
+          <tr>
+            <td>Extension 실사용</td>
+            <td><span class="status-wip">⚡ 코드 완성, 실환경 미검증</span></td>
+            <td><span class="status-done">✅ 실제 suno.com 동작 검증 완료</span></td>
+            <td><span class="badge badge-medium">MEDIUM</span></td>
+          </tr>
+          <tr>
+            <td>서비스 모니터링</td>
+            <td><span class="status-todo">❌ 없음</span></td>
+            <td><span class="status-done">✅ Vercel Analytics + 에러 추적</span></td>
+            <td><span class="badge badge-medium">MEDIUM</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 2: 아키텍처 전환 다이어그램 -->
+  <div class="section">
+    <div class="section-title">
+      <div class="icon" style="background:rgba(16,185,129,0.2)">🏗️</div>
+      신규 기능 1 — Supabase + Google OAuth 인증 인프라
+    </div>
+    <div class="section-desc">Phase 6의 핵심. 인증이 완성되어야 다른 모든 기능(DB 마이그레이션, 멀티유저)이 가능합니다.</div>
+
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-header">
+        <div class="card-title">🔄 Phase 5 → Phase 6 아키텍처 비교</div>
+        <span class="badge badge-critical">CRITICAL</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 40px 1fr;gap:16px;align-items:center">
+        <!-- Phase 5 아키텍처 -->
+        <div>
+          <div style="text-align:center;font-size:12px;color:var(--muted);font-weight:700;margin-bottom:12px;text-transform:uppercase;letter-spacing:1px">Phase 5 현재</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div class="arch-box" style="border-color:rgba(239,68,68,0.3);background:rgba(239,68,68,0.05)">
+              <div class="arch-icon">🌐</div>
+              <div class="arch-title">브라우저</div>
+              <div class="arch-sub" style="color:#f87171">localStorage만<br>탭 닫으면 위험</div>
+            </div>
+            <div style="text-align:center;color:var(--muted);font-size:18px">↕️</div>
+            <div class="arch-box" style="border-color:rgba(245,158,11,0.3);background:rgba(245,158,11,0.05)">
+              <div class="arch-icon">⚡</div>
+              <div class="arch-title">Next.js (Vercel)</div>
+              <div class="arch-sub">API Routes<br>인증 없음</div>
+            </div>
+          </div>
+        </div>
+        <!-- 화살표 -->
+        <div style="text-align:center;font-size:28px">→</div>
+        <!-- Phase 6 아키텍처 -->
+        <div>
+          <div style="text-align:center;font-size:12px;color:var(--green);font-weight:700;margin-bottom:12px;text-transform:uppercase;letter-spacing:1px">Phase 6 목표</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div class="arch-box" style="border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.05)">
+              <div class="arch-icon">🔐</div>
+              <div class="arch-title">Google OAuth</div>
+              <div class="arch-sub" style="color:#6ee7b7">NextAuth.js v5<br>session 관리</div>
+            </div>
+            <div style="text-align:center;color:var(--muted);font-size:18px">↕️</div>
+            <div class="arch-box" style="border-color:rgba(6,182,212,0.3);background:rgba(6,182,212,0.05)">
+              <div class="arch-icon">🗄️</div>
+              <div class="arch-title">Supabase</div>
+              <div class="arch-sub" style="color:#67e8f9">PostgreSQL + RLS<br>user_id 기반 격리</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-header"><div class="card-title">🔑 Google OAuth 설정 방법</div><span class="badge badge-new">신규</span></div>
+        <ol style="font-size:13px;color:var(--muted);line-height:2.2;padding-left:18px">
+          <li><b style="color:var(--text)">Google Cloud Console</b> → 새 프로젝트 생성</li>
+          <li>OAuth 2.0 클라이언트 ID 생성</li>
+          <li>승인된 리디렉션 URI 추가:<br><code style="color:var(--accent2);font-size:11px">http://localhost:3000/api/auth/callback/google</code></li>
+          <li>.env.local에 GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET 추가</li>
+          <li>NEXTAUTH_SECRET 랜덤 문자열 생성 (openssl rand -base64 32)</li>
+        </ol>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">🗄️ Supabase 프로젝트 설정</div><span class="badge badge-new">신규</span></div>
+        <ol style="font-size:13px;color:var(--muted);line-height:2.2;padding-left:18px">
+          <li><b style="color:var(--text)">supabase.com</b> → 새 프로젝트 생성</li>
+          <li>Project URL + anon key 복사</li>
+          <li>Authentication → Providers → Google 활성화</li>
+          <li>.env.local에 SUPABASE_URL, SUPABASE_ANON_KEY 추가</li>
+          <li>RLS (Row Level Security) 활성화 필수</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="terminal-box">
+      <span class="t-comment"># Phase 6 주요 패키지 설치</span><br>
+      <span class="t-prompt">$ </span><span class="t-cmd">npm install next-auth@beta @auth/supabase-adapter @supabase/supabase-js</span><br>
+      <span class="t-prompt">$ </span><span class="t-cmd">npm install recharts</span><br>
+      <span class="t-prompt">$ </span><span class="t-cmd">npm install @vercel/analytics</span><br>
+      <span class="t-comment"># Geist 폰트는 Next.js 15+에 내장 (next/font/google)</span>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 3: Supabase DB 스키마 -->
+  <div class="section">
+    <div class="section-title">
+      <div class="icon" style="background:rgba(6,182,212,0.2)">🗄️</div>
+      신규 기능 2 — Supabase DB 스키마 + 마이그레이션
+    </div>
+    <div class="section-desc">localStorage에 저장되던 모든 데이터를 Supabase PostgreSQL로 이전합니다. RLS로 사용자별 데이터를 완전히 격리합니다.</div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">📋 데이터 마이그레이션 맵</div>
+        <span class="badge badge-critical">CRITICAL</span>
+      </div>
+      <table class="phase-table">
+        <thead>
+          <tr>
+            <th>현재 (localStorage 키)</th>
+            <th>→ Supabase 테이블</th>
+            <th>주요 컬럼</th>
+            <th>RLS 정책</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code style="color:var(--accent3)">'scrap_sheets'</code></td>
+            <td><code style="color:var(--accent2)">scrap_sheets</code></td>
+            <td>id, user_id, title, items[], created_at</td>
+            <td>user_id = auth.uid()</td>
+          </tr>
+          <tr>
+            <td><code style="color:var(--accent3)">'lyrics_history'</code></td>
+            <td><code style="color:var(--accent2)">lyrics_history</code></td>
+            <td>id, user_id, title, genre, lyrics, suno_prompt, starred</td>
+            <td>user_id = auth.uid()</td>
+          </tr>
+          <tr>
+            <td><code style="color:var(--accent3)">'youtube_channels'</code></td>
+            <td><code style="color:var(--accent2)">youtube_channels</code></td>
+            <td>id, user_id, channel_id, name, subscriber_count, view_count</td>
+            <td>user_id = auth.uid()</td>
+          </tr>
+          <tr>
+            <td><code style="color:var(--accent3)">'revenue_songs'</code></td>
+            <td><code style="color:var(--accent2)">revenue_songs</code></td>
+            <td>id, user_id, title, platform, monthly_streams, revenue</td>
+            <td>user_id = auth.uid()</td>
+          </tr>
+          <tr>
+            <td><code style="color:var(--accent3)">'schedule_config'</code></td>
+            <td><code style="color:var(--accent2)">schedule_configs</code></td>
+            <td>id, user_id, days[], time, timezone</td>
+            <td>user_id = auth.uid()</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="info-box">
+      <b>💡 점진적 전환 전략:</b> localStorage 함수를 즉시 삭제하지 않고,
+      Supabase 버전을 <code>db.ts</code>에 별도로 추가한 뒤 페이지별로 순차 전환합니다.
+      로그인 안 한 경우는 localStorage fallback 유지 → 기존 사용자 데이터 손실 방지.
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-header"><div class="card-title">🔒 RLS (Row Level Security) 핵심</div><span class="badge badge-critical">CRITICAL</span></div>
+        <div style="background:var(--bg);border-radius:8px;padding:14px;font-family:monospace;font-size:12px;line-height:1.8;color:var(--text)">
+          <span style="color:#94a3b8">-- 모든 테이블에 적용하는 기본 패턴</span><br>
+          <span style="color:#67e8f9">ALTER TABLE</span> lyrics_history <span style="color:#67e8f9">ENABLE ROW LEVEL SECURITY</span>;<br><br>
+          <span style="color:#67e8f9">CREATE POLICY</span> "본인 데이터만" <span style="color:#67e8f9">ON</span> lyrics_history<br>
+          &nbsp;&nbsp;<span style="color:#67e8f9">FOR ALL USING</span> (user_id = <span style="color:#fbbf24">auth.uid()</span>);
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">📁 마이그레이션 파일 구조</div><span class="badge badge-new">신규</span></div>
+        <div style="background:var(--bg);border-radius:8px;padding:14px;font-family:monospace;font-size:13px;line-height:2;color:var(--text)">
+          <span style="color:var(--muted)">suno-yt-dashboard/</span><br>
+          <span style="color:var(--muted)">└── </span><b style="color:var(--accent2)">supabase/</b><br>
+          &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--muted)">└── migrations/</span><br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--accent3)">001_initial_schema.sql</span><br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--accent3)">002_rls_policies.sql</span><br>
+          <span style="color:var(--muted)">└── </span><span style="color:var(--green)">src/lib/db.ts</span> <span style="color:var(--muted);font-size:11px">← 신규</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 4: YouTube API -->
+  <div class="section">
+    <div class="section-title">
+      <div class="icon" style="background:rgba(239,68,68,0.2)">📺</div>
+      신규 기능 3 — YouTube Analytics API 실연동
+    </div>
+    <div class="section-desc">현재 수동으로 입력하는 YouTube 통계를 YouTube Data API v3로 자동 수집합니다. 실시간 구독자 수·조회수·영상 목록 연동.</div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">🔌 YouTube Data API v3 연동 플로우</div>
+        <span class="badge badge-high">HIGH</span>
+      </div>
+      <div class="flow">
+        <div class="flow-step">
+          <div class="step-num">Step 1</div>
+          <div class="step-label">🔑 API 키 발급</div>
+          <div class="step-sub">Google Cloud Console</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <div class="step-num">Step 2</div>
+          <div class="step-label">📡 채널 ID 조회</div>
+          <div class="step-sub">channels.list()</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <div class="step-num">Step 3</div>
+          <div class="step-label">📊 통계 수집</div>
+          <div class="step-sub">subscribers, views</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <div class="step-num">Step 4</div>
+          <div class="step-label">🗄️ DB 저장</div>
+          <div class="step-sub">Supabase 캐싱</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <div class="step-num">Done!</div>
+          <div class="step-label">📈 차트 표시</div>
+          <div class="step-sub">자동 업데이트</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-header"><div class="card-title">📡 신규 API Routes</div><span class="badge badge-new">신규</span></div>
+        <ul style="font-size:13px;color:var(--muted);line-height:2.2;padding-left:16px">
+          <li><code style="color:var(--accent2)">GET /api/youtube/channel</code><br><span style="font-size:11px">채널 기본 통계 (구독자, 총 조회수)</span></li>
+          <li><code style="color:var(--accent2)">GET /api/youtube/videos</code><br><span style="font-size:11px">최근 업로드 영상 목록 (최대 50개)</span></li>
+          <li><code style="color:var(--accent2)">POST /api/youtube/sync</code><br><span style="font-size:11px">Supabase에 최신 통계 저장 (캐싱)</span></li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">⚠️ API 할당량 주의사항</div><span class="badge badge-high">HIGH</span></div>
+        <ul style="font-size:13px;color:var(--muted);line-height:2.2;padding-left:16px">
+          <li>YouTube Data API v3 일일 할당량: <b style="color:var(--text)">10,000 units</b></li>
+          <li>channels.list() = 1 unit, videos.list() = 1 unit</li>
+          <li>대응책: Supabase에 6시간 캐싱 → 실제 API 호출 최소화</li>
+          <li>Vercel Edge Cache로 중복 요청 차단</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 5: Recharts 차트 -->
+  <div class="section">
+    <div class="section-title">
+      <div class="icon" style="background:rgba(124,58,237,0.2)">📈</div>
+      신규 기능 4 — Recharts 데이터 시각화
+    </div>
+    <div class="section-desc">숫자만 나열되던 통계 페이지를 Recharts로 시각화합니다. MusePilot처럼 직관적인 차트로 채널 성장을 한눈에.</div>
+
+    <div class="mockup-container">
+      <div class="mockup-title-bar">
+        <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
+        <span style="margin-left:8px">/statistics 페이지 차트 시안</span>
+      </div>
+      <div style="padding:24px;background:#0d0d18">
+        <div style="display:grid;grid-template-columns:2fr 1fr;gap:20px">
+          <!-- 조회수 AreaChart 시뮬레이션 -->
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px">
+            <div style="font-size:14px;font-weight:700;margin-bottom:4px">📈 조회수 추이 (최근 30일)</div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:16px">Recharts AreaChart · YouTube API 실데이터</div>
+            <div style="position:relative;height:120px;display:flex;align-items:flex-end;gap:3px;padding:0 4px">
+              <!-- 간단한 bar 시뮬레이션 -->
+              <div style="flex:1;background:rgba(6,182,212,0.2);border-top:2px solid #06b6d4;border-radius:2px 2px 0 0;height:40%"></div>
+              <div style="flex:1;background:rgba(6,182,212,0.2);border-top:2px solid #06b6d4;border-radius:2px 2px 0 0;height:55%"></div>
+              <div style="flex:1;background:rgba(6,182,212,0.2);border-top:2px solid #06b6d4;border-radius:2px 2px 0 0;height:45%"></div>
+              <div style="flex:1;background:rgba(6,182,212,0.2);border-top:2px solid #06b6d4;border-radius:2px 2px 0 0;height:70%"></div>
+              <div style="flex:1;background:rgba(6,182,212,0.2);border-top:2px solid #06b6d4;border-radius:2px 2px 0 0;height:65%"></div>
+              <div style="flex:1;background:rgba(6,182,212,0.2);border-top:2px solid #06b6d4;border-radius:2px 2px 0 0;height:80%"></div>
+              <div style="flex:1;background:rgba(6,182,212,0.2);border-top:2px solid #06b6d4;border-radius:2px 2px 0 0;height:75%"></div>
+              <div style="flex:1;background:rgba(6,182,212,0.2);border-top:2px solid #06b6d4;border-radius:2px 2px 0 0;height:90%"></div>
+              <div style="flex:1;background:rgba(6,182,212,0.2);border-top:2px solid #06b6d4;border-radius:2px 2px 0 0;height:85%"></div>
+              <div style="flex:1;background:rgba(6,182,212,0.35);border-top:2px solid #22d3ee;border-radius:2px 2px 0 0;height:100%"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:8px">
+              <span>3/1</span><span>3/7</span><span>3/14</span><span>3/21</span><span>3/19</span>
+            </div>
+          </div>
+          <!-- 장르 BarChart 시뮬레이션 -->
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px">
+            <div style="font-size:14px;font-weight:700;margin-bottom:4px">🎵 장르별 생성 수</div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:16px">Recharts BarChart</div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px"><span>K-Pop</span><span style="color:var(--accent2)">24</span></div>
+                <div style="background:var(--border);border-radius:3px;height:8px;overflow:hidden"><div style="background:var(--accent2);width:80%;height:100%;border-radius:3px"></div></div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px"><span>Lo-Fi</span><span style="color:var(--green)">18</span></div>
+                <div style="background:var(--border);border-radius:3px;height:8px;overflow:hidden"><div style="background:var(--green);width:60%;height:100%;border-radius:3px"></div></div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px"><span>R&amp;B</span><span style="color:var(--accent)">12</span></div>
+                <div style="background:var(--border);border-radius:3px;height:8px;overflow:hidden"><div style="background:var(--accent);width:40%;height:100%;border-radius:3px"></div></div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px"><span>Jazz</span><span style="color:var(--accent3)">8</span></div>
+                <div style="background:var(--border);border-radius:3px;height:8px;overflow:hidden"><div style="background:var(--accent3);width:27%;height:100%;border-radius:3px"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-header"><div class="card-title">📊 구현할 차트 목록</div><span class="badge badge-high">HIGH</span></div>
+        <ul style="font-size:13px;color:var(--muted);line-height:2.2;padding-left:16px">
+          <li><b style="color:var(--text)">AreaChart</b> — 조회수 추이 (30일, /statistics)</li>
+          <li><b style="color:var(--text)">BarChart</b> — 장르별 생성 통계 (/statistics)</li>
+          <li><b style="color:var(--text)">LineChart</b> — 구독자 증가 추이 (/statistics)</li>
+          <li><b style="color:var(--text)">PieChart</b> — 수익 플랫폼별 비율 (/revenue)</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">⚠️ SSR 주의: 반드시 dynamic import 사용</div><span class="badge badge-critical">CRITICAL</span></div>
+        <div style="background:var(--bg);border-radius:8px;padding:14px;font-family:monospace;font-size:12px;line-height:1.8;color:var(--text)">
+          <span style="color:#94a3b8">// Recharts는 window 객체 사용 → SSR 에러 발생</span><br>
+          <span style="color:#67e8f9">const</span> ViewsChart = <span style="color:#a78bfa">dynamic</span>(<br>
+          &nbsp;&nbsp;() => <span style="color:#fbbf24">import</span>('./ViewsAreaChart'),<br>
+          &nbsp;&nbsp;{ ssr: <span style="color:#f87171">false</span> }<br>
+          );
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 6: UI 고도화 -->
+  <div class="section">
+    <div class="section-title">
+      <div class="icon" style="background:rgba(245,158,11,0.2)">✨</div>
+      신규 기능 5 — UI/UX 고도화 (폰트 · 반응형 · 모니터링)
+    </div>
+    <div class="section-desc">Geist 폰트 적용으로 Next.js 공식 디자인 언어와 통일. Vercel Analytics로 실 사용자 행동 분석.</div>
+
+    <div class="grid-3">
+      <div class="card">
+        <div class="card-header"><div class="card-title">🔤 Geist 폰트</div><span class="badge badge-medium">MEDIUM</span></div>
+        <ul style="font-size:13px;color:var(--muted);line-height:2;padding-left:16px">
+          <li>현재: Google Fonts Inter</li>
+          <li>목표: next/font/google Geist</li>
+          <li>수정 파일: layout.tsx 1개</li>
+          <li>더 선명한 코드용 Geist Mono도 함께</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">📱 반응형 완성</div><span class="badge badge-medium">MEDIUM</span></div>
+        <ul style="font-size:13px;color:var(--muted);line-height:2;padding-left:16px">
+          <li>모바일 사이드바 햄버거 메뉴</li>
+          <li>테이블 → 카드 전환 (모바일)</li>
+          <li>터치 친화적 버튼 크기 (44px 최소)</li>
+          <li>뷰포트 별 레이아웃 검증</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">📊 Vercel Analytics</div><span class="badge badge-medium">MEDIUM</span></div>
+        <ul style="font-size:13px;color:var(--muted);line-height:2;padding-left:16px">
+          <li>페이지뷰 + 방문자 수 추적</li>
+          <li>Web Vitals (LCP, FCP, CLS) 모니터링</li>
+          <li>설치: &lt;Analytics /&gt; 컴포넌트 추가</li>
+          <li>Vercel 대시보드에서 실시간 확인</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 7: Extension 실전 검증 -->
+  <div class="section">
+    <div class="section-title">
+      <div class="icon" style="background:rgba(16,185,129,0.2)">🔌</div>
+      신규 기능 6 — Extension 실전 검증 + suno.com 셀렉터 안정화
+    </div>
+    <div class="section-desc">Phase 5에서 코드로 완성된 Extension을 실제 suno.com에서 검증합니다. suno.com UI 업데이트 대응 프로세스도 구축합니다.</div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">🧪 실전 테스트 시나리오</div>
+        <span class="badge badge-medium">MEDIUM</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+        <div style="background:var(--surface);border-radius:8px;padding:14px">
+          <div style="font-size:13px;font-weight:700;color:var(--accent2);margin-bottom:8px">시나리오 1</div>
+          <div style="font-size:13px;font-weight:600;margin-bottom:6px">단일 프롬프트 전송</div>
+          <ol style="font-size:12px;color:var(--muted);line-height:2;padding-left:14px">
+            <li>/lyrics에서 가사 생성</li>
+            <li>"Suno로 전송" 버튼 클릭</li>
+            <li>suno.com 자동 열림 확인</li>
+            <li>프롬프트 자동 입력 확인</li>
+          </ol>
+        </div>
+        <div style="background:var(--surface);border-radius:8px;padding:14px">
+          <div style="font-size:13px;font-weight:700;color:var(--green);margin-bottom:8px">시나리오 2</div>
+          <div style="font-size:13px;font-weight:600;margin-bottom:6px">다중 큐 배치 처리</div>
+          <ol style="font-size:12px;color:var(--muted);line-height:2;padding-left:14px">
+            <li>3개 프롬프트 큐에 추가</li>
+            <li>Popup에서 "전체 시작"</li>
+            <li>탭 2개 동시 생성 확인</li>
+            <li>완료 후 대시보드 알림</li>
+          </ol>
+        </div>
+        <div style="background:var(--surface);border-radius:8px;padding:14px">
+          <div style="font-size:13px;font-weight:700;color:var(--accent3);margin-bottom:8px">시나리오 3</div>
+          <div style="font-size:13px;font-weight:600;margin-bottom:6px">DOM 셀렉터 검증</div>
+          <ol style="font-size:12px;color:var(--muted);line-height:2;padding-left:14px">
+            <li>suno.com 로그인 상태 확인</li>
+            <li>INJECT_FAILED 없이 진행</li>
+            <li>textarea 셀렉터 fallback 확인</li>
+            <li>업데이트 시 셀렉터 수정 프로세스</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 8: 의존성 패키지 목록 -->
+  <div class="section">
+    <div class="section-title">
+      <div class="icon" style="background:rgba(245,158,11,0.2)">📦</div>
+      Phase 6 신규 패키지 목록
+    </div>
+    <div class="section-desc">Phase 6에서 새로 추가되는 npm 패키지입니다. 기존 패키지는 수정 없이 유지됩니다.</div>
+    <div class="card">
+      <div class="dep-item">
+        <div class="dep-icon" style="background:rgba(239,68,68,0.15)">🔐</div>
+        <div><div class="dep-name">next-auth@beta (v5)</div><div class="dep-desc">NextAuth.js v5 — Google OAuth, 세션 관리, JWT</div></div>
+        <div class="dep-badge"><span class="badge badge-critical">CRITICAL</span></div>
+      </div>
+      <div class="dep-item">
+        <div class="dep-icon" style="background:rgba(6,182,212,0.15)">🗄️</div>
+        <div><div class="dep-name">@supabase/supabase-js</div><div class="dep-desc">Supabase JavaScript 클라이언트 (DB, Auth, Storage)</div></div>
+        <div class="dep-badge"><span class="badge badge-critical">CRITICAL</span></div>
+      </div>
+      <div class="dep-item">
+        <div class="dep-icon" style="background:rgba(6,182,212,0.15)">🔗</div>
+        <div><div class="dep-name">@auth/supabase-adapter</div><div class="dep-desc">NextAuth ↔ Supabase 어댑터 (세션을 DB에 저장)</div></div>
+        <div class="dep-badge"><span class="badge badge-critical">CRITICAL</span></div>
+      </div>
+      <div class="dep-item">
+        <div class="dep-icon" style="background:rgba(124,58,237,0.15)">📈</div>
+        <div><div class="dep-name">recharts</div><div class="dep-desc">React 기반 차트 라이브러리 (AreaChart, BarChart, PieChart)</div></div>
+        <div class="dep-badge"><span class="badge badge-high">HIGH</span></div>
+      </div>
+      <div class="dep-item">
+        <div class="dep-icon" style="background:rgba(16,185,129,0.15)">📊</div>
+        <div><div class="dep-name">@vercel/analytics</div><div class="dep-desc">Vercel 내장 Analytics — 페이지뷰, Web Vitals</div></div>
+        <div class="dep-badge"><span class="badge badge-medium">MEDIUM</span></div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 9: 전체 체크리스트 -->
+  <div class="section">
+    <div class="section-title">
+      <div class="icon" style="background:rgba(239,68,68,0.2)">✅</div>
+      Phase 6 전체 구현 체크리스트
+    </div>
+    <div class="section-desc">항목을 클릭하면 완료 처리됩니다. 진행 상황이 브라우저에 자동 저장됩니다.</div>
+
+    <div class="card" style="margin-bottom:24px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div style="font-size:14px;font-weight:700">전체 진행률</div>
+        <div id="progress-text" style="font-size:13px;color:var(--muted)">0 / 34 완료</div>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="main-progress" style="width:0%"></div></div>
+    </div>
+
+    <!-- A. Supabase + 인증 -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">🔐 A. Supabase + Google OAuth 인증 인프라</div>
+        <span class="badge badge-critical">CRITICAL</span>
+      </div>
+      <ul class="checklist">
+        <li><input type="checkbox"><div>
+          <div class="check-label">A1. Supabase 프로젝트 생성 + 환경변수 설정</div>
+          <div class="check-sub">supabase.com → 새 프로젝트 → SUPABASE_URL, SUPABASE_ANON_KEY → .env.local 추가</div>
+        </div></li>
+        <li><input type="checkbox"><div>
+          <div class="check-label">A2. Google OAuth 클라이언트 등록</div>
+          <div class="check-sub">Google Cloud Console → OAuth 2.0 → 리디렉션 URI: localhost:3000/api/auth/callback/google</div>
+        </div></li>
+        <li><input type="checkbox"><div>
+          <div class="check-label">A3. next-auth@beta + @auth/supabase-adapter 설치</div>
+          <div class="check-sub">npm install next-auth@beta @auth/supabase-adapter @supabase/supabase-js</div>
+        </div></li>
+        <li><input type="checkbox"><div>
+          <div class="check-label">A4. src/lib/auth.ts 신규 — NextAuth 설정 (Google provider + Supabase adapter)</div>
+          <div class="check-sub">providers: [Google], adapter: SupabaseAdapter, callbacks: session에 user.id 포함</div>
+        </div></li>
+        <li><input type="checkbox"><div>
+          <div class="check-label">A5. src/app/api/auth/[...nextauth]/route.ts 신규</div>
+          <div class="check-sub">NextAuth 핸들러 export { GET, POST }</div>
+        </div></li>
+        <li><input type="checkbox"><div>
+          <div class="check-label">A6. src/middleware.ts 신규 — 보호 라우트 인증 게이트</div>
+          <div class="check-sub">/dashboard, /lyrics, /planner 등 → 미인증 시 /login 리다이렉트</div>
+        </div></li>
+        <li><input type="checkbox"><div>
+          <div class="check-label">A7. src/app/login/page.tsx 수정 — 실제 Google 로그인 연결</div>
+          <div class="check-sub">signIn('google') 버튼 연결, 로그인 후 /dashboard 리다이렉트</div>
+        </div></li>
+        <li><input type="checkbox"><div>
+          <div class="check-label">A8. 헤더에 사용자 아바타 + 로그아웃 버튼 추가</div>
+          <div class="check-sub">useSession() → session.user.image, name 표시, signOut() 연결</div>
+        </div></li>
+      </ul>
+    </div>
+
+    <!-- B. Supabase DB 마이그레이션 -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">🗄️ B. Supabase DB 스키마 + 마이그레이션</div>
+        <span class="badge badge-critical">CRITICAL</span>
+      </div>
+      <ul class="checklist">
+        <li><input type="checkbox"><div>
+          <div class="check-label">B1. supabase/migrations/001_initial_schema.sql 작성</div>
+          <div class="check-sub">scrap_sheets, lyrics_history, youtube_channels, revenue_songs, schedule_configs 5개 테이블</div>
+        </div></li>
+        <li><input type="checkbox"><div>
+          <div class="check-label">B2. supabase/migrations/002_rls_policies.sql — RLS 정책 적용</div>
+          <div class="check-sub">모든 테이블에 user_id = auth.uid() 정책 (SELECT, INSERT, UPDATE, DELETE)</div>
+        </div></li>
+        <li><input type="checkbox"><div>
+          <div class="check-label">B3. src/lib/db.ts 신규 — Supabase 클라이언트 + CRUD 함수</div>
+          <div class="check-sub">createClient() 래퍼, getScrapSheets(), saveLyricsHistory(), getYoutubeChannels() 등</div>
+        </div></li>
+        <li><input type="checkbox"><div>
+          <div class="check-label">B4. /scrapsheet 페이지 Supabase 전환</div>
+          <div class="check-sub">localStorage 함수 → db.ts 함수로 교체, 인증된 사용자만 데이터 접근</div>
+        </div></li>
+        <li><input type="checkbox"><div>
+          <div class="check-label">B5. /lyrics 가사 이력 Supabase 전환 (D3 완전 버전)</div>
+          <div class="check-sub">Phase 5에서 localStorage 버전 완성됨 → Supabase로 업그레이드, starred/태그 완성</div>
+        </div></li>
+        <li><input type="checkbox"><div>
+          <div class="check-label">B6. /revenue 페이지 Supabase 전환</div>
+          <div class="check-sub">revenue_songs 테이블 연결, 음원 CRUD 기능 DB 기반으로 전환</div>
+        </div></li>
+        <li><input type="checkbox"><div>
+          <div class="check-label">B7. localStorage → Supabase 데이터 import 유틸리티</div>
+          <div class="check-sub">기존 사용자가 localStorage 데이터를 Supabase로 1회 이전할 수 있는 마이그레이션 버튼</div>
+        </div></li>
+      </ul>
+    </div>
+
+    <!-- C. YouTube API -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">📺 C. YouTube Analytics API 실연동</div>
+        <span class="badge badge-high">HIGH</span>
+      </div>
+      <ul class="checklist">
+        <li><input type="checkbox"><div>
+          <div class="check-label">C1. YouTube Data API v3 활성화 + API 키 설정</div>
+          <div class="check-sub">Google Cloud Console → YouTube Data API v3 활성화 → .env.local에 YOUTUBE_API_KEY 추가</div>
+        </div></li>
+        <li><input type="checkbox"><div>
+          <div class="check-label">C2. /api/youtube/channel/route.ts 신규 — 채널 통계 조회</div>
+          <div class="check-sub">channels.list(id, statistics) → subscriberCount, viewCount, videoCount 반환</div>
+        </div></li>
+        <li><input type="checkbox"><div>
+          <div class="check-label">C3. /api/youtube/videos/route.ts 신규 — 최근 영상 목록</div>
+          <div class="check-sub">search.list(channelId, order:date, maxResults:20) → 영상 제목/썸네일/조회수</div>
+        </div></li>
+        <li><input type="checkbox"><div>
+          <div class="check-label">C4. /statistics 페이지 — 실제 API 데이터로 교체</div>
+          <div class="check-sub">수동 입력 폼 제거, YouTube API 자동 수집 데이터 표시, 마지막 업데이트 시각 표시</div>
+        </div></li>
+        <li><input type="checkbox"><div>
+          <div class="check-label">C5. /videos 페이지 — 실제 영상 목록 표시</div>
+          <div class="check-sub">YouTube API 영상 목록 + 썸네일 + 조회수/댓글수 카드 UI</div>
+        </div></li>
+      </ul>
+    </div>
+
+    <!-- D. Recharts + UI 고도화 -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">📈 D. Recharts 차트 + UI/폰트 고도화</div>
+        <span class="badge badge-high">HIGH</span>
+      </div>
+      <ul class="checklist">
+        <li><input type="checkbox"><div>
+          <div class="check-label">D1. recharts 설치 + ViewsAreaChart 컴포넌트</div>
+          <div class="check-sub">src/components/charts/ViewsAreaChart.tsx — 최근 30일 조회수 추이, dynamic import (ssr:false)</div>
+        </div></li>
+        <li><input type="checkbox"><div>
+          <div class="check-label">D2. GenreBarChart 컴포넌트</div>
+          <div class="check-sub">src/components/charts/GenreBarChart.tsx — 장르별 생성 수 수평 막대 차트</div>
+        </div></li>
+        <li><input type="checkbox"><div>
+          <div class="check-label">D3. RevenuePieChart 컴포넌트</div>
+          <div class="check-sub">src/components/charts/RevenuePieChart.tsx — 플랫폼별 수익 비율 파이 차트</div>
+        </div></li>
+        <li><input type="checkbox"><div>
+          <div class="check-label">D4. /statistics 페이지 — 차트 3개 통합</div>
+          <div class="check-sub">ViewsAreaChart + GenreBarChart + SubscriberLineChart 배치</div>
+        </div></li>
+        <li><input type="checkbox"><div>
+          <div class="check-label">D5. Geist 폰트 적용 (Inter → Geist)</div>
+          <div class="check-sub">src/app/layout.tsx — next/font/google에서 Geist + Geist_Mono import, CSS variable 교체</div>
+        </div></li>
+        <li><input type="checkbox"><div>
+          <div class="check-label">D6. @vercel/analytics 설치 + Analytics 컴포넌트 추가</div>
+          <div class="check-sub">layout.tsx에 &lt;Analytics /&gt; 추가, Vercel 대시보드에서 실시간 지표 확인</div>
+        </div></li>
+      </ul>
+    </div>
+
+    <!-- E. Extension 실전 검증 -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">🔌 E. Extension 실전 검증 + 안정화</div>
+        <span class="badge badge-medium">MEDIUM</span>
+      </div>
+      <ul class="checklist">
+        <li><input type="checkbox"><div>
+          <div class="check-label">E1. suno.com에서 실제 단일 프롬프트 전송 테스트</div>
+          <div class="check-sub">Chrome 개발자 모드 → Extension 로드 → /lyrics에서 "Suno로 전송" → suno.com 자동 주입 확인</div>
+        </div></li>
+        <li><input type="checkbox"><div>
+          <div class="check-label">E2. 다중 큐 배치 처리 (3개 이상) 테스트</div>
+          <div class="check-sub">Popup에서 3개 큐 → 탭 2개 동시 처리 → 완료 알림 수신 확인</div>
+        </div></li>
+        <li><input type="checkbox"><div>
+          <div class="check-label">E3. suno.com DOM 셀렉터 검증 + 업데이트 프로세스 수립</div>
+          <div class="check-sub">실제 textarea 셀렉터 확인, INJECT_FAILED 없이 동작 확인, 셀렉터 변경 시 대응 방법 문서화</div>
+        </div></li>
+        <li><input type="checkbox"><div>
+          <div class="check-label">E4. Vercel 배포 환경에서 Extension ↔ Dashboard 통신 검증</div>
+          <div class="check-sub">localhost:3000 아닌 vercel.app 도메인에서 postMessage/PING-PONG 정상 동작 확인</div>
+        </div></li>
+      </ul>
+    </div>
+
+    <!-- F. 성능 + 배포 -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">🚀 F. 성능 최적화 + 최종 배포</div>
+        <span class="badge badge-medium">MEDIUM</span>
+      </div>
+      <ul class="checklist">
+        <li><input type="checkbox"><div>
+          <div class="check-label">F1. YouTube API 응답 Supabase 캐싱 (6시간)</div>
+          <div class="check-sub">API 호출 시 Supabase에 저장 → 6시간 이내 재요청 시 DB에서 반환 → 할당량 절약</div>
+        </div></li>
+        <li><input type="checkbox"><div>
+          <div class="check-label">F2. 이미지 최적화 — next/image 적용</div>
+          <div class="check-sub">YouTube 썸네일을 &lt;img&gt; → &lt;Image&gt; 교체, WebP 자동 변환, lazy loading</div>
+        </div></li>
+        <li><input type="checkbox"><div>
+          <div class="check-label">F3. Vercel 배포 + 환경변수 설정</div>
+          <div class="check-sub">Vercel 대시보드 → Environment Variables에 모든 키 등록 → git push → 자동 배포</div>
+        </div></li>
+        <li><input type="checkbox"><div>
+          <div class="check-label">F4. Phase 6 완료 후 README.md + docs 최종 업데이트</div>
+          <div class="check-sub">Supabase 설정 가이드, YouTube API 키 발급 방법, Extension 사용법 최신화</div>
+        </div></li>
+      </ul>
+    </div>
+
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 10: 병렬 작업 지시서 -->
+  <div class="section">
+    <div class="section-title">
+      <div class="icon" style="background:rgba(124,58,237,0.2)">⚡</div>
+      병렬 터미널 작업 가이드
+    </div>
+    <div class="section-desc">파일 충돌 없는 3개 터미널로 동시 진행 가능합니다. T1 완료 후 T4(DB 전환) 시작을 권장합니다.</div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">🔀 파일 충돌 매트릭스</div>
+        <span class="badge badge-new">병렬 안전</span>
+      </div>
+      <table class="phase-table">
+        <thead>
+          <tr>
+            <th>터미널</th>
+            <th>담당 항목</th>
+            <th>주요 파일</th>
+            <th>충돌 위험</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><b style="color:var(--accent2)">T1</b></td>
+            <td>A1~A8 (Supabase + Auth)</td>
+            <td>middleware.ts, api/auth/**, lib/auth.ts (신규)</td>
+            <td><span style="color:var(--green)">✅ 없음</span></td>
+          </tr>
+          <tr>
+            <td><b style="color:var(--green)">T2</b></td>
+            <td>B1~B3 (DB 스키마 + db.ts)</td>
+            <td>supabase/migrations/**, lib/db.ts (신규)</td>
+            <td><span style="color:var(--green)">✅ 없음</span></td>
+          </tr>
+          <tr>
+            <td><b style="color:var(--accent3)">T3</b></td>
+            <td>C1~C5 + D1~D6 (YouTube + 차트 + UI)</td>
+            <td>api/youtube/**, components/charts/**, statistics/page.tsx, layout.tsx</td>
+            <td><span style="color:var(--green)">✅ 없음</span></td>
+          </tr>
+          <tr>
+            <td><b style="color:var(--accent)">T4</b> <span style="font-size:11px;color:var(--muted)">(T1+T2 완료 후)</span></td>
+            <td>B4~B7 (페이지별 DB 전환)</td>
+            <td>app/scrapsheet/**, app/lyrics/**, app/revenue/**</td>
+            <td><span style="color:var(--accent3)">⚠️ T1 auth 필요</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="grid-2">
+      <div class="card" style="border-color:rgba(6,182,212,0.3)">
+        <div style="font-size:12px;font-weight:700;color:var(--accent2);margin-bottom:8px;text-transform:uppercase">T1 — Auth 인프라 프롬프트</div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.8">
+          Phase 6 T1: suno-yt-dashboard에 NextAuth.js v5 + Google OAuth + Supabase 인증을 구현해주세요.
+          <br><br>A1(환경변수) → A2(패키지 설치) → A3(lib/auth.ts) → A4(api/auth/) → A5(middleware.ts) → A6(login page) → A7(Header 아바타) → A8(세션 user_id).
+          <br><br>검증: <code>npx tsc --noEmit &amp;&amp; npm run lint</code>
+          <br>주의: src/types/index.ts, src/lib/storage.ts 수정 금지
+        </div>
+      </div>
+      <div class="card" style="border-color:rgba(16,185,129,0.3)">
+        <div style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:8px;text-transform:uppercase">T2 — DB 스키마 프롬프트</div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.8">
+          Phase 6 T2: suno-yt-dashboard Supabase DB 스키마를 설계해주세요.
+          <br><br>B1(001_initial_schema.sql: 5개 테이블) → B2(002_rls_policies.sql: user_id=auth.uid()) → B3(src/lib/db.ts: createClient + CRUD 함수).
+          <br><br>검증: <code>npx tsc --noEmit</code>
+          <br>주의: middleware.ts, api/auth/** 수정 금지
+        </div>
+      </div>
+      <div class="card" style="border-color:rgba(245,158,11,0.3)">
+        <div style="font-size:12px;font-weight:700;color:var(--accent3);margin-bottom:8px;text-transform:uppercase">T3 — YouTube + 차트 + UI 프롬프트</div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.8">
+          Phase 6 T3: suno-yt-dashboard에 Recharts 차트와 YouTube API, Geist 폰트를 구현해주세요.
+          <br><br>C1~C5(YouTube API 연동) → D1~D4(Recharts 차트 3개 + statistics 통합) → D5(Geist 폰트 layout.tsx) → D6(Vercel Analytics).
+          <br><br>검증: <code>npx tsc --noEmit &amp;&amp; npm run build</code>
+          <br>주의: Recharts는 dynamic import + ssr:false 필수
+        </div>
+      </div>
+      <div class="card" style="border-color:rgba(124,58,237,0.3)">
+        <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:8px;text-transform:uppercase">T4 — 페이지 DB 전환 프롬프트 (T1+T2 완료 후)</div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.8">
+          Phase 6 T4: suno-yt-dashboard 페이지들을 localStorage에서 Supabase로 전환해주세요.
+          <br><br>B4(/scrapsheet) → B5(/lyrics 가사이력 Supabase 업그레이드) → B6(/revenue) → B7(localStorage 데이터 import 버튼).
+          <br><br>조건: lib/auth.ts와 lib/db.ts 완성 후 시작
+          <br>검증: <code>npx tsc --noEmit &amp;&amp; npm run build</code>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <div style="font-size:20px;margin-bottom:8px">🚀</div>
+  Phase 6 마스터 기획서 — Suno YT Dashboard 클라우드 전환<br>
+  작성일: 2026-03-19 &nbsp;·&nbsp; 기준: Phase 5 완료 (55/55) &nbsp;·&nbsp; 목표: 34개 항목
+</footer>
+
+<script>
+  const STORAGE_KEY = 'phase6_checklist';
+
+  function saveState() {
+    const checks = document.querySelectorAll('.checklist input[type="checkbox"]');
+    const state = {};
+    checks.forEach((cb, i) => { state[i] = cb.checked; });
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    updateProgress();
+  }
+
+  function loadState() {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (!saved) return;
+    const state = JSON.parse(saved);
+    const checks = document.querySelectorAll('.checklist input[type="checkbox"]');
+    checks.forEach((cb, i) => {
+      if (state[i]) {
+        cb.checked = true;
+        cb.closest('li').classList.add('done');
+      }
+    });
+    updateProgress();
+  }
+
+  function updateProgress() {
+    const checks = document.querySelectorAll('.checklist input[type="checkbox"]');
+    const total = checks.length;
+    const done = Array.from(checks).filter(c => c.checked).length;
+    const pct = total > 0 ? Math.round(done / total * 100) : 0;
+    document.getElementById('progress-text').textContent = `${done} / ${total} 완료`;
+    document.getElementById('main-progress').style.width = pct + '%';
+  }
+
+  document.querySelectorAll('.checklist li').forEach(li => {
+    li.addEventListener('click', (e) => {
+      if (e.target.tagName === 'INPUT') return;
+      const cb = li.querySelector('input[type="checkbox"]');
+      cb.checked = !cb.checked;
+      li.classList.toggle('done', cb.checked);
+      saveState();
+    });
+  });
+
+  document.querySelectorAll('.checklist input[type="checkbox"]').forEach(cb => {
+    cb.addEventListener('change', () => {
+      cb.closest('li').classList.toggle('done', cb.checked);
+      saveState();
+    });
+  });
+
+  loadState();
+</script>
+</body>
+</html>
