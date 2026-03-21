@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Header from '@/components/Header';
-import { loadData, updateSchedule } from '@/lib/storage';
+import { loadData, updateSchedule } from '@/lib/supabase-storage';
 import { ScheduleConfig } from '@/types';
 import type { ScheduleRecommendation } from '@/app/api/gemini/schedule/route';
 
@@ -175,11 +175,11 @@ export default function SchedulePage() {
     const [highlightDow, setHighlightDow] = useState<number | null>(null);
 
     useEffect(() => {
-        setConfig(loadData().schedule);
+        loadData().then((data) => setConfig(data.schedule));
     }, []);
 
     async function handleAiRecommend() {
-        const data = loadData();
+        const data = await loadData();
         if (!data.geminiApiKey) {
             setAiError('설정 페이지에서 Gemini API 키를 먼저 입력하세요.');
             return;
@@ -220,8 +220,8 @@ export default function SchedulePage() {
         setConfig(c => ({ ...c, targetTime: timeStr, enabled: true }));
     }
 
-    function handleSave() {
-        updateSchedule(config);
+    async function handleSave() {
+        await updateSchedule(config);
         setSaved(true);
         setTimeout(() => setSaved(false), 2500);
 

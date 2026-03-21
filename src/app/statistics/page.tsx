@@ -13,7 +13,7 @@ import {
 } from 'recharts';
 import StatCard from '@/components/StatCard';
 import Image from 'next/image';
-import { loadData, loadRevenue } from '@/lib/storage';
+import { loadData, loadRevenue } from '@/lib/supabase-storage';
 import type { StatsSummary, ChannelStats } from '@/types';
 import GenreChart from '@/components/GenreChart';
 import RevenuePieChart from '@/components/RevenuePieChart';
@@ -62,41 +62,48 @@ export default function StatisticsPage() {
   const [summary, setSummary] = useState<StatsSummary | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [genreData, setGenreData] = useState<{ genre: string; count: number }[]>([]);
+  const [revenuePieData, setRevenuePieData] = useState<RevenuePieSlice[]>([]);
 
-  // 장르별 프롬프트 수 집계 (scrap sheets)
-  const genreData = (() => {
-    const sheets = loadData().sheets ?? [];
-    const counts: Record<string, number> = {};
-    sheets.forEach((sheet) => {
-      (sheet.items ?? []).forEach((item) => {
-        const g = item.genre || '기타';
-        counts[g] = (counts[g] ?? 0) + 1;
+  useEffect(() => {
+    loadData().then((appData) => {
+      const sheets = appData.sheets ?? [];
+      const counts: Record<string, number> = {};
+      sheets.forEach((sheet) => {
+        (sheet.items ?? []).forEach((item) => {
+          const g = item.genre || '기타';
+          counts[g] = (counts[g] ?? 0) + 1;
+        });
       });
+      setGenreData(
+        Object.entries(counts)
+          .map(([genre, count]) => ({ genre, count }))
+          .sort((a, b) => b.count - a.count)
+          .slice(0, 5),
+      );
     });
-    return Object.entries(counts)
-      .map(([genre, count]) => ({ genre, count }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 5);
-  })();
+  }, []);
 
-  // 플랫폼별 수익 집계
-  const revenuePieData: RevenuePieSlice[] = (() => {
-    const entries = loadRevenue();
-    const totals: Record<string, number> = {};
-    entries.forEach((e) => {
-      totals[e.platform] = (totals[e.platform] ?? 0) + e.amount;
+  useEffect(() => {
+    loadRevenue().then((entries) => {
+      const totals: Record<string, number> = {};
+      entries.forEach((e) => {
+        totals[e.platform] = (totals[e.platform] ?? 0) + e.amount;
+      });
+      setRevenuePieData(
+        Object.entries(totals)
+          .filter(([, v]) => v > 0)
+          .map(([platform, value]) => ({
+            name: PLATFORM_LABEL[platform] ?? platform,
+            value,
+            color: PLATFORM_COLORS[platform] ?? '#888',
+          })),
+      );
     });
-    return Object.entries(totals)
-      .filter(([, v]) => v > 0)
-      .map(([platform, value]) => ({
-        name: PLATFORM_LABEL[platform] ?? platform,
-        value,
-        color: PLATFORM_COLORS[platform] ?? '#888',
-      }));
-  })();
+  }, []);
 
   const fetchStats = useCallback(async () => {
-    const appData = loadData();
+    const appData = await loadData();
     const channels = appData.youtubeChannels ?? [];
     const channelIds = channels
       .map((c) => c.channelId)

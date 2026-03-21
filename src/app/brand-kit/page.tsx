@@ -1,36 +1,39 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Header from '@/components/Header';
-import { getBrandKit, saveBrandKit } from '@/lib/storage';
+import { loadData, updateBrandKit } from '@/lib/supabase-storage';
 import type { BrandKit } from '@/types';
 
 function toArray(val: string): string[] {
     return val.split(',').map(s => s.trim()).filter(Boolean);
 }
 
-function initForm() {
-    const kit = getBrandKit();
-    if (!kit) return { channelName: '', tagline: '', primaryGenre: '', subGenres: '', targetAudience: '', moodKeywords: '', avoidKeywords: '', promptTemplate: '' };
-    return {
-        channelName: kit.channelName,
-        tagline: kit.tagline,
-        primaryGenre: kit.primaryGenre,
-        subGenres: kit.subGenres.join(', '),
-        targetAudience: kit.targetAudience,
-        moodKeywords: kit.moodKeywords.join(', '),
-        avoidKeywords: kit.avoidKeywords.join(', '),
-        promptTemplate: kit.promptTemplate,
-    };
-}
+const EMPTY_FORM = { channelName: '', tagline: '', primaryGenre: '', subGenres: '', targetAudience: '', moodKeywords: '', avoidKeywords: '', promptTemplate: '' };
 
 export default function BrandKitPage() {
-    const [form, setForm] = useState(initForm);
+    const [form, setForm] = useState(EMPTY_FORM);
     const [saved, setSaved] = useState(false);
+
+    useEffect(() => {
+        loadData().then(({ brandKit: kit }) => {
+            if (!kit) return;
+            setForm({
+                channelName: kit.channelName,
+                tagline: kit.tagline,
+                primaryGenre: kit.primaryGenre,
+                subGenres: kit.subGenres.join(', '),
+                targetAudience: kit.targetAudience,
+                moodKeywords: kit.moodKeywords.join(', '),
+                avoidKeywords: kit.avoidKeywords.join(', '),
+                promptTemplate: kit.promptTemplate,
+            });
+        });
+    }, []);
 
     const hasKit = form.channelName.trim().length > 0;
 
-    function handleSave() {
+    async function handleSave() {
         const kit: BrandKit = {
             channelName: form.channelName.trim(),
             tagline: form.tagline.trim(),
@@ -42,7 +45,7 @@ export default function BrandKitPage() {
             promptTemplate: form.promptTemplate.trim(),
             updatedAt: new Date().toISOString(),
         };
-        saveBrandKit(kit);
+        await updateBrandKit(kit);
         setSaved(true);
         setTimeout(() => setSaved(false), 2500);
     }
