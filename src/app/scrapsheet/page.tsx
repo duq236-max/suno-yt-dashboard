@@ -15,13 +15,20 @@ export default function ScrapsheetPage() {
     const [newSheetGenre, setNewSheetGenre] = useState('Lo-fi');
 
     useEffect(() => {
-        loadData().then((data) => setSheets(data.sheets)).catch(() => { });
+        loadData()
+            .then((data) => setSheets(data.sheets))
+            .catch((err) => console.error('시트 로드 실패:', err));
     }, []);
 
     async function persist(updated: ScrapSheet[]) {
-        const data = await loadData();
-        await saveData({ ...data, sheets: updated });
-        setSheets(updated);
+        try {
+            const data = await loadData();
+            await saveData({ ...data, sheets: updated });
+            setSheets(updated);
+        } catch (err) {
+            console.error('시트 저장 실패:', err);
+            alert('저장에 실패했습니다. 네트워크 연결을 확인하고 다시 시도해주세요.');
+        }
     }
 
     async function createSheet() {

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Header from '@/components/Header';
 import Link from 'next/link';
-import { loadData, updateGeminiApiKey } from '@/lib/supabase-storage';
+import { loadData, updateGeminiApiKey, clearAllUserData } from '@/lib/supabase-storage';
 import { pingExtension, type PingResult } from '@/lib/ping-test';
 
 type Theme = 'dark' | 'light';
@@ -58,17 +58,22 @@ export default function SettingsPage() {
         applyTheme(next);
     }
 
-    function clearAll() {
+    async function clearAll() {
         if (!confirm('모든 데이터를 초기화하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) return;
-        localStorage.removeItem('suno-yt-data');
+        await clearAllUserData();             // Supabase 삭제
+        localStorage.removeItem('suno-yt-data');  // localStorage도 정리
         setCleared(true);
         setTimeout(() => window.location.href = '/dashboard', 1500);
     }
 
     async function saveApiKey() {
-        await updateGeminiApiKey(apiKey.trim());
-        setApiKeySaved(true);
-        setTimeout(() => setApiKeySaved(false), 2500);
+        try {
+            await updateGeminiApiKey(apiKey.trim());
+            setApiKeySaved(true);
+            setTimeout(() => setApiKeySaved(false), 2500);
+        } catch {
+            alert('API 키 저장 실패. 다시 시도해주세요.');
+        }
     }
 
     return (
@@ -215,7 +220,7 @@ export default function SettingsPage() {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                             {[
                                 { label: '버전', value: 'v2.0.0 (Phase 2)' },
-                                { label: '저장 방식', value: 'localStorage (로컬 브라우저)' },
+                                { label: '저장 방식', value: 'Supabase (클라우드 DB)' },
                                 { label: '데이터 위치', value: '이 브라우저에만 저장됩니다' },
                             ].map((row) => (
                                 <div key={row.label} style={{
@@ -280,7 +285,7 @@ export default function SettingsPage() {
                         <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '14px', lineHeight: 1.6 }}>
                             모든 데이터(채널기획, 스크랩시트, 유튜브 채널, 스케쥴)를 초기화합니다. 되돌릴 수 없습니다.
                         </p>
-                        <button className="btn btn-danger" onClick={clearAll} disabled={cleared}>
+                        <button className="btn btn-danger" onClick={() => void clearAll()} disabled={cleared}>
                             {cleared ? '✅ 초기화 완료, 이동 중...' : '🗑️ 전체 데이터 초기화'}
                         </button>
                     </div>

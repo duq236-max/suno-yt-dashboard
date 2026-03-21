@@ -168,6 +168,8 @@ export async function loadData(): Promise<AppData> {
     const userId = await getCurrentUserId();
     if (!userId) return { ...DEFAULT_DATA };
 
+    await ensureUserSettings(userId);
+
     type MaybeSingle<T> = { data: T | null; error: { message: string } | null };
     type MaybeList<T>   = { data: T[] | null; error: { message: string } | null };
 
@@ -558,13 +560,59 @@ export async function updateGeminiApiKey(key: string): Promise<void> {
 
     const { error } = await supabase
         .from('user_settings')
-        .update({ gemini_api_key: key || null })
-        .eq('user_id', userId);
+        .upsert(
+            {
+                user_id: userId,
+                gemini_api_key: key || null,
+                schedule_enabled: false,
+                schedule_frequency: 'daily' as const,
+                schedule_target_time: '18:00',
+                email_alert: false,
+            },
+            { onConflict: 'user_id' },
+        );
 
     if (error) {
         console.error('updateGeminiApiKey error:', error.message);
         throw new Error(`Gemini API 키 저장 실패: ${error.message}`);
     }
+}
+
+// ──────────────────────────────────────────────────────────
+// ensureUserSettings
+// 로그인 직후 user_settings row가 없으면 기본값으로 생성
+// ──────────────────────────────────────────────────────────
+export async function ensureUserSettings(userId: string): Promise<void> {
+    await supabase
+        .from('user_settings')
+        .upsert(
+            {
+                user_id: userId,
+                schedule_enabled: false,
+                schedule_frequency: 'daily' as const,
+                schedule_target_time: '18:00',
+                email_alert: false,
+            },
+            { onConflict: 'user_id', ignoreDuplicates: true },
+        );
+}
+
+// ──────────────────────────────────────────────────────────
+// clearAllUserData
+// settings의 "데이터 초기화" 기능 — Supabase soft/hard delete
+// ──────────────────────────────────────────────────────────
+export async function clearAllUserData(): Promise<void> {
+    const userId = await getCurrentUserId();
+    if (!userId) return;
+
+    await Promise.all([
+        supabase.from('scrap_sheets').update({ deleted_at: new Date().toISOString() }).eq('user_id', userId),
+        supabase.from('scrap_items').update({ deleted_at: new Date().toISOString() }).eq('user_id', userId),
+        supabase.from('channel_info').delete().eq('user_id', userId),
+        supabase.from('youtube_channels').update({ deleted_at: new Date().toISOString() }).eq('user_id', userId),
+        supabase.from('brand_kit').delete().eq('user_id', userId),
+        supabase.from('user_settings').update({ gemini_api_key: null }).eq('user_id', userId),
+    ]);
 }
 
 // ──────────────────────────────────────────────────────────

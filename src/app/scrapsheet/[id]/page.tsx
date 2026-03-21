@@ -39,6 +39,7 @@ export default function ScrapsheetDetailPage() {
     const router = useRouter();
 
     const [sheet, setSheet] = useState<ScrapSheet | null>(null);
+    const [loadError, setLoadError] = useState(false);
     const [showForm, setShowForm] = useState(false);
     const [form, setForm] = useState(EMPTY_ITEM);
     const [editingId, setEditingId] = useState<string | null>(null);
@@ -52,11 +53,13 @@ export default function ScrapsheetDetailPage() {
     const [aiError, setAiError] = useState<string | null>(null);
 
     useEffect(() => {
-        loadData().then(data => {
-            const found = data.sheets.find(s => s.id === id);
-            if (!found) { router.push('/scrapsheet'); return; }
-            setSheet(found);
-        });
+        loadData()
+            .then(data => {
+                const found = data.sheets.find(s => s.id === id);
+                if (!found) { router.push('/scrapsheet'); return; }
+                setSheet(found);
+            })
+            .catch(() => setLoadError(true));
     }, [id, router]);
 
     // ✅ Hook 규칙: useMemo는 early return 전에 선언 (sheet가 null이면 빈 배열 반환)
@@ -70,6 +73,17 @@ export default function ScrapsheetDetailPage() {
         return items;
     }, [sheet, filterSort, filterStatus]);
 
+    if (loadError) {
+        return (
+            <>
+                <Header title="스크랩시트" />
+                <div className="page-content" style={{ color: 'var(--text-muted)', fontSize: '14px' }}>
+                    데이터를 불러오지 못했습니다. 새로고침 해주세요.
+                </div>
+            </>
+        );
+    }
+
     if (!sheet) {
         return (
             <>
@@ -81,7 +95,12 @@ export default function ScrapsheetDetailPage() {
 
     async function persistSheet(updated: ScrapSheet) {
         setSheet(updated);
-        await upsertSheet(updated);
+        try {
+            await upsertSheet(updated);
+        } catch (err) {
+            console.error('시트 저장 실패:', err);
+            alert('저장에 실패했습니다. 네트워크 연결을 확인하고 다시 시도해주세요.');
+        }
     }
 
     function openAdd() {

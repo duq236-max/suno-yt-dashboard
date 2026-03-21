@@ -4,8 +4,7 @@ import { useEffect, useState, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import Header from '@/components/Header';
 import StatCard from '@/components/StatCard';
-import { loadData, updateYoutubeChannels, generateId, formatNumber } from '@/lib/supabase-storage';
-import { loadLyricsHistory } from '@/lib/storage';
+import { loadData, updateYoutubeChannels, generateId, formatNumber, loadLyricsHistory } from '@/lib/supabase-storage';
 import { fetchYoutubeChannel, fetchYoutubeAnalytics, YoutubeAnalytics, YoutubeChannelInfo } from '@/lib/youtube';
 import { AppData, YoutubeChannel } from '@/types';
 import Link from 'next/link';
@@ -33,8 +32,9 @@ export default function DashboardPage() {
 
     useEffect(() => {
         loadData().then(setData);
+        loadLyricsHistory().then(h => setLyricsCount(h.length));
     }, []);
-    const [lyricsCount] = useState(() => loadLyricsHistory().length);
+    const [lyricsCount, setLyricsCount] = useState(0);
     const [showYtModal, setShowYtModal] = useState(false);
     const [ytForm, setYtForm] = useState(EMPTY_YT);
     const [editingYtId, setEditingYtId] = useState<string | null>(null);
@@ -42,16 +42,7 @@ export default function DashboardPage() {
     const [pendingChannelId, setPendingChannelId] = useState<string | null>(null);
     const [analyticsMap, setAnalyticsMap] = useState<Record<string, YoutubeAnalytics>>({});
     const [liveChannelInfo, setLiveChannelInfo] = useState<Record<string, YoutubeChannelInfo>>({});
-    const [recentGenres] = useState<string[]>(() => {
-        try {
-            const stored = localStorage.getItem('recentGenres');
-            if (stored) {
-                const parsed: unknown = JSON.parse(stored);
-                if (Array.isArray(parsed)) return (parsed as string[]).slice(0, 3);
-            }
-        } catch { /* ignore */ }
-        return [];
-    });
+    const [recentGenres] = useState<string[]>([]);
 
     // 채널 목록이 생기면 analytics 병렬 fetch (quota 캐시 1시간)
     useEffect(() => {
