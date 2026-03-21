@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Header from '@/components/Header';
 import Link from 'next/link';
-import { loadData, updateGeminiApiKey } from '@/lib/storage';
+import { loadData, updateGeminiApiKey } from '@/lib/supabase-storage';
 import { pingExtension, type PingResult } from '@/lib/ping-test';
 
 type Theme = 'dark' | 'light';
@@ -15,7 +15,7 @@ function applyTheme(theme: Theme) {
 
 export default function SettingsPage() {
     const [cleared, setCleared] = useState(false);
-    const [apiKey, setApiKey] = useState(() => loadData().geminiApiKey ?? '');
+    const [apiKey, setApiKey] = useState('');
     const [apiKeySaved, setApiKeySaved] = useState(false);
     const [theme, setTheme] = useState<Theme>(() => (typeof window !== 'undefined' ? (localStorage.getItem('theme') ?? 'dark') : 'dark') as Theme);
     const [extStatus, setExtStatus] = useState<ExtConnStatus>('detecting');
@@ -24,6 +24,15 @@ export default function SettingsPage() {
     // 마운트 시 초기 테마 적용 (setState 없음 — DOM 조작만)
     // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => { applyTheme(theme); }, []);
+
+    // 마운트 시 API 키 로드
+    useEffect(() => {
+        const fetchApiKey = async () => {
+            const data = await loadData();
+            setApiKey(data.geminiApiKey ?? '');
+        };
+        fetchApiKey();
+    }, []);
 
     // 마운트 시 Extension 연결 감지
     useEffect(() => {
@@ -56,8 +65,8 @@ export default function SettingsPage() {
         setTimeout(() => window.location.href = '/dashboard', 1500);
     }
 
-    function saveApiKey() {
-        updateGeminiApiKey(apiKey.trim());
+    async function saveApiKey() {
+        await updateGeminiApiKey(apiKey.trim());
         setApiKeySaved(true);
         setTimeout(() => setApiKeySaved(false), 2500);
     }

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Header from '@/components/Header';
-import { loadData, updateChannel, generateId } from '@/lib/storage';
+import { loadData, updateChannel, generateId } from '@/lib/supabase-storage';
 import { ChannelInfo } from '@/types';
 import { useRouter } from 'next/navigation';
 import type { PlannerReport, ContentCalendarItem } from '@/app/api/gemini/planner/route';
@@ -99,18 +99,21 @@ export default function PlannerPage() {
     const [playlistError, setPlaylistError] = useState('');
 
     useEffect(() => {
-        const data = loadData();
-        if (data.channel) {
-            setExisting(data.channel);
-            setForm({
-                genre: data.channel.genre,
-                targetAudience: data.channel.targetAudience,
-                uploadFrequency: data.channel.uploadFrequency,
-                name: data.channel.name,
-                youtubeName: data.channel.youtubeName || '',
-                concept: '',
-            });
-        }
+        const fetchChannel = async () => {
+            const data = await loadData();
+            if (data.channel) {
+                setExisting(data.channel);
+                setForm({
+                    genre: data.channel.genre,
+                    targetAudience: data.channel.targetAudience,
+                    uploadFrequency: data.channel.uploadFrequency,
+                    name: data.channel.name,
+                    youtubeName: data.channel.youtubeName || '',
+                    concept: '',
+                });
+            }
+        };
+        fetchChannel();
     }, []);
 
     function next() { setStep((s) => Math.min(s + 1, 6)); }
@@ -130,7 +133,7 @@ export default function PlannerPage() {
     }
 
     async function generateReport() {
-        const data = loadData();
+        const data = await loadData();
         const apiKey = data.geminiApiKey;
 
         if (!apiKey) {
@@ -172,7 +175,7 @@ export default function PlannerPage() {
 
     // J3: 플레이리스트 순서 AI 추천 API 호출
     async function generatePlaylistOrder() {
-        const data = loadData();
+        const data = await loadData();
         const apiKey = data.geminiApiKey;
         if (!apiKey) {
             setPlaylistError('설정 페이지에서 Gemini API 키를 먼저 입력하세요.');
@@ -203,7 +206,7 @@ export default function PlannerPage() {
         }
     }
 
-    function finish() {
+    async function finish() {
         const channel: ChannelInfo = {
             id: existing?.id || generateId(),
             name: form.name.trim() || '내 채널',
@@ -213,7 +216,7 @@ export default function PlannerPage() {
             youtubeName: form.youtubeName.trim(),
             createdAt: existing?.createdAt || new Date().toISOString(),
         };
-        updateChannel(channel);
+        await updateChannel(channel);
         router.push('/dashboard');
     }
 
