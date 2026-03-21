@@ -13,7 +13,8 @@ const PING_TYPE = 'SUNO_BATCH_PING';
 const PONG_TYPE = 'SUNO_BATCH_PONG';
 const ADD_TO_QUEUE_TYPE = 'ADD_TO_QUEUE';
 const ADD_TO_QUEUE_RESULT_TYPE = 'ADD_TO_QUEUE_RESULT';
-const DETECT_TIMEOUT_MS = 1000;
+const DETECT_TIMEOUT_MS = 3000;
+const PING_INTERVAL_MS = 800;
 
 // Chrome Web Store URL — 개발 중에는 빈 문자열 (로드 테스트 안내로 대체)
 const EXTENSION_STORE_URL = '';
@@ -24,8 +25,8 @@ export default function SendToSunoButton({ lyrics, sunoPrompt }: Props) {
     const [sent, setSent] = useState(false);
     const [sendError, setSendError] = useState<string | null>(null);
 
-    // Extension 설치 감지: ping → 1초 타임아웃
-    useEffect(() => {
+    const detect = useCallback(() => {
+        setExtStatus('detecting');
         let resolved = false;
 
         function handlePong(event: MessageEvent) {
@@ -33,27 +34,41 @@ export default function SendToSunoButton({ lyrics, sunoPrompt }: Props) {
                 resolved = true;
                 setExtStatus('installed');
                 window.removeEventListener('message', handlePong);
+                clearInterval(pingInterval);
+                clearTimeout(timer);
             }
         }
 
         window.addEventListener('message', handlePong);
+
+        // PING을 주기적으로 재전송 (Extension이 느리게 초기화될 경우 대비)
         window.postMessage({ type: PING_TYPE }, '*');
+        const pingInterval = setInterval(() => {
+            if (!resolved) window.postMessage({ type: PING_TYPE }, '*');
+        }, PING_INTERVAL_MS);
 
         const timer = setTimeout(() => {
             if (!resolved) {
                 setExtStatus('not_installed');
                 window.removeEventListener('message', handlePong);
+                clearInterval(pingInterval);
             }
         }, DETECT_TIMEOUT_MS);
 
         return () => {
             clearTimeout(timer);
+            clearInterval(pingInterval);
             window.removeEventListener('message', handlePong);
         };
     }, []);
 
+    // 마운트 시 자동 감지
+    useEffect(() => {
+        return detect();
+    }, [detect]);
+
     const handleClick = useCallback(() => {
-        if (extStatus === 'not_installed') {
+        if (extStatus === 'not_installed' || extStatus === 'detecting') {
             setShowModal(true);
             return;
         }
@@ -88,10 +103,10 @@ export default function SendToSunoButton({ lyrics, sunoPrompt }: Props) {
     const buttonLabel = sent
         ? '✓ 큐에 추가됨'
         : extStatus === 'detecting'
-            ? '감지 중…'
+            ? '⏳ Extension 감지 중…'
             : 'Suno로 전송';
 
-    const buttonDisabled = extStatus === 'detecting' || sent;
+    const buttonDisabled = sent;
 
     return (
         <>
