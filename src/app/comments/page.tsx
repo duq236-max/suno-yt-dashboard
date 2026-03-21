@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import Image from 'next/image';
 import Header from '@/components/Header';
-import { loadData } from '@/lib/storage';
+import { loadData } from '@/lib/supabase-storage';
 import type { CommentThread } from '@/app/api/youtube/comments/route';
 import type { ReplyResult } from '@/app/api/gemini/reply/route';
 
@@ -79,7 +79,7 @@ export default function CommentsPage() {
   const [replyStates, setReplyStates] = useState<Record<string, ReplyState>>({});
 
   useEffect(() => {
-    const data = loadData();
+    loadData().then((data) => {
     setApiKey(data.geminiApiKey ?? '');
 
     const bk = data.brandKit;
@@ -92,6 +92,7 @@ export default function CommentsPage() {
 
     const firstChannelId = yt?.channelId ?? '';
     setChannelId(firstChannelId);
+    });
   }, []);
 
   const handleFetch = useCallback(async () => {

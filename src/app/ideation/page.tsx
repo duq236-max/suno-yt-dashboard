@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Header from '@/components/Header';
 import { CreativityPanel } from '@/components/CreativityPanel';
-import { loadData, loadData as loadStorage, generateId, updateSheets } from '@/lib/storage';
+import { loadData, generateId, updateSheets } from '@/lib/supabase-storage';
 import type { IdeaCard } from '@/app/api/gemini/ideation/route';
 
 const GENRES = ['Lo-fi Hip-hop', 'Jazz', 'Classical Piano', 'Ambient', 'EDM', 'Chillhop', '수면 음악', '카페 BGM', '명상 음악', 'Nature Sounds'];
@@ -25,18 +25,20 @@ export default function IdeationPage() {
     const [creativity, setCreativity] = useState({ temperature: 0.7, topP: 0.9, topK: 30 });
 
     useEffect(() => {
-        const data = loadStorage();
-        setApiKey(data.geminiApiKey ?? '');
-        // BrandKit 컨텍스트 자동 주입
-        if (data.brandKit) {
-            const bk = data.brandKit;
-            const parts: string[] = [];
-            if (bk.channelName) parts.push(`채널명: ${bk.channelName}`);
-            if (bk.primaryGenre) parts.push(`장르: ${bk.primaryGenre}`);
-            if (bk.targetAudience) parts.push(`타겟: ${bk.targetAudience}`);
-            if (bk.moodKeywords?.length) parts.push(`무드: ${bk.moodKeywords.slice(0, 3).join('·')}`);
-            setBrandContext(parts.join(', '));
-        }
+        (async () => {
+            const data = await loadData();
+            setApiKey(data.geminiApiKey ?? '');
+            // BrandKit 컨텍스트 자동 주입
+            if (data.brandKit) {
+                const bk = data.brandKit;
+                const parts: string[] = [];
+                if (bk.channelName) parts.push(`채널명: ${bk.channelName}`);
+                if (bk.primaryGenre) parts.push(`장르: ${bk.primaryGenre}`);
+                if (bk.targetAudience) parts.push(`타겟: ${bk.targetAudience}`);
+                if (bk.moodKeywords?.length) parts.push(`무드: ${bk.moodKeywords.slice(0, 3).join('·')}`);
+                setBrandContext(parts.join(', '));
+            }
+        })();
     }, []);
 
     async function handleGenerate() {
@@ -70,8 +72,8 @@ export default function IdeationPage() {
         }
     }
 
-    function handleSaveToScrapSheet(idea: IdeaCard, idx: number) {
-        const data = loadData();
+    async function handleSaveToScrapSheet(idea: IdeaCard, idx: number) {
+        const data = await loadData();
         const defaultSheet = data.sheets[0];
 
         const newItem = {
@@ -90,7 +92,7 @@ export default function IdeationPage() {
         if (defaultSheet) {
             const updatedSheet = { ...defaultSheet, items: [...defaultSheet.items, newItem] };
             const updatedSheets = data.sheets.map(s => s.id === defaultSheet.id ? updatedSheet : s);
-            updateSheets(updatedSheets);
+            await updateSheets(updatedSheets);
         } else {
             const newSheet = {
                 id: generateId(),
@@ -99,7 +101,7 @@ export default function IdeationPage() {
                 items: [newItem],
                 createdAt: new Date().toISOString(),
             };
-            updateSheets([newSheet]);
+            await updateSheets([newSheet]);
         }
 
         setSavedIds(prev => new Set(prev).add(String(idx)));

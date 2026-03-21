@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Header from '@/components/Header';
-import { loadData } from '@/lib/storage';
+import { loadData } from '@/lib/supabase-storage';
 import type { AuditResult, AuditSuggestion } from '@/app/api/gemini/audit/route';
 import type { BrandKit, ScrapSheet } from '@/types';
 
@@ -184,7 +184,7 @@ export default function AuditPage() {
     const [errorMsg, setErrorMsg] = useState('');
 
     useEffect(() => {
-        const data = loadData();
+        loadData().then((data) => {
         setApiKey(data.geminiApiKey ?? '');
         setBrandKit(data.brandKit);
         setSheets(data.sheets);
@@ -205,6 +205,7 @@ export default function AuditPage() {
                 avgEngagementRate: avgEngagement,
             });
         }
+        });
     }, []);
 
     async function handleAudit() {

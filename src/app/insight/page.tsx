@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Header from '@/components/Header';
-import { loadData } from '@/lib/storage';
+import { loadData } from '@/lib/supabase-storage';
 import type { InsightResult, InsightCard } from '@/app/api/gemini/insight/route';
 
 type InsightState = 'idle' | 'loading' | 'done' | 'error';
@@ -72,7 +72,7 @@ export default function InsightPage() {
     const [channelName, setChannelName] = useState('');
 
     useEffect(() => {
-        const data = loadData();
+        loadData().then((data) => {
         setApiKey(data.geminiApiKey ?? '');
 
         // BrandKit 우선, 없으면 ChannelInfo 폴백
@@ -80,6 +80,7 @@ export default function InsightPage() {
         const ch = data.channel;
         const yt = data.youtubeChannels?.[0];
         setChannelName(bk?.channelName || ch?.name || yt?.channelName || '내 채널');
+        });
     }, []);
 
     async function handleAnalyze() {
@@ -94,7 +95,7 @@ export default function InsightPage() {
         setResult(null);
 
         try {
-            const data = loadData();
+            const data = await loadData();
             const bk = data.brandKit;
             const ch = data.channel;
             const yt = data.youtubeChannels?.[0];

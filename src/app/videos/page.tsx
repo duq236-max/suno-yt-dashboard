@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { useEffect, useState, useMemo } from 'react';
 import Header from '@/components/Header';
-import { loadData } from '@/lib/storage';
+import { loadData } from '@/lib/supabase-storage';
 
 interface VideoStat {
   videoId: string;
@@ -36,13 +36,14 @@ export default function VideosPage() {
   const [sortKey, setSortKey] = useState<SortKey>('date');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // localStorage에서 channelId 가져오기
+  // Supabase에서 channelId 가져오기
   useEffect(() => {
-    const data = loadData();
-    const ch = data.youtubeChannels?.[0];
-    if (ch?.channelId) {
-      setChannelId(ch.channelId);
-    }
+    loadData().then((data) => {
+      const ch = data.youtubeChannels?.[0];
+      if (ch?.channelId) {
+        setChannelId(ch.channelId);
+      }
+    });
   }, []);
 
   // channelId가 생기면 자동으로 불러오기

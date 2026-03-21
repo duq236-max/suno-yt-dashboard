@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Header from '@/components/Header';
-import { loadData, generateId, addThumbnailHistory, loadThumbnailHistory, toggleThumbnailFavorite } from '@/lib/storage';
+import { loadData, generateId } from '@/lib/supabase-storage';
+import { addThumbnailHistory, loadThumbnailHistory, toggleThumbnailFavorite } from '@/lib/storage';
 import type { CoverResult, ThumbnailHistoryItem } from '@/types';
 import { CreativityPanel } from '@/components/CreativityPanel';
 
@@ -41,14 +42,15 @@ export default function CoverPage() {
     const [thumbnailHistory, setThumbnailHistory] = useState<ThumbnailHistoryItem[]>([]);
 
     useEffect(() => {
-        const data = loadData();
-        setApiKey(data.geminiApiKey ?? '');
-        if (data.brandKit) {
-            const bk = data.brandKit;
-            if (bk.channelName) setChannelName(bk.channelName);
-            if (bk.primaryGenre) setGenre(bk.primaryGenre);
-            if (bk.moodKeywords?.length) setKeywords(bk.moodKeywords.slice(0, 4).join(', '));
-        }
+        loadData().then((data) => {
+            setApiKey(data.geminiApiKey ?? '');
+            if (data.brandKit) {
+                const bk = data.brandKit;
+                if (bk.channelName) setChannelName(bk.channelName);
+                if (bk.primaryGenre) setGenre(bk.primaryGenre);
+                if (bk.moodKeywords?.length) setKeywords(bk.moodKeywords.slice(0, 4).join(', '));
+            }
+        });
         setThumbnailHistory(loadThumbnailHistory());
     }, []);
 
