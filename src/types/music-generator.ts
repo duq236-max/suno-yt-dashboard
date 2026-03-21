@@ -1,0 +1,33 @@
+export interface ChipItem {
+  emoji: string;
+  label: string;
+}
+
+export interface ChipSection {
+  id: string;
+  label: string;
+  chips: ChipItem[];
+  multi: boolean;
+}
+
+export interface MusicGeneratorForm {
+  genres: string[];
+  moods: string[];
+  vocals: string[];
+  usage: string[];
+  instruments: string[];
+  bpm: string;
+  targetAge: string;
+  language: string;
+  theme: string[];
+  customRequest: string;
+  shortsMode: boolean;
+  model: 'flash' | 'pro';
+}
+
+export interface GeneratedSong {
+  title: string;
+  style: string;
+  lyrics: string;
+  bpm: number;
+}
