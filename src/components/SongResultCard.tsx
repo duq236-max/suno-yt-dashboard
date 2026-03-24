@@ -1,16 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-
-interface Song {
-  title: string;
-  style: string;
-  lyrics: string;
-}
+import type { GeneratedSong } from '@/types/music-generator';
 
 interface SongResultCardProps {
   index: number;
-  song: Song;
+  song: GeneratedSong;
+  onSendToSuno?: (song: GeneratedSong) => void;
 }
 
 function CopyButton({ text }: { text: string }) {
@@ -34,7 +30,7 @@ function CopyButton({ text }: { text: string }) {
   );
 }
 
-export default function SongResultCard({ index, song }: SongResultCardProps) {
+export default function SongResultCard({ index, song, onSendToSuno }: SongResultCardProps) {
   const [expanded, setExpanded] = useState(false);
 
   // 제목에서 짧은 태그라인 추출 (첫 괄호 안 텍스트 또는 스타일 첫 단어)
@@ -134,6 +130,19 @@ export default function SongResultCard({ index, song }: SongResultCardProps) {
 
           {/* LYRICS 섹션 */}
           <Section label="LYRICS" content={song.lyrics} multiline />
+
+          {/* Suno 전송 버튼 */}
+          {onSendToSuno && (
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <button
+                type="button"
+                className="btn btn-primary btn-sm"
+                onClick={() => onSendToSuno(song)}
+              >
+                🎵 Suno로 전송
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

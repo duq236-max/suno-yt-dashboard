@@ -64,6 +64,7 @@ export type DbUserSettings = {
     email_alert: boolean;
     email_address: string | null;
     gemini_api_key: string | null;
+    music_gen_history: unknown[] | null;
     created_at: string;
     updated_at: string;
 };
@@ -191,12 +192,13 @@ export type DbScrapItemInsert = {
 export type DbUserSettingsInsert = {
     id?: string;
     user_id: string;
-    schedule_enabled: boolean;
-    schedule_frequency: 'daily' | '3perweek' | 'weekly';
-    schedule_target_time: string;
-    email_alert: boolean;
+    schedule_enabled?: boolean;
+    schedule_frequency?: 'daily' | '3perweek' | 'weekly';
+    schedule_target_time?: string;
+    email_alert?: boolean;
     email_address?: string | null;
     gemini_api_key?: string | null;
+    music_gen_history?: unknown[] | null;
 }
 
 export type DbYoutubeChannelInsert = {

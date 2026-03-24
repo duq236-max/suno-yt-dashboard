@@ -183,4 +183,6 @@ export interface AppData {
     brandKit: BrandKit | null;
     // Phase 5 — 수익 관리
     revenue?: RevenueEntry[];
+    // 음악 생성 히스토리
+    musicGenHistory?: import('./music-generator').MusicGenHistory[];
 }

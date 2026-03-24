@@ -22,6 +22,7 @@ import type {
     RevenueEntry,
     Song,
 } from '@/types';
+import type { MusicGenHistory } from '@/types/music-generator';
 import {
     supabase,
     getCurrentUserId,
@@ -697,6 +698,56 @@ export async function deleteLyricsHistory(id: string): Promise<void> {
         console.error('deleteLyricsHistory error:', error.message);
         throw new Error(`가사 히스토리 삭제 실패: ${error.message}`);
     }
+}
+
+// ──────────────────────────────────────────────────────────
+// saveMusicGenHistory
+// user_settings의 music_gen_history jsonb 배열에 push 후 upsert.
+// 최신 30개만 유지.
+// ──────────────────────────────────────────────────────────
+export async function saveMusicGenHistory(history: MusicGenHistory): Promise<void> {
+    const userId = await getCurrentUserId();
+    if (!userId) return;
+
+    const existing = await loadMusicGenHistory();
+    const updated = [history, ...existing].slice(0, 30);
+
+    const { error } = await supabase
+        .from('user_settings')
+        .upsert(
+            { user_id: userId, music_gen_history: updated },
+            { onConflict: 'user_id' }
+        );
+
+    if (error) {
+        console.error('saveMusicGenHistory error:', error.message);
+        throw new Error(`음악 생성 히스토리 저장 실패: ${error.message}`);
+    }
+}
+
+// ──────────────────────────────────────────────────────────
+// loadMusicGenHistory
+// user_settings의 music_gen_history jsonb 배열 반환.
+// ──────────────────────────────────────────────────────────
+export async function loadMusicGenHistory(): Promise<MusicGenHistory[]> {
+    const userId = await getCurrentUserId();
+    if (!userId) return [];
+
+    const { data, error } = await supabase
+        .from('user_settings')
+        .select('music_gen_history')
+        .eq('user_id', userId)
+        .single();
+
+    if (error) {
+        // PGRST116 = 행 없음 (첫 저장 전 정상)
+        if (error.code !== 'PGRST116') {
+            console.error('loadMusicGenHistory error:', error.message);
+        }
+        return [];
+    }
+
+    return (data?.music_gen_history as MusicGenHistory[] | null) ?? [];
 }
 
 // ──────────────────────────────────────────────────────────

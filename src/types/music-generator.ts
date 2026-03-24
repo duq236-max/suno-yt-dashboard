@@ -31,3 +31,10 @@ export interface GeneratedSong {
   lyrics: string;
   bpm: number;
 }
+
+export interface MusicGenHistory {
+  id: string;
+  createdAt: string;
+  form: Partial<MusicGeneratorForm>; // 생성 조건 요약
+  songs: GeneratedSong[];
+}
