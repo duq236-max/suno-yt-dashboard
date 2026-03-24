@@ -4,9 +4,10 @@ import { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import ChipSelector from '@/components/ChipSelector';
 import SongResultCard from '@/components/SongResultCard';
+import SaveToSheetModal from '@/components/SaveToSheetModal';
 import { MUSIC_CHIPS } from '@/data/music-chips';
-import type { MusicGeneratorForm, GeneratedSong } from '@/types/music-generator';
-import { loadData } from '@/lib/supabase-storage';
+import type { MusicGeneratorForm, GeneratedSong, MusicGenHistory } from '@/types/music-generator';
+import { loadData, saveMusicGenHistory, loadMusicGenHistory, generateId } from '@/lib/supabase-storage';
 
 type ActiveTab = 'generate' | 'cover' | 'marketing';
 
@@ -30,6 +31,8 @@ type FormArrayKey = 'genres' | 'moods' | 'vocals' | 'usage' | 'instruments' | 't
 type FormStringKey = 'bpm' | 'targetAge' | 'language';
 const ARRAY_KEYS = new Set<string>(['genres', 'moods', 'vocals', 'usage', 'instruments', 'theme']);
 
+const SUNO_SEND_TYPE = 'SUNO_BATCH_SEND';
+
 export default function MusicGeneratorPage() {
     const [form, setForm] = useState<MusicGeneratorForm>(DEFAULT_FORM);
     const [activeTab, setActiveTab] = useState<ActiveTab>('generate');
@@ -37,11 +40,28 @@ export default function MusicGeneratorPage() {
     const [results, setResults] = useState<GeneratedSong[]>([]);
     const [apiKey, setApiKey] = useState('');
 
+    // 모달 / Toast / 이력
+    const [showSaveModal, setShowSaveModal] = useState(false);
+    const [toast, setToast] = useState<string | null>(null);
+    const [history, setHistory] = useState<MusicGenHistory[]>([]);
+
     useEffect(() => {
         loadData().then((data) => {
             setApiKey(data.geminiApiKey ?? '');
         }).catch(() => {});
     }, []);
+
+    // 이력 로드
+    useEffect(() => {
+        loadMusicGenHistory().then(setHistory).catch(() => {});
+    }, []);
+
+    // Toast 자동 해제 (2초)
+    useEffect(() => {
+        if (!toast) return;
+        const timer = setTimeout(() => setToast(null), 2000);
+        return () => clearTimeout(timer);
+    }, [toast]);
 
     function handleChipToggle(sectionId: string, chip: string) {
         if (ARRAY_KEYS.has(sectionId)) {
@@ -68,7 +88,7 @@ export default function MusicGeneratorPage() {
         return val ? [val] : [];
     }
 
-    async function generate() {
+    async function generate(sheetId?: string, openSuno?: boolean) {
         setIsGenerating(true);
         setResults([]);
         try {
@@ -78,12 +98,52 @@ export default function MusicGeneratorPage() {
                 body: JSON.stringify({ form, apiKey }),
             });
             const data = (await res.json()) as { songs?: GeneratedSong[] };
-            setResults(data.songs ?? []);
+            const songs = data.songs ?? [];
+            setResults(songs);
+
+            // 이력 저장
+            if (songs.length > 0) {
+                const record: MusicGenHistory = {
+                    id: generateId(),
+                    createdAt: new Date().toISOString(),
+                    form,
+                    songs,
+                };
+                await saveMusicGenHistory(record);
+
+                // 이력 패널 갱신
+                const updated = await loadMusicGenHistory();
+                setHistory(updated);
+
+                // Toast
+                const genreLabel = form.genres[0] ?? '음악';
+                const sheetLabel = sheetId ? ' 시트에 저장됨' : '';
+                setToast(`✅ ${genreLabel} ${songs.length}곡 생성 완료${sheetLabel}`);
+
+                // Suno 열기 (Extension 전송)
+                if (openSuno) {
+                    window.postMessage({ type: SUNO_SEND_TYPE, songs }, '*');
+                    window.open('https://suno.com', '_blank', 'noopener');
+                }
+            }
         } catch {
             setResults([]);
+            setToast('❌ 생성 중 오류가 발생했습니다');
         } finally {
             setIsGenerating(false);
         }
+    }
+
+    /** SaveToSheetModal onConfirm 핸들러 */
+    async function handleSaveAndGenerate(sheetId: string, openSuno: boolean) {
+        setShowSaveModal(false);
+        await generate(sheetId, openSuno);
+    }
+
+    /** SongResultCard — Suno 전송 핸들러 */
+    function handleSendToSuno(song: GeneratedSong) {
+        window.postMessage({ type: SUNO_SEND_TYPE, songs: [song] }, '*');
+        window.open('https://suno.com', '_blank', 'noopener');
     }
 
     const tabs: { id: ActiveTab; label: string }[] = [
@@ -256,10 +316,10 @@ export default function MusicGeneratorPage() {
                         </div>
                     </div>
 
-                    {/* 생성하기 버튼 */}
+                    {/* 생성하기 버튼 → 모달 표시 */}
                     <button
                         type="button"
-                        onClick={generate}
+                        onClick={() => setShowSaveModal(true)}
                         disabled={isGenerating || !apiKey}
                         style={{
                             width: '100%',
@@ -312,8 +372,71 @@ export default function MusicGeneratorPage() {
                                 🎵 생성 결과 — {results.length}곡
                             </div>
                             {results.map((song, idx) => (
-                                <SongResultCard key={idx} index={idx + 1} song={song} />
+                                <SongResultCard
+                                    key={idx}
+                                    index={idx + 1}
+                                    song={song}
+                                    onSendToSuno={handleSendToSuno}
+                                />
                             ))}
+                        </div>
+                    )}
+
+                    {/* 이력 패널 (최근 3개) */}
+                    {history.length > 0 && (
+                        <div style={{ marginTop: '32px' }}>
+                            <div
+                                style={{
+                                    fontSize: '13px',
+                                    fontWeight: 700,
+                                    color: 'var(--text-muted)',
+                                    marginBottom: '12px',
+                                }}
+                            >
+                                🕐 최근 생성 이력
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                {history.slice(0, 3).map((item) => {
+                                    const genres = item.form.genres?.join(', ') || '(장르 없음)';
+                                    const date = new Date(item.createdAt).toLocaleDateString('ko-KR', {
+                                        month: 'short',
+                                        day: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit',
+                                    });
+                                    return (
+                                        <div
+                                            key={item.id}
+                                            className="card"
+                                            style={{
+                                                padding: '12px 16px',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '12px',
+                                            }}
+                                        >
+                                            <span style={{ fontSize: '20px', flexShrink: 0 }}>🎵</span>
+                                            <div style={{ flex: 1, minWidth: 0 }}>
+                                                <div
+                                                    style={{
+                                                        fontSize: '13px',
+                                                        fontWeight: 600,
+                                                        color: 'var(--text-primary)',
+                                                        overflow: 'hidden',
+                                                        textOverflow: 'ellipsis',
+                                                        whiteSpace: 'nowrap',
+                                                    }}
+                                                >
+                                                    {genres}
+                                                </div>
+                                                <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                                                    {date} · {item.songs.length}곡
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
                         </div>
                     )}
                 </div>
@@ -334,6 +457,43 @@ export default function MusicGeneratorPage() {
                     <div style={{ fontSize: '40px', marginBottom: '12px' }}>📊</div>
                     <div style={{ fontSize: '15px', fontWeight: 700, marginBottom: '6px' }}>마케팅·분석 탭</div>
                     <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>추후 구현 예정 — 생성 통계 및 마케팅 인사이트</div>
+                </div>
+            )}
+
+            {/* SaveToSheetModal */}
+            <SaveToSheetModal
+                isOpen={showSaveModal}
+                onClose={() => setShowSaveModal(false)}
+                onConfirm={handleSaveAndGenerate}
+            />
+
+            {/* Toast (하단 고정, 2초 표시) */}
+            {toast && (
+                <div
+                    style={{
+                        position: 'fixed',
+                        bottom: '24px',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        padding: '12px 20px',
+                        borderRadius: '10px',
+                        background: 'var(--bg-card)',
+                        border: '1px solid var(--border)',
+                        boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
+                        fontSize: '13px',
+                        color: 'var(--text-primary)',
+                        zIndex: 9999,
+                        whiteSpace: 'nowrap',
+                        animation: 'toast-in 0.2s ease',
+                    }}
+                >
+                    {toast}
+                    <style>{`
+                        @keyframes toast-in {
+                            from { opacity: 0; transform: translateX(-50%) translateY(8px); }
+                            to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+                        }
+                    `}</style>
                 </div>
             )}
         </div>
