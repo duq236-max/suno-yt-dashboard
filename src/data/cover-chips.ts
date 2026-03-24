@@ -1,0 +1,108 @@
+import type { CoverChipSection } from '@/types/cover-image';
+
+export const COVER_CHIPS: CoverChipSection[] = [
+  {
+    id: 'mood', label: '분위기',
+    chips: [
+      { label: '몽환적', value: 'dreamy' },
+      { label: '다크', value: 'dark' },
+      { label: '따뜻한', value: 'warm' },
+      { label: '미니멀', value: 'minimal' },
+      { label: '에너제틱', value: 'energetic' },
+      { label: '멜랑꼴리', value: 'melancholic' },
+      { label: '신비로운', value: 'mysterious' },
+      { label: '밝고 경쾌한', value: 'bright' },
+    ],
+  },
+  {
+    id: 'color', label: '색감',
+    chips: [
+      { label: '네온', value: 'neon' },
+      { label: '파스텔', value: 'pastel' },
+      { label: '흑백', value: 'monochrome' },
+      { label: '그라디언트', value: 'gradient' },
+      { label: '어두운 톤', value: 'dark-tones' },
+      { label: '비비드', value: 'vivid' },
+      { label: '세피아', value: 'sepia' },
+      { label: '시네마틱', value: 'cinematic' },
+    ],
+  },
+  {
+    id: 'concept', label: '비주얼 컨셉',
+    chips: [
+      { label: '도시야경', value: 'cityscape' },
+      { label: '자연', value: 'nature' },
+      { label: '추상', value: 'abstract' },
+      { label: '인물 실루엣', value: 'silhouette' },
+      { label: '우주', value: 'space' },
+      { label: '바다', value: 'ocean' },
+      { label: '숲', value: 'forest' },
+      { label: '건축물', value: 'architecture' },
+    ],
+  },
+  {
+    id: 'artStyle', label: '아트 스타일',
+    chips: [
+      { label: '사진', value: 'photography' },
+      { label: '일러스트', value: 'illustration' },
+      { label: '3D 렌더링', value: '3d-render' },
+      { label: '수채화', value: 'watercolor' },
+      { label: '픽셀아트', value: 'pixel-art' },
+      { label: '오일페인팅', value: 'oil-painting' },
+      { label: '애니메이션', value: 'anime' },
+      { label: '미니멀 그래픽', value: 'minimal-graphic' },
+    ],
+  },
+  {
+    id: 'lighting', label: '조명',
+    chips: [
+      { label: '골든아워', value: 'golden-hour' },
+      { label: '네온 라이트', value: 'neon-light' },
+      { label: '달빛', value: 'moonlight' },
+      { label: '스튜디오', value: 'studio' },
+      { label: '역광', value: 'backlight' },
+      { label: '낮은 조도', value: 'low-key' },
+      { label: '드라마틱', value: 'dramatic' },
+      { label: '자연광', value: 'natural' },
+    ],
+  },
+  {
+    id: 'timeSeason', label: '계절/시간대',
+    chips: [
+      { label: '새벽', value: 'dawn' },
+      { label: '낮', value: 'daytime' },
+      { label: '노을', value: 'sunset' },
+      { label: '밤', value: 'night' },
+      { label: '봄', value: 'spring' },
+      { label: '여름', value: 'summer' },
+      { label: '가을', value: 'autumn' },
+      { label: '겨울', value: 'winter' },
+    ],
+  },
+  {
+    id: 'textStyle', label: '텍스트 스타일',
+    chips: [
+      { label: '큰 타이틀', value: 'large-title' },
+      { label: '서브타이틀 포함', value: 'with-subtitle' },
+      { label: '텍스트 없음', value: 'no-text' },
+      { label: '손글씨', value: 'handwriting' },
+      { label: '모던 산세리프', value: 'modern-sans' },
+      { label: '세리프', value: 'serif' },
+      { label: '글리치', value: 'glitch' },
+      { label: '빈티지', value: 'vintage' },
+    ],
+  },
+  {
+    id: 'composition', label: '구도',
+    chips: [
+      { label: '중앙 집중', value: 'centered' },
+      { label: '삼분할', value: 'rule-of-thirds' },
+      { label: '광각', value: 'wide-angle' },
+      { label: '클로즈업', value: 'closeup' },
+      { label: '조감도', value: 'birds-eye' },
+      { label: '대칭', value: 'symmetry' },
+      { label: '여백 강조', value: 'negative-space' },
+      { label: '프레임 인 프레임', value: 'frame-in-frame' },
+    ],
+  },
+];

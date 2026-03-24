@@ -1,0 +1,1803 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>간편화 재구축 프로젝트 — 음원 패키지 생성 기획서</title>
+<style>
+:root {
+  --bg:#0a0a0a; --bg2:#111; --bg3:#1a1a1a; --bg4:#222; --bg5:#2a2a2a;
+  --accent:#e53e3e; --accent2:#fc5050;
+  --pink:#e91e8c; --pink2:#ff4db8;
+  --purple:#7c3aed; --purple2:#a855f7;
+  --green:#22c55e; --blue:#3b82f6; --orange:#f97316; --yellow:#eab308;
+  --text:#fff; --muted:#6b7280; --muted2:#9ca3af;
+  --border:#2a2a2a; --border2:#333;
+  --radius:8px; --radius-lg:12px; --radius-xl:16px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;line-height:1.5;font-size:14px;}
+
+/* ── HERO ── */
+.hero{background:linear-gradient(160deg,#0f0010 0%,#0a0a0a 40%,#100010 100%);padding:52px 32px 40px;text-align:center;border-bottom:1px solid var(--border);}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(233,30,140,.12);border:1px solid rgba(233,30,140,.4);color:var(--pink);padding:4px 14px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:1.5px;margin-bottom:18px;}
+.hero h1{font-size:36px;font-weight:900;background:linear-gradient(135deg,#fff 30%,var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px;letter-spacing:-0.5px;}
+.hero-sub{color:var(--muted2);font-size:14px;margin-bottom:24px;}
+.hero-tags{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+.hero-tag{background:var(--bg3);border:1px solid var(--border2);padding:5px 14px;border-radius:20px;font-size:12px;color:var(--muted2);}
+.hero-tag b{color:var(--text);}
+
+/* ── PROGRESS BAR ── */
+.progress-wrap{background:var(--bg2);border-bottom:1px solid var(--border);padding:20px 32px;position:sticky;top:0;z-index:100;}
+.progress-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.progress-title{font-size:13px;font-weight:700;}
+.progress-count{font-size:13px;color:var(--pink);font-weight:700;}
+.progress-bar-outer{background:var(--bg4);border-radius:99px;height:8px;overflow:hidden;}
+.progress-bar-inner{background:linear-gradient(90deg,var(--pink),var(--purple2));height:100%;border-radius:99px;transition:width .4s ease;}
+.progress-phases{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+.phase-pill{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--border);}
+.phase-pill.active{background:rgba(233,30,140,.15);border-color:var(--pink);color:var(--pink);}
+
+/* ── CONTAINER ── */
+.container{max-width:1360px;margin:0 auto;padding:36px 24px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+
+/* ── SECTION ── */
+.section{margin-bottom:52px;}
+.section-header{display:flex;align-items:center;gap:10px;margin-bottom:20px;padding-bottom:12px;border-bottom:2px solid var(--border);}
+.section-header h2{font-size:20px;font-weight:800;}
+.section-header .accent-line{flex:1;height:2px;background:linear-gradient(90deg,var(--pink),transparent);}
+
+/* ── CARD ── */
+.card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px;}
+.card-sm{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:14px;}
+.card-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:10px;}
+
+/* ── CHECKLIST ── */
+.checklist-group{margin-bottom:24px;}
+.checklist-group-title{font-size:13px;font-weight:700;color:var(--muted2);margin-bottom:10px;padding:6px 10px;background:var(--bg4);border-radius:6px;border-left:3px solid var(--pink);}
+.check-item{display:flex;align-items:flex-start;gap:10px;padding:8px 10px;border-radius:6px;cursor:pointer;transition:.15s;margin-bottom:3px;}
+.check-item:hover{background:var(--bg4);}
+.check-item.done{opacity:.55;}
+.check-item.done .check-text{text-decoration:line-through;color:var(--muted);}
+.check-box{width:18px;height:18px;border:2px solid var(--border2);border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-top:1px;transition:.15s;}
+.check-item.done .check-box{background:var(--pink);border-color:var(--pink);}
+.check-text{font-size:13px;flex:1;}
+.check-badge{font-size:10px;padding:1px 7px;border-radius:8px;font-weight:700;flex-shrink:0;}
+.badge-p1{background:rgba(233,30,140,.2);color:var(--pink);border:1px solid rgba(233,30,140,.4);}
+.badge-p2{background:rgba(59,130,246,.2);color:var(--blue);border:1px solid rgba(59,130,246,.4);}
+.badge-p3{background:rgba(34,197,94,.2);color:var(--green);border:1px solid rgba(34,197,94,.4);}
+.badge-p4{background:rgba(124,58,237,.2);color:var(--purple2);border:1px solid rgba(124,58,237,.4);}
+.badge-p5{background:rgba(234,179,8,.2);color:var(--yellow);border:1px solid rgba(234,179,8,.4);}
+.badge-p6{background:rgba(124,58,237,.2);color:#c084fc;border:1px solid rgba(124,58,237,.5);}
+.badge-p7{background:rgba(34,197,94,.2);color:#4ade80;border:1px solid rgba(34,197,94,.5);}
+.badge-done{background:rgba(34,197,94,.15);color:var(--green);}
+
+/* ── IFRAME MOCKUP EMBED ── */
+.iframe-section{margin-bottom:52px;}
+.iframe-wrap{border-radius:16px;overflow:hidden;border:1px solid var(--border);box-shadow:0 20px 60px rgba(0,0,0,.6);background:#0c0c14;}
+.iframe-wrap iframe{display:block;width:100%;border:none;}
+
+/* ── MODAL MOCKUP ── */
+.modal-overlay-mock{background:rgba(0,0,0,.75);border-radius:16px;padding:40px 20px;display:flex;align-items:center;justify-content:center;}
+.modal-box{background:#1a1a1a;border:1px solid #333;border-radius:14px;width:100%;max-width:360px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.8);}
+.modal-hdr{padding:16px 18px 12px;border-bottom:1px solid #2a2a2a;display:flex;align-items:center;gap:8px;}
+.modal-hdr-icon{width:28px;height:28px;border-radius:8px;background:rgba(233,30,140,.15);border:1px solid rgba(233,30,140,.3);display:flex;align-items:center;justify-content:center;font-size:13px;}
+.modal-title{font-size:14px;font-weight:800;}
+.modal-sub-text{font-size:11px;color:var(--muted);}
+.modal-body{padding:16px 18px;}
+.modal-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:7px;}
+.sheet-option{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg4);margin-bottom:5px;cursor:pointer;transition:.15s;}
+.sheet-option.sel{border-color:var(--pink);background:rgba(233,30,140,.08);}
+.sheet-option-dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--border2);flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.sheet-option.sel .sheet-option-dot{border-color:var(--pink);background:var(--pink);}
+.sheet-option-dot-inner{width:5px;height:5px;border-radius:50%;background:#fff;}
+.sheet-option-name{font-size:12px;flex:1;}
+.sheet-option-count{font-size:10px;color:var(--muted);}
+.new-sheet-row{display:flex;gap:6px;margin-top:8px;margin-bottom:14px;}
+.new-sheet-input{flex:1;background:var(--bg4);border:1px solid var(--border2);border-radius:7px;padding:7px 10px;font-size:12px;color:var(--text);}
+.new-sheet-btn{padding:7px 12px;border-radius:7px;background:rgba(233,30,140,.15);border:1px solid rgba(233,30,140,.35);color:var(--pink);font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;}
+.modal-divider{border:none;border-top:1px solid var(--border);margin:12px 0;}
+.modal-check-row{display:flex;align-items:center;gap:8px;padding:6px 0;cursor:pointer;}
+.modal-check{width:16px;height:16px;border-radius:4px;border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:10px;font-weight:900;}
+.modal-check.on{background:var(--pink);border-color:var(--pink);color:#fff;}
+.modal-check-text{font-size:12px;color:#ccc;}
+.modal-check-sub{font-size:10px;color:var(--muted);}
+.modal-footer{padding:12px 18px;border-top:1px solid #2a2a2a;display:flex;gap:8px;}
+.modal-btn-cancel{flex:1;padding:9px;border-radius:8px;background:var(--bg4);border:1px solid var(--border2);color:var(--muted2);font-size:12px;font-weight:600;cursor:pointer;}
+.modal-btn-ok{flex:2;padding:9px;border-radius:8px;background:linear-gradient(135deg,var(--pink),#c026d3);border:none;color:#fff;font-size:12px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;}
+.phase-card.p5{border-left-color:var(--yellow);}
+.phase-card.p5 .phase-n{background:var(--yellow);color:#000;}
+
+/* ── ANNOTATION BADGE ── */
+.mock-annot{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:rgba(229,62,62,.9);color:#fff;font-size:10px;font-weight:900;border:2px solid rgba(255,80,80,.4);flex-shrink:0;box-shadow:0 0 8px rgba(229,62,62,.6);animation:annot-pulse 2s infinite;vertical-align:middle;margin-right:4px;}
+@keyframes annot-pulse{0%,100%{box-shadow:0 0 8px rgba(229,62,62,.5);}50%{box-shadow:0 0 16px rgba(229,62,62,.95);}}
+
+/* ── Claude Kit button in mockup nav ── */
+.mock-claude-kit{display:flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:700;border:1px solid rgba(217,119,6,.45);background:rgba(217,119,6,.12);color:#d97706;cursor:pointer;transition:.15s;}
+.mock-claude-kit.kit-on{border-color:rgba(217,119,6,.9);background:rgba(217,119,6,.28);color:#fbbf24;box-shadow:0 0 10px rgba(217,119,6,.3);}
+.mock-kit-dot{width:6px;height:6px;border-radius:50%;background:#d97706;}
+/* ── Info banner ── */
+.mock-info-banner{padding:9px 16px;border-radius:8px;font-size:12px;font-weight:500;margin-bottom:14px;border:1px solid;transition:.3s;}
+.mock-info-banner.mode-default{background:rgba(124,58,237,.07);border-color:rgba(124,58,237,.25);color:#c4b5fd;}
+.mock-info-banner.mode-claude{background:rgba(217,119,6,.08);border-color:rgba(217,119,6,.35);color:#fbbf24;}
+/* ── Gen button Claude mode ── */
+.gen-btn.claude-mode{background:linear-gradient(135deg,#d97706,#b45309);}
+
+/* ── Textarea action bar in mockup ── */
+.mock-textarea-wrap{position:relative;border:1px solid #2e2e3e;border-radius:8px;overflow:hidden;margin-bottom:12px;}
+.mock-textarea-input{width:100%;background:#15151f;border:none;padding:8px 12px;color:var(--muted);font-size:11px;display:block;min-height:60px;resize:none;font-family:inherit;outline:none;}
+.mock-textarea-input::placeholder{color:#3a3a4a;}
+.mock-textarea-actions{display:flex;align-items:center;gap:5px;padding:6px 10px;border-top:1px solid #1e1e2e;background:#12121c;flex-wrap:wrap;}
+.mock-ta-char{font-size:10px;color:#444;margin-right:auto;}
+.mock-btn-claude{display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:7px;font-size:11px;font-weight:700;border:1px solid rgba(217,119,6,.4);background:rgba(217,119,6,.12);color:#d97706;cursor:pointer;}
+.mock-btn-suno{display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:7px;font-size:11px;font-weight:700;border:1px solid rgba(229,62,62,.35);background:rgba(229,62,62,.08);color:#f87171;cursor:pointer;}
+/* ── 곡 수 선택 칩 ── */
+.mock-cnt-group{display:flex;align-items:center;gap:3px;}
+.mock-cnt{padding:3px 8px;border-radius:6px;font-size:10px;font-weight:700;border:1px solid #333;background:#1c1c28;color:#666;cursor:pointer;transition:.12s;}
+.mock-cnt.sel{border-color:rgba(229,62,62,.6);background:rgba(229,62,62,.15);color:#f87171;}
+
+/* ── 저장하기 button in result area ── */
+.save-btn{background:rgba(229,62,62,.12);border:1px solid rgba(229,62,62,.35);color:var(--pink);padding:6px 14px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;transition:.15s;white-space:nowrap;}
+.save-btn:hover{background:rgba(229,62,62,.24);border-color:var(--pink);}
+
+/* ── Interactive save modal overlay ── */
+.modal-live-overlay{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:1000;display:none;align-items:center;justify-content:center;}
+.modal-live-overlay.open{display:flex;}
+.modal-live-box{background:#1a1a1a;border:1px solid #333;border-radius:14px;width:360px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.9);animation:modalIn .2s ease;}
+@keyframes modalIn{from{opacity:0;transform:scale(.96) translateY(-8px);}to{opacity:1;transform:scale(1) translateY(0);}}
+
+/* ── MOCKUP ── */
+.mockup-shell{background:#0c0c14;border:1px solid #1e1e2e;border-radius:16px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.6);}
+.mockup-nav{background:#0f0f1a;border-bottom:1px solid #1e1e2e;padding:10px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+.mockup-nav-title{font-size:15px;font-weight:700;color:#fff;}
+.nav-controls{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+.shorts-toggle{display:flex;align-items:center;gap:6px;background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.5);color:#a855f7;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;}
+.shorts-toggle.on{background:rgba(124,58,237,.35);border-color:#a855f7;}
+.model-flash{background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.4);color:#60a5fa;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;}
+.model-pro{background:rgba(233,30,140,.12);border:1px solid rgba(233,30,140,.4);color:#f472b6;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;}
+.model-pro.on{background:rgba(233,30,140,.3);border-color:var(--pink);color:#fff;}
+
+/* Tabs */
+.mock-tabs{display:flex;gap:4px;padding:12px 18px 0;background:#0f0f1a;}
+.mock-tab{padding:8px 18px;border-radius:8px 8px 0 0;font-size:12px;cursor:pointer;color:var(--muted);border:1px solid transparent;border-bottom:none;}
+.mock-tab.on{background:#0c0c14;border-color:#1e1e2e;color:#fff;font-weight:600;}
+
+/* Body */
+.mock-body{padding:18px;max-height:640px;overflow-y:auto;}
+.mock-body::-webkit-scrollbar{width:4px;}
+.mock-body::-webkit-scrollbar-track{background:transparent;}
+.mock-body::-webkit-scrollbar-thumb{background:#333;border-radius:4px;}
+
+.mock-section-header{font-size:16px;font-weight:800;color:#fff;margin-bottom:10px;margin-top:4px;}
+.mock-section-header span{color:var(--pink);}
+.mock-section-sub{font-size:11px;color:var(--muted);margin-bottom:8px;}
+
+/* Chips */
+.mock-chips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px;}
+.mc{display:inline-flex;align-items:center;gap:4px;background:#1c1c28;border:1px solid #2e2e3e;padding:4px 10px;border-radius:20px;font-size:11px;color:#c4c4d4;cursor:pointer;transition:.12s;}
+.mc:hover{border-color:#7c3aed;color:#c084fc;}
+.mc.sel{background:rgba(124,58,237,.25);border-color:#7c3aed;color:#c084fc;}
+.mc.sel-pink{background:rgba(233,30,140,.2);border-color:var(--pink);color:#fb7185;}
+
+/* Input */
+.mock-input{width:100%;background:#15151f;border:1px solid #2e2e3e;border-radius:8px;padding:8px 12px;color:var(--muted);font-size:11px;margin-top:2px;margin-bottom:16px;}
+
+/* Generate button */
+.gen-btn{width:100%;background:linear-gradient(135deg,var(--pink),#c026d3);border:none;color:#fff;padding:12px;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;letter-spacing:.3px;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:8px;}
+
+/* Result cards */
+.result-card{background:#15151f;border:1px solid #2e2e3e;border-radius:10px;padding:10px 14px;margin-bottom:6px;display:flex;align-items:center;gap:10px;cursor:pointer;}
+.result-card:hover{border-color:#444;}
+.result-num{background:linear-gradient(135deg,var(--pink),#c026d3);color:#fff;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0;}
+.result-body{flex:1;min-width:0;}
+.result-title{font-size:12px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.result-tags-line{font-size:10px;color:#666;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.result-tags-line .bpm{color:var(--pink);font-weight:700;}
+.result-arrow{color:#555;font-size:12px;flex-shrink:0;}
+
+/* Expanded */
+.result-expand{background:#12121e;border:1px solid #2e2e3e;border-radius:10px;padding:14px;margin-bottom:6px;}
+.expand-head{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
+.expand-section{margin-bottom:12px;}
+.expand-label{font-size:9px;font-weight:800;color:#555;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:5px;display:flex;align-items:center;justify-content:space-between;}
+.copy-btn{background:rgba(229,62,62,.12);border:1px solid rgba(229,62,62,.3);color:#f87171;padding:2px 9px;border-radius:8px;font-size:9px;font-weight:700;cursor:pointer;}
+.expand-val{background:#1c1c2e;border:1px solid #2e2e3e;border-radius:6px;padding:8px 10px;font-size:11px;color:#d1d5db;line-height:1.7;white-space:pre-wrap;}
+
+/* ── CHIP DATA TABLE ── */
+.chip-data{width:100%;border-collapse:collapse;}
+.chip-data th{background:var(--bg4);padding:9px 12px;text-align:left;font-size:11px;color:var(--muted);border:1px solid var(--border);font-weight:700;}
+.chip-data td{padding:9px 12px;font-size:11px;border:1px solid var(--border);vertical-align:top;line-height:1.8;}
+.chip-data tr:nth-child(even) td{background:var(--bg2);}
+.cm{display:inline-flex;align-items:center;gap:3px;background:var(--bg4);border:1px solid var(--border2);padding:2px 8px;border-radius:10px;font-size:10px;margin:2px;color:#d1d5db;}
+.cm.a{border-color:rgba(233,30,140,.5);color:#fb7185;background:rgba(233,30,140,.08);}
+.cm.b{border-color:rgba(59,130,246,.5);color:#60a5fa;background:rgba(59,130,246,.08);}
+.cm.p{border-color:rgba(124,58,237,.5);color:#a78bfa;background:rgba(124,58,237,.08);}
+.cm.g{border-color:rgba(34,197,94,.5);color:#4ade80;background:rgba(34,197,94,.08);}
+.src{font-size:9px;padding:1px 6px;border-radius:6px;margin-left:4px;font-weight:700;}
+.src-ss{background:rgba(34,197,94,.15);color:#4ade80;}
+.src-mp{background:rgba(124,58,237,.15);color:#a78bfa;}
+
+/* ── PHASE CARDS ── */
+.phase-card{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:18px;border-left:4px solid var(--pink);}
+.phase-card.p2{border-left-color:var(--blue);}
+.phase-card.p3{border-left-color:var(--green);}
+.phase-card.p4{border-left-color:var(--purple2);}
+.phase-head{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+.phase-n{width:30px;height:30px;border-radius:50%;background:var(--pink);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0;}
+.phase-card.p2 .phase-n{background:var(--blue);}
+.phase-card.p3 .phase-n{background:var(--green);}
+.phase-card.p4 .phase-n{background:var(--purple2);}
+.phase-h4{font-size:14px;font-weight:800;}
+.phase-sub{font-size:12px;color:var(--muted2);}
+.phase-list{list-style:none;padding-left:4px;}
+.phase-list li{font-size:12px;color:#ccc;padding:3px 0;border-bottom:1px solid var(--border);display:flex;gap:8px;}
+.phase-list li:last-child{border-bottom:none;}
+.phase-list li::before{content:"→";color:var(--pink);flex-shrink:0;}
+
+/* ── STATS ── */
+.stat-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:32px;}
+.stat-box{flex:1;min-width:100px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px 16px;text-align:center;}
+.stat-n{font-size:30px;font-weight:900;background:linear-gradient(135deg,var(--pink),var(--purple2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.stat-l{font-size:11px;color:var(--muted);margin-top:3px;}
+
+/* Sidebar preview */
+.sb-wrap{background:#0f0f1a;border:1px solid #1e1e2e;border-radius:10px;padding:14px;}
+.sb-section-label{font-size:9px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:1.5px;padding:0 6px;margin-bottom:6px;}
+.sb-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:6px;font-size:12px;color:#9ca3af;cursor:pointer;}
+.sb-item:hover{background:#1c1c2e;color:#fff;}
+.sb-item.on{background:rgba(233,30,140,.12);color:var(--pink);}
+.sb-new{background:var(--pink);color:#fff;font-size:9px;font-weight:800;padding:1px 6px;border-radius:6px;margin-left:auto;}
+
+hr.div{border:none;border-top:1px solid var(--border);margin:44px 0;}
+
+/* Annotation */
+.anno{font-size:11px;color:var(--muted);text-align:center;margin-top:8px;}
+.tag-ref{display:inline-block;font-size:10px;padding:1px 7px;border-radius:6px;}
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-badge">🎵 간편화 재구축 프로젝트</div>
+  <h1>음원 패키지 생성 기획서</h1>
+  <p class="hero-sub">음악 생성 · 커버 이미지 생성 · SEO 최적화 패키지 — 3개 서브페이지 통합 기획</p>
+  <div class="hero-tags">
+    <div class="hero-tag">🎵 음악생성 <b>/music-generator</b></div>
+    <div class="hero-tag">🖼 커버이미지 <b>/cover-image-generator</b></div>
+    <div class="hero-tag">🔍 SEO패키지 <b>/seo-package</b></div>
+    <div class="hero-tag">작성일 <b>2026-03-24 업데이트</b></div>
+    <div class="hero-tag">프로젝트 <b>suno-yt-dashboard</b></div>
+  </div>
+</div>
+
+<!-- PROGRESS BAR -->
+<div class="progress-wrap">
+  <div class="progress-header">
+    <div class="progress-title">🎯 음원 패키지 생성 전체 진행률</div>
+    <div class="progress-count" id="prog-text">0 / 0 완료</div>
+  </div>
+  <div class="progress-bar-outer">
+    <div class="progress-bar-inner" id="prog-bar" style="width:0%"></div>
+  </div>
+  <div class="progress-phases">
+    <div class="phase-pill active" onclick="filterPhase('all',this)">전체</div>
+    <div class="phase-pill" onclick="filterPhase('p1',this)">🎵 음악생성 — 초기셋팅</div>
+    <div class="phase-pill" onclick="filterPhase('p2',this)">🎵 음악생성 — UI 구현</div>
+    <div class="phase-pill" onclick="filterPhase('p3',this)">🎵 음악생성 — API 연동</div>
+    <div class="phase-pill" onclick="filterPhase('p4',this)">🎵 음악생성 — 저장 모달</div>
+    <div class="phase-pill" onclick="filterPhase('p6',this)">🖼 커버이미지</div>
+    <div class="phase-pill" onclick="filterPhase('p7',this)">🔍 SEO 패키지</div>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- STATS -->
+<div class="stat-row">
+  <div class="stat-box"><div class="stat-n">3</div><div class="stat-l">서브 페이지</div></div>
+  <div class="stat-box"><div class="stat-n">24</div><div class="stat-l">구현 체크리스트</div></div>
+  <div class="stat-box"><div class="stat-n">400+</div><div class="stat-l">전체 프리셋 칩</div></div>
+  <div class="stat-box"><div class="stat-n">9</div><div class="stat-l">음악생성 섹션</div></div>
+  <div class="stat-box"><div class="stat-n">8</div><div class="stat-l">커버이미지 카테고리</div></div>
+  <div class="stat-box"><div class="stat-n">7</div><div class="stat-l">SEO 입력 섹션</div></div>
+</div>
+
+<!-- ════════════════════════════════════════ -->
+<!-- SECTION A — 체크리스트 -->
+<!-- ════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-header">
+    <h2>✅ 구현 체크리스트</h2>
+    <div class="accent-line"></div>
+  </div>
+  <div class="grid2">
+
+    <!-- Phase 1 -->
+    <div class="card">
+      <div style="font-size:11px;font-weight:700;color:var(--pink);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--border);">🎵 음악 생성기 — /music-generator</div>
+      <div class="checklist-group">
+        <div class="checklist-group-title">🚀 Phase 1 — 초기 셋팅 &amp; 라우트</div>
+        <div class="check-item" data-phase="p1" onclick="toggle(this)">
+          <div class="check-box">✓</div>
+          <div class="check-text">새 라우트 <code>/music-generator</code> 생성</div>
+          <span class="check-badge badge-p1">P1</span>
+        </div>
+        <div class="check-item" data-phase="p1" onclick="toggle(this)">
+          <div class="check-box">✓</div>
+          <div class="check-text">사이드바 크리에이티브 섹션에 🎵 음악생성 항목 추가</div>
+          <span class="check-badge badge-p1">P1</span>
+        </div>
+        <div class="check-item" data-phase="p1" onclick="toggle(this)">
+          <div class="check-box">✓</div>
+          <div class="check-text">layout.tsx — 페이지 헤더 + 탭 구조</div>
+          <span class="check-badge badge-p1">P1</span>
+        </div>
+        <div class="check-item" data-phase="p1" onclick="toggle(this)">
+          <div class="check-box">✓</div>
+          <div class="check-text">src/data/music-chips.ts — 칩 데이터 파일 생성</div>
+          <span class="check-badge badge-p1">P1</span>
+        </div>
+        <div class="check-item" data-phase="p1" onclick="toggle(this)">
+          <div class="check-box">✓</div>
+          <div class="check-text">src/types/music-generator.ts — 타입 정의</div>
+          <span class="check-badge badge-p1">P1</span>
+        </div>
+      </div>
+
+      <div class="checklist-group">
+        <div class="checklist-group-title">🎨 Phase 2 — 음악생성 탭 UI 구현</div>
+        <div class="check-item" data-phase="p2" onclick="toggle(this)">
+          <div class="check-box">✓</div>
+          <div class="check-text">상단 ⚡ Shorts 모드 토글 버튼</div>
+          <span class="check-badge badge-p2">P2</span>
+        </div>
+        <div class="check-item" data-phase="p2" onclick="toggle(this)">
+          <div class="check-box">✓</div>
+          <div class="check-text">🆓 Flash / 🔥 Pro 모델 선택 버튼</div>
+          <span class="check-badge badge-p2">P2</span>
+        </div>
+        <div class="check-item" data-phase="p2" onclick="toggle(this)">
+          <div class="check-box">✓</div>
+          <div class="check-text">ChipSelector 컴포넌트 — 다중선택 + 직접입력</div>
+          <span class="check-badge badge-p2">P2</span>
+        </div>
+        <div class="check-item" data-phase="p2" onclick="toggle(this)">
+          <div class="check-box">✓</div>
+          <div class="check-text">1. 장르 선택 섹션 (33개 칩)</div>
+          <span class="check-badge badge-p2">P2</span>
+        </div>
+        <div class="check-item" data-phase="p2" onclick="toggle(this)">
+          <div class="check-box">✓</div>
+          <div class="check-text">2. 분위기 및 감성 선택 (29개 칩)</div>
+          <span class="check-badge badge-p2">P2</span>
+        </div>
+        <div class="check-item" data-phase="p2" onclick="toggle(this)">
+          <div class="check-box">✓</div>
+          <div class="check-text">3. 보컬 및 창법 선택 (25개 칩)</div>
+          <span class="check-badge badge-p2">P2</span>
+        </div>
+        <div class="check-item" data-phase="p2" onclick="toggle(this)">
+          <div class="check-box">✓</div>
+          <div class="check-text">4. 사용 용도 및 상황 (11개 칩)</div>
+          <span class="check-badge badge-p2">P2</span>
+        </div>
+        <div class="check-item" data-phase="p2" onclick="toggle(this)">
+          <div class="check-box">✓</div>
+          <div class="check-text">5. 주요 악기 설정 (22개 칩)</div>
+          <span class="check-badge badge-p2">P2</span>
+        </div>
+        <div class="check-item" data-phase="p2" onclick="toggle(this)">
+          <div class="check-box">✓</div>
+          <div class="check-text">6. 속도 (BPM) 설정 (15개 칩)</div>
+          <span class="check-badge badge-p2">P2</span>
+        </div>
+        <div class="check-item" data-phase="p2" onclick="toggle(this)">
+          <div class="check-box">✓</div>
+          <div class="check-text">7. 타겟 연령대 선택 (6개 칩)</div>
+          <span class="check-badge badge-p2">P2</span>
+        </div>
+        <div class="check-item" data-phase="p2" onclick="toggle(this)">
+          <div class="check-box">✓</div>
+          <div class="check-text">8. 가사 언어 설정 (11개 칩)</div>
+          <span class="check-badge badge-p2">P2</span>
+        </div>
+        <div class="check-item" data-phase="p2" onclick="toggle(this)">
+          <div class="check-box">✓</div>
+          <div class="check-text">9. 가사 주제 및 요청 (12개 칩 + textarea)</div>
+          <span class="check-badge badge-p2">P2</span>
+        </div>
+        <div class="check-item" data-phase="p2" onclick="toggle(this)">
+          <div class="check-box">✓</div>
+          <div class="check-text">▶ 10곡 생성하기 버튼 (풀너비, 그라디언트)</div>
+          <span class="check-badge badge-p2">P2</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Phase 3, 4 -->
+    <div class="card">
+      <div class="checklist-group">
+        <div class="checklist-group-title">⚡ Phase 3 — Gemini API 연동 + 결과 화면</div>
+        <div class="check-item" data-phase="p3" onclick="toggle(this)">
+          <div class="check-box">✓</div>
+          <div class="check-text">POST /api/music-generator route 생성</div>
+          <span class="check-badge badge-p3">P3</span>
+        </div>
+        <div class="check-item" data-phase="p3" onclick="toggle(this)">
+          <div class="check-box">✓</div>
+          <div class="check-text">Gemini Flash / Pro 분기 처리</div>
+          <span class="check-badge badge-p3">P3</span>
+        </div>
+        <div class="check-item" data-phase="p3" onclick="toggle(this)">
+          <div class="check-box">✓</div>
+          <div class="check-text">10곡 JSON 배열 프롬프트 설계 (title/style/lyrics)</div>
+          <span class="check-badge badge-p3">P3</span>
+        </div>
+        <div class="check-item" data-phase="p3" onclick="toggle(this)">
+          <div class="check-box">✓</div>
+          <div class="check-text">Shorts 모드 시 4줄 가사 제한 로직</div>
+          <span class="check-badge badge-p3">P3</span>
+        </div>
+        <div class="check-item" data-phase="p3" onclick="toggle(this)">
+          <div class="check-box">✓</div>
+          <div class="check-text">SongResultCard 컴포넌트 — 접힘/펼침 아코디언</div>
+          <span class="check-badge badge-p3">P3</span>
+        </div>
+        <div class="check-item" data-phase="p3" onclick="toggle(this)">
+          <div class="check-box">✓</div>
+          <div class="check-text">결과 카드: 타이틀 / 장르·스타일 / 가사 + Copy 버튼</div>
+          <span class="check-badge badge-p3">P3</span>
+        </div>
+        <div class="check-item" data-phase="p3" onclick="toggle(this)">
+          <div class="check-box">✓</div>
+          <div class="check-text">생성 로딩 애니메이션 (스켈레톤 10개)</div>
+          <span class="check-badge badge-p3">P3</span>
+        </div>
+        <div class="check-item" data-phase="p3" onclick="toggle(this)">
+          <div class="check-box">✓</div>
+          <div class="check-text">Supabase music_generations 테이블 저장</div>
+          <span class="check-badge badge-p3">P3</span>
+        </div>
+        <div class="check-item" data-phase="p3" onclick="toggle(this)">
+          <div class="check-box">✓</div>
+          <div class="check-text">Suno로 전송 버튼 — Extension 연동</div>
+          <span class="check-badge badge-p3">P3</span>
+        </div>
+        <div class="check-item" data-phase="p3" onclick="toggle(this)">
+          <div class="check-box">✓</div>
+          <div class="check-text">생성 이력 불러오기 (히스토리 패널)</div>
+          <span class="check-badge badge-p3">P3</span>
+        </div>
+      </div>
+
+      <div class="checklist-group">
+        <div class="checklist-group-title">💾 Phase 4 — 저장 모달 + Extension 연동</div>
+        <div class="check-item" data-phase="p4" onclick="toggle(this)">
+          <div class="check-box"></div>
+          <div class="check-text">SaveToSheetModal 컴포넌트 생성</div>
+          <span class="check-badge badge-p4">P4</span>
+        </div>
+        <div class="check-item" data-phase="p4" onclick="toggle(this)">
+          <div class="check-box"></div>
+          <div class="check-text">생성하기 버튼 클릭 시 모달 먼저 표시</div>
+          <span class="check-badge badge-p4">P4</span>
+        </div>
+        <div class="check-item" data-phase="p4" onclick="toggle(this)">
+          <div class="check-box"></div>
+          <div class="check-text">기존 스크랩시트 목록 라디오 선택</div>
+          <span class="check-badge badge-p4">P4</span>
+        </div>
+        <div class="check-item" data-phase="p4" onclick="toggle(this)">
+          <div class="check-box"></div>
+          <div class="check-text">새 시트 이름 인라인 입력 + 생성</div>
+          <span class="check-badge badge-p4">P4</span>
+        </div>
+        <div class="check-item" data-phase="p4" onclick="toggle(this)">
+          <div class="check-box"></div>
+          <div class="check-text">저장 후 Suno.com 바로 열기 체크박스</div>
+          <span class="check-badge badge-p4">P4</span>
+        </div>
+        <div class="check-item" data-phase="p4" onclick="toggle(this)">
+          <div class="check-box"></div>
+          <div class="check-text">Extension 미설치 시 설치 안내 분기</div>
+          <span class="check-badge badge-p4">P4</span>
+        </div>
+        <div class="check-item" data-phase="p4" onclick="toggle(this)">
+          <div class="check-box"></div>
+          <div class="check-text">저장 완료 후 Toast 알림 + 시트 이동 링크</div>
+          <span class="check-badge badge-p4">P4</span>
+        </div>
+        <div class="check-item" data-phase="p4" onclick="toggle(this)">
+          <div class="check-box"></div>
+          <div class="check-text">Sidebar에 🎵 음악생성 항목 추가 (T4 미완료)</div>
+          <span class="check-badge badge-p4">P4</span>
+        </div>
+        <div class="check-item" data-phase="p4" onclick="toggle(this)">
+          <div class="check-box"></div>
+          <div class="check-text">POST /api/music-generator route 완성</div>
+          <span class="check-badge badge-p4">P4</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cover Image + SEO -->
+    <div class="card">
+      <div style="font-size:11px;font-weight:700;color:var(--purple2);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--border);">🖼 커버 이미지 생성기 — /cover-image-generator</div>
+      <div class="checklist-group">
+        <div class="checklist-group-title" style="border-left-color:var(--purple2);">커버이미지 구현 항목</div>
+        <div class="check-item" data-phase="p6" onclick="toggle(this)">
+          <div class="check-box"></div>
+          <div class="check-text">CoverImageForm 타입 정의</div>
+          <span class="check-badge badge-p6">P6</span>
+        </div>
+        <div class="check-item" data-phase="p6" onclick="toggle(this)">
+          <div class="check-box"></div>
+          <div class="check-text">cover-chips.ts 8카테고리 칩 데이터</div>
+          <span class="check-badge badge-p6">P6</span>
+        </div>
+        <div class="check-item" data-phase="p6" onclick="toggle(this)">
+          <div class="check-box"></div>
+          <div class="check-text">CoverChipSelector 컴포넌트 (기타 추가/삭제)</div>
+          <span class="check-badge badge-p6">P6</span>
+        </div>
+        <div class="check-item" data-phase="p6" onclick="toggle(this)">
+          <div class="check-box"></div>
+          <div class="check-text">SheetCommandPalette 컴포넌트 (시트 연동)</div>
+          <span class="check-badge badge-p6">P6</span>
+        </div>
+        <div class="check-item" data-phase="p6" onclick="toggle(this)">
+          <div class="check-box"></div>
+          <div class="check-text">layout.tsx + page.tsx 구현</div>
+          <span class="check-badge badge-p6">P6</span>
+        </div>
+        <div class="check-item" data-phase="p6" onclick="toggle(this)">
+          <div class="check-box"></div>
+          <div class="check-text">Sidebar에 🖼 커버이미지 항목 추가</div>
+          <span class="check-badge badge-p6">P6</span>
+        </div>
+        <div class="check-item" data-phase="p6" onclick="toggle(this)">
+          <div class="check-box"></div>
+          <div class="check-text">POST /api/cover-image route (Claude 작업지시서)</div>
+          <span class="check-badge badge-p6">P6</span>
+        </div>
+        <div class="check-item" data-phase="p6" onclick="toggle(this)">
+          <div class="check-box"></div>
+          <div class="check-text">출력 3탭: Claude작업지시서 / Gemini프롬프트 / 컨셉미리보기</div>
+          <span class="check-badge badge-p6">P6</span>
+        </div>
+      </div>
+
+      <div style="font-size:11px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--border);margin-top:8px;">🔍 SEO 최적화 패키지 — /seo-package</div>
+      <div class="checklist-group">
+        <div class="checklist-group-title" style="border-left-color:var(--green);">SEO 패키지 구현 항목</div>
+        <div class="check-item" data-phase="p7" onclick="toggle(this)">
+          <div class="check-box"></div>
+          <div class="check-text">SeoForm · SeoOutput 타입 정의</div>
+          <span class="check-badge badge-p7">P7</span>
+        </div>
+        <div class="check-item" data-phase="p7" onclick="toggle(this)">
+          <div class="check-box"></div>
+          <div class="check-text">seo-chips.ts 7섹션 칩 데이터</div>
+          <span class="check-badge badge-p7">P7</span>
+        </div>
+        <div class="check-item" data-phase="p7" onclick="toggle(this)">
+          <div class="check-box"></div>
+          <div class="check-text">SeoChipSelector 컴포넌트 (단일/다중 혼합 + 기타)</div>
+          <span class="check-badge badge-p7">P7</span>
+        </div>
+        <div class="check-item" data-phase="p7" onclick="toggle(this)">
+          <div class="check-box"></div>
+          <div class="check-text">RegionTimeslot 컴포넌트 (한국시간 timezone 변환)</div>
+          <span class="check-badge badge-p7">P7</span>
+        </div>
+        <div class="check-item" data-phase="p7" onclick="toggle(this)">
+          <div class="check-box"></div>
+          <div class="check-text">layout.tsx + page.tsx 구현</div>
+          <span class="check-badge badge-p7">P7</span>
+        </div>
+        <div class="check-item" data-phase="p7" onclick="toggle(this)">
+          <div class="check-box"></div>
+          <div class="check-text">Sidebar에 🔍 SEO패키지 항목 추가</div>
+          <span class="check-badge badge-p7">P7</span>
+        </div>
+        <div class="check-item" data-phase="p7" onclick="toggle(this)">
+          <div class="check-box"></div>
+          <div class="check-text">POST /api/seo-package route (Claude 작업지시서)</div>
+          <span class="check-badge badge-p7">P7</span>
+        </div>
+        <div class="check-item" data-phase="p7" onclick="toggle(this)">
+          <div class="check-box"></div>
+          <div class="check-text">출력 카드: 제목후보·키워드·설명문·태그·업로드시간</div>
+          <span class="check-badge badge-p7">P7</span>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /grid2 -->
+</div><!-- /section -->
+
+<hr class="div">
+
+<!-- ════════════════════════════════════════ -->
+<!-- SECTION B — 사이드바 변경 -->
+<!-- ════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-header">
+    <h2>🗂 사이드바 변경사항</h2>
+    <div class="accent-line"></div>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-label">현재 구조</div>
+      <div class="sb-wrap">
+        <div class="sb-section-label">크리에이티브</div>
+        <div class="sb-item">🎨 BrandKit</div>
+        <div class="sb-item">💡 Ideation</div>
+        <div class="sb-item">📝 Lyrics</div>
+        <div class="sb-item">🖼 Cover Generator</div>
+        <div class="sb-item">📚 프롬프트 라이브러리</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-label">변경 후 — 음원 패키지 3개 항목 추가</div>
+      <div class="sb-wrap">
+        <div class="sb-section-label">크리에이티브</div>
+        <div class="sb-item on">🎵 음악생성 <span class="sb-new">NEW</span></div>
+        <div class="sb-item" style="color:var(--purple2);">🖼 커버이미지 <span class="sb-new" style="background:var(--purple2);">NEW</span></div>
+        <div class="sb-item" style="color:var(--green);">🔍 SEO 패키지 <span class="sb-new" style="background:var(--green);">NEW</span></div>
+        <div class="sb-item">🎨 BrandKit</div>
+        <div class="sb-item">💡 Ideation</div>
+        <div class="sb-item">📝 Lyrics</div>
+        <div class="sb-item">📚 프롬프트 라이브러리</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr class="div">
+
+<!-- ════════════════════════════════════════ -->
+<!-- SECTION C — UI 시안 (입력 폼) -->
+<!-- ════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-header">
+    <h2>🖥 UI 시안 — 입력 폼 (음악 생성 탭)</h2>
+    <div class="accent-line"></div>
+  </div>
+
+  <div class="mockup-shell">
+    <!-- Nav -->
+    <div class="mockup-nav">
+      <div class="mockup-nav-title">🎵 음악생성</div>
+      <div class="nav-controls">
+        <button class="mock-claude-kit" id="mockKitBtn" onclick="toggleClaudeKit()">
+          <span class="mock-kit-dot" id="mockKitDot"></span>
+          🤖 <span id="mockKitLabel">Claude 작업지시</span>
+        </button>
+        <button class="shorts-toggle">⚡ Shorts 모드 (30~60초) &nbsp;4줄·강렬한 훅</button>
+        <button class="model-flash">🆓 Flash (무료)</button>
+        <button class="model-pro on">🔥 Pro (유료)</button>
+      </div>
+    </div>
+    <!-- Tabs -->
+    <div class="mock-tabs">
+      <div class="mock-tab on">🎵 음악 생성</div>
+      <div class="mock-tab">🖼 커버 이미지</div>
+      <div class="mock-tab">📊 마케팅/분석/전략</div>
+    </div>
+    <!-- Body -->
+    <div class="mock-body">
+      <div class="mock-info-banner mode-default" id="mockInfoBanner">
+        🎵 음악 스타일 및 옵션 선택 — 원하는 항목을 클릭하고 <b>생성하기</b>를 누르세요.
+      </div>
+
+      <!-- 1. 장르 -->
+      <div class="mock-section-header"><span>1.</span> 장르 선택</div>
+      <div class="mock-chips">
+        <span class="mc sel">🏙 시티팝(City Pop)</span><span class="mc">🎵 인디팝(Lo-fi)</span><span class="mc">⚡ 일렉트로닉</span><span class="mc">🎸 K-록</span><span class="mc">🥁 트로트/동양</span><span class="mc">🌿 앰비언트/자연</span><span class="mc">✝ CCM/찬양</span><span class="mc">🎵 K-pop</span><span class="mc">💔 발라드</span><span class="mc">🎺 재즈</span><span class="mc">🎙 팝</span><span class="mc">🎧 힙합</span><span class="mc">🔊 뉴메탈</span><span class="mc">🎤 어반/R&amp;B</span><span class="mc">🌴 트로피칼</span><span class="mc">🌙 드림팝</span><span class="mc">🌲 포크</span><span class="mc">🎸 로큰롤</span><span class="mc">✝ 가스펠</span><span class="mc">💫 소울</span><span class="mc">🎸 블루스</span><span class="mc">🤠 컨트리</span><span class="mc">🌍 레게</span><span class="mc">⚡ EDM</span><span class="mc">🔊 트랩</span><span class="mc">🎵 펑크</span><span class="mc">💃 디스코</span><span class="mc">➕ 더보기</span>
+      </div>
+      <input class="mock-input" placeholder="원하는 장르를 직접 입력하세요">
+
+      <!-- 2. 분위기 -->
+      <div class="mock-section-header"><span>2.</span> 분위기 및 감성 선택</div>
+      <div class="mock-chips">
+        <span class="mc">🌙 몽환적(코스믹)</span><span class="mc">💔 감동의 슬픔</span><span class="mc">🌑 무거운 색채</span><span class="mc">⛪ 경건하고 차분한</span><span class="mc">🍂 세피아 감성</span><span class="mc">☀ 순수한 청춘</span><span class="mc">🔥 도전과 열정</span><span class="mc">💕 로맨틱 낭만</span><span class="mc sel-pink">💜 다크하고 강렬</span><span class="mc">👥 함께하는 위로</span><span class="mc">🎭 강렬한 드라마</span><span class="mc">🌅 일몰의 감성</span><span class="mc">⚡ 도전적인</span><span class="mc">🌟 희망찬</span><span class="mc">✨ 꿈꾸는 감성</span><span class="mc">🕊 평온하고 잔잔한</span><span class="mc">🌀 신비로운</span><span class="mc">🎉 황홀한</span><span class="mc">➕ 더보기</span>
+      </div>
+      <input class="mock-input" placeholder="원하는 분위기 및 감성을 직접 입력하세요">
+
+      <!-- 3. 보컬 -->
+      <div class="mock-section-header"><span>3.</span> 보컬 및 창법 선택</div>
+      <div class="mock-chips">
+        <span class="mc">🎤 이야기형 담담한 보컬</span><span class="mc">🌙 서정적 담담한 보컬</span><span class="mc">🌸 부드러운 고조 여성 보컬</span><span class="mc">💪 파워풀한 여성 보컬</span><span class="mc">🔥 강렬한 남성 보컬</span><span class="mc">❄ 날카로운 남성 보컬</span><span class="mc">👦 소년 보컬</span><span class="mc">🎵 언더 보컬</span><span class="mc">👫 합창 보컬</span><span class="mc sel-pink">💫 보컬 하모니</span><span class="mc">🌍 아시아 여성 보컬</span><span class="mc">🎙 영어 보컬(남)</span><span class="mc">🎤 영어 보컬(여)</span><span class="mc">🎵 뮤지컬 남성</span><span class="mc">🎵 뮤지컬 여성</span><span class="mc">🎸 기악 연주곡(무보컬)</span><span class="mc">🌊 Raspy Voice</span><span class="mc">🌟 Falsetto</span><span class="mc">➕ 더보기</span>
+      </div>
+      <input class="mock-input" placeholder="원하는 보컬 및 창법을 직접 입력하세요">
+
+      <!-- 4. 용도 -->
+      <div class="mock-section-header"><span>4.</span> 사용 용도 및 상황</div>
+      <div class="mock-chips">
+        <span class="mc sel">📹 유튜브 브이로그 BGM</span><span class="mc">🎬 개인 활동 배경음악</span><span class="mc">📚 공부/집중력 향상</span><span class="mc">💆 힐링/자연스러운</span><span class="mc">😴 수면 영상</span><span class="mc">☕ 카페 분위기</span><span class="mc">🎵 감성 소스/악기</span><span class="mc">⛪ 교회 예배/찬양</span><span class="mc">💪 운동/피트니스</span><span class="mc">🎮 게임 BGM</span>
+      </div>
+      <input class="mock-input" placeholder="원하는 사용 용도를 직접 입력하세요">
+
+      <!-- 5. 악기 -->
+      <div class="mock-section-header"><span>5.</span> 주요 악기 설정</div>
+      <div class="mock-chips">
+        <span class="mc">🎹 그랜드 피아노</span><span class="mc">🎸 어쿠스틱 기타</span><span class="mc">⚡ 일렉 기타</span><span class="mc">🥁 드럼셋</span><span class="mc">🎷 색소폰</span><span class="mc">🎻 바이올린</span><span class="mc">🎻 첼로</span><span class="mc">🔔 실로폰</span><span class="mc sel">🎹 신디사이저</span><span class="mc">🎵 베이스</span><span class="mc">🎺 트럼펫</span><span class="mc">🪗 하모니카</span><span class="mc">🎸 우쿨렐레</span><span class="mc">🪘 퍼커션</span><span class="mc">🎻 하프</span><span class="mc">➕ 더보기</span>
+      </div>
+      <input class="mock-input" placeholder="원하는 주요 악기를 직접 입력하세요">
+
+      <!-- 6. BPM -->
+      <div class="mock-section-header"><span>6.</span> 속도 (BPM) 설정</div>
+      <div class="mock-chips">
+        <span class="mc">🐢 조용한 느림(40-50 BPM)</span><span class="mc">🌊 꽤 느림(50-70 BPM)</span><span class="mc">🌿 느림(70-90 BPM)</span><span class="mc sel" style="background:rgba(124,58,237,.25);border-color:#7c3aed;color:#c084fc;">💜 보통(90-110 BPM)</span><span class="mc">⚡ 약간 빠름(110-130 BPM)</span><span class="mc">🚀 빠름(130-150 BPM)</span><span class="mc">🔥 매우 빠름(150-170 BPM)</span><span class="mc">⚡ 초고속(170+ BPM)</span>
+      </div>
+      <input class="mock-input" placeholder="원하는 속도(BPM)를 직접 입력하세요">
+
+      <!-- 7. 연령대 -->
+      <div class="mock-section-header"><span>7.</span> 타겟 연령대 선택</div>
+      <div class="mock-chips">
+        <span class="mc">👶 어린이(0-7세)</span><span class="mc sel">🏫 10대(청소년)</span><span class="mc">💫 20대(청춘)</span><span class="mc">👔 30-40대(직장인/부모)</span><span class="mc">👴 50-60대(시/중년)</span><span class="mc">🌍 전 연령대</span>
+      </div>
+      <input class="mock-input" placeholder="원하는 타겟 연령대를 직접 입력하세요">
+
+      <!-- 8. 언어 -->
+      <div class="mock-section-header"><span>8.</span> 가사 언어 설정</div>
+      <div class="mock-chips">
+        <span class="mc sel">🇰🇷 한국어</span><span class="mc">🇺🇸 영어</span><span class="mc">🔀 한국어+영어 혼합</span><span class="mc">🇯🇵 일본어</span><span class="mc">🇨🇳 중국어</span><span class="mc">🇪🇸 스페인어</span>
+      </div>
+      <input class="mock-input" placeholder="원하는 가사 언어를 직접 입력하세요">
+
+      <!-- 9. 주제 -->
+      <div class="mock-section-header"><span>9.</span> 가사 주제 및 요청</div>
+      <div class="mock-chips">
+        <span class="mc">❤ 첫사랑</span><span class="mc">🕊 자유로움</span><span class="mc">🌸 새벽 묵상</span><span class="mc sel-pink">💔 이별과 그리움</span><span class="mc">🔄 재회</span><span class="mc">💪 자기 사랑</span><span class="mc">👤 과거의 나</span><span class="mc">🌟 용기</span><span class="mc">🎭 감성</span><span class="mc">🌙 무해한 나</span><span class="mc">🌊 삶과의 화해</span><span class="mc">⚡ 자신감</span><span class="mc">💧 감수성</span><span class="mc">🌧 비 오는 날</span><span class="mc">✈ 여행</span><span class="mc">🙏 감사와 기도</span><span class="mc">🎵 가사 없는 반주</span><span class="mc sel-pink">🎄 크리스마스</span>
+      </div>
+      <div class="mock-textarea-wrap">
+        <textarea class="mock-textarea-input" rows="3" placeholder="가사 주제와 요청을 자세하게 작성하세요 (예: 비오는 저녁 카페에서 혼자 생각에 잠긴 감성적인 분위기)"></textarea>
+        <div class="mock-textarea-actions">
+          <span class="mock-ta-char">0 / 500자</span>
+        </div>
+      </div>
+
+      <!-- 곡 수 선택 + 액션 버튼 한 행 -->
+      <div style="background:#12121c;border:1px solid #1e1e2e;border-radius:10px;padding:8px 12px;margin-bottom:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <span style="font-size:11px;color:#666;flex-shrink:0;">몇 곡?</span>
+        <div class="mock-cnt-group">
+          <span class="mock-cnt" onclick="selectCount(this)">5곡</span>
+          <span class="mock-cnt sel" onclick="selectCount(this)">10곡</span>
+          <span class="mock-cnt" onclick="selectCount(this)">15곡</span>
+          <span class="mock-cnt" onclick="selectCount(this)">20곡</span>
+          <span class="mock-cnt" onclick="selectCount(this)">25곡</span>
+          <span class="mock-cnt" onclick="selectCount(this)">30곡</span>
+        </div>
+        <div style="display:flex;gap:6px;margin-left:auto;flex-shrink:0;">
+          <button class="mock-btn-claude">🤖 Claude 지시서 보기</button>
+        </div>
+      </div>
+      <button class="gen-btn" id="mockGenBtn" onclick="openConfirmModal()">▶&nbsp; 생성하기 (Gemini 2.5 Flash)</button>
+    </div>
+  </div>
+  <div class="anno">↑ 입력 폼 UI 시안 — 스크린샷 7장 + MusePilot BrandKit 크롤링 기반</div>
+</div>
+
+<hr class="div">
+
+<!-- ════════════════════════════════════════ -->
+<!-- SECTION G — 저장 모달 UI 시안 -->
+<!-- ════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-header">
+    <h2>💾 저장 모달 UI 시안 — Phase 5</h2>
+    <div class="accent-line"></div>
+  </div>
+  <p style="font-size:12px;color:var(--muted);margin-bottom:20px;">
+    ▶ 10곡 생성하기 클릭 시 오버레이로 표시. 저장 위치 확정 후 실제 생성 API 호출.
+  </p>
+
+  <div class="grid2">
+    <!-- 모달 시안 -->
+    <div>
+      <div class="card-label" style="margin-bottom:10px;">저장 모달 — 기존 시트 선택 상태</div>
+      <div class="modal-overlay-mock">
+        <div class="modal-box">
+          <div class="modal-hdr">
+            <div class="modal-hdr-icon">💾</div>
+            <div>
+              <div class="modal-title">어디에 저장할까요?</div>
+              <div class="modal-sub-text">선택한 곡을 스크랩시트에 저장합니다</div>
+            </div>
+          </div>
+          <div class="modal-body">
+            <div class="modal-label">기존 시트 선택</div>
+            <div class="sheet-option sel">
+              <div class="sheet-option-dot"><div class="sheet-option-dot-inner"></div></div>
+              <div class="sheet-option-name">🎵 K-pop 발라드 모음</div>
+              <div class="sheet-option-count">12곡</div>
+            </div>
+            <div class="sheet-option">
+              <div class="sheet-option-dot"></div>
+              <div class="sheet-option-name">🌙 새벽감성 시리즈</div>
+              <div class="sheet-option-count">8곡</div>
+            </div>
+            <div class="sheet-option">
+              <div class="sheet-option-dot"></div>
+              <div class="sheet-option-name">⚡ 일렉트로닉 실험</div>
+              <div class="sheet-option-count">5곡</div>
+            </div>
+
+            <div class="modal-divider"></div>
+            <div class="modal-label">새 시트 만들기</div>
+            <div class="new-sheet-row">
+              <input class="new-sheet-input" placeholder="새 시트 이름 입력...">
+              <button class="new-sheet-btn">+ 만들기</button>
+            </div>
+
+            <div class="modal-divider"></div>
+            <div class="modal-check-row">
+              <div class="modal-check on">✓</div>
+              <div>
+                <div class="modal-check-text">저장 후 Suno.com 바로 열기</div>
+                <div class="modal-check-sub">Extension이 자동으로 첫 번째 곡을 주입합니다</div>
+              </div>
+            </div>
+            <div class="modal-check-row">
+              <div class="modal-check"></div>
+              <div>
+                <div class="modal-check-text">저장 완료 후 시트 페이지로 이동</div>
+                <div class="modal-check-sub">생성 결과를 시트에서 확인합니다</div>
+              </div>
+            </div>
+            <div class="modal-check-row">
+              <div class="modal-check"></div>
+              <div>
+                <div class="modal-check-text">이어서 만들기</div>
+                <div class="modal-check-sub">저장 후 같은 조건으로 다음 배치를 자동 시작합니다</div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="modal-btn-cancel">취소</button>
+            <button class="modal-btn-ok">💾 저장하기</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Extension 미설치 분기 -->
+    <div>
+      <div class="card-label" style="margin-bottom:10px;">Extension 미설치 시 — 안내 분기</div>
+      <div class="modal-overlay-mock">
+        <div class="modal-box">
+          <div class="modal-hdr">
+            <div class="modal-hdr-icon">💾</div>
+            <div>
+              <div class="modal-title">어디에 저장할까요?</div>
+              <div class="modal-sub-text">선택한 곡을 스크랩시트에 저장합니다</div>
+            </div>
+          </div>
+          <div class="modal-body">
+            <div class="modal-label">기존 시트 선택</div>
+            <div class="sheet-option sel">
+              <div class="sheet-option-dot"><div class="sheet-option-dot-inner"></div></div>
+              <div class="sheet-option-name">🎵 K-pop 발라드 모음</div>
+              <div class="sheet-option-count">12곡</div>
+            </div>
+            <div class="sheet-option">
+              <div class="sheet-option-dot"></div>
+              <div class="sheet-option-name">🌙 새벽감성 시리즈</div>
+              <div class="sheet-option-count">8곡</div>
+            </div>
+            <div class="modal-divider"></div>
+            <div class="modal-label">새 시트 만들기</div>
+            <div class="new-sheet-row">
+              <input class="new-sheet-input" placeholder="새 시트 이름 입력...">
+              <button class="new-sheet-btn">+ 만들기</button>
+            </div>
+            <div class="modal-divider"></div>
+
+            <!-- Extension 미설치 배너 -->
+            <div style="background:rgba(234,179,8,.07);border:1px solid rgba(234,179,8,.25);border-radius:8px;padding:10px 12px;margin-bottom:8px;">
+              <div style="font-size:12px;font-weight:700;color:var(--yellow);margin-bottom:4px;">⚠ Extension이 설치되지 않았어요</div>
+              <div style="font-size:11px;color:#999;line-height:1.5;margin-bottom:8px;">Suno.com 자동 주입 기능을 사용하려면<br>Chrome Extension을 설치해주세요.</div>
+              <button style="background:rgba(234,179,8,.15);border:1px solid rgba(234,179,8,.4);color:var(--yellow);padding:5px 12px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;">🔧 Extension 설치하기</button>
+            </div>
+            <div class="modal-check-row">
+              <div class="modal-check"></div>
+              <div>
+                <div class="modal-check-text">이어서 만들기</div>
+                <div class="modal-check-sub">저장 후 같은 조건으로 다음 배치를 자동 시작합니다</div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="modal-btn-cancel">취소</button>
+            <button class="modal-btn-ok">💾 저장하기</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:16px;">
+        <div class="card-label">사용자 흐름</div>
+        <div style="font-size:12px;color:#ccc;line-height:2;">
+          1. ▶ 10곡 생성하기 클릭<br>
+          2. 💾 저장 모달 표시 (시트 선택)<br>
+          3a. Suno 열기 ON → Suno.com 탭 열기 + Extension 주입<br>
+          3b. Suno 열기 OFF → 저장 후 결과 화면만 표시<br>
+          4. Toast: "K-pop 발라드 모음에 저장됨 → 시트 보기"
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr class="div">
+
+<!-- ════════════════════════════════════════ -->
+<!-- SECTION D — 결과 화면 시안 -->
+<!-- ════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-header">
+    <h2>🎶 결과 화면 UI 시안</h2>
+    <div class="accent-line"></div>
+  </div>
+  <div class="grid2">
+    <!-- 접힌 상태 -->
+    <div>
+      <div class="card-label" style="margin-bottom:10px;">▼ 접힌 상태 (생성 직후)</div>
+      <div class="mockup-shell" style="padding:16px;">
+        <button class="gen-btn" style="margin-bottom:8px;">▶&nbsp; 생성하기</button>
+        <button class="save-btn" style="width:100%;padding:8px;display:block;margin-bottom:14px;" onclick="openSaveModal()">💾 저장하기</button>
+        <div class="result-card">
+          <div class="result-num">1</div>
+          <div class="result-body">
+            <div class="result-title">Shattered Keys</div>
+            <div class="result-tags-line">dark, city pop, grand piano, husky male vocal, intense · <span class="bpm">95 BPM</span></div>
+          </div>
+          <div class="result-arrow">▼</div>
+        </div>
+        <div class="result-card">
+          <div class="result-num">2</div>
+          <div class="result-body">
+            <div class="result-title">Void in the Frame</div>
+            <div class="result-tags-line">R&B, trap, female vocal, melancholic, groove · <span class="bpm">88 BPM</span></div>
+          </div>
+          <div class="result-arrow">▼</div>
+        </div>
+        <div class="result-card">
+          <div class="result-num">3</div>
+          <div class="result-body">
+            <div class="result-title">Midnight Whiskey</div>
+            <div class="result-tags-line">blues, jazz, acoustic guitar, raspy voice · <span class="bpm">72 BPM</span></div>
+          </div>
+          <div class="result-arrow">▼</div>
+        </div>
+        <div class="result-card">
+          <div class="result-num">4</div>
+          <div class="result-body">
+            <div class="result-title">Echoes of Us</div>
+            <div class="result-tags-line">indie, dreamy, soft vocals, piano, gentle · <span class="bpm">102 BPM</span></div>
+          </div>
+          <div class="result-arrow">▼</div>
+        </div>
+        <div class="result-card">
+          <div class="result-num">5</div>
+          <div class="result-body">
+            <div class="result-title">Gray Skyline</div>
+            <div class="result-tags-line">city pop, nostalgic, female vocal, synth · <span class="bpm">110 BPM</span></div>
+          </div>
+          <div class="result-arrow">▼</div>
+        </div>
+        <div class="result-card">
+          <div class="result-num">6</div>
+          <div class="result-body">
+            <div class="result-title">Broken Strings</div>
+            <div class="result-tags-line">indie, acoustic, emotional, storytelling · <span class="bpm">84 BPM</span></div>
+          </div>
+          <div class="result-arrow">▼</div>
+        </div>
+        <div style="text-align:center;color:var(--muted);font-size:11px;margin-top:8px;">⋯ 4곡 더</div>
+        <button class="save-btn" style="width:100%;margin-top:10px;padding:9px;display:block;" onclick="openSaveModal()">💾 전체 10곡 저장하기</button>
+      </div>
+    </div>
+    <!-- 펼친 상태 -->
+    <div>
+      <div class="card-label" style="margin-bottom:10px;">▲ 펼친 상태 (클릭 후 — 1번 카드)</div>
+      <div class="mockup-shell" style="padding:16px;">
+        <div class="result-expand">
+          <div class="expand-head">
+            <div class="result-num">1</div>
+            <span style="font-size:13px;font-weight:700;">Shattered Keys</span>
+            <span style="font-size:10px;color:var(--muted);flex:1;padding-left:8px;">dark, city pop · 95 BPM</span>
+            <div style="color:#555;font-size:12px;cursor:pointer;">▲</div>
+          </div>
+          <div class="expand-section">
+            <div class="expand-label">TITLE <button class="copy-btn">Copy</button></div>
+            <div class="expand-val">Shattered Keys</div>
+          </div>
+          <div class="expand-section">
+            <div class="expand-label">GENRE / STYLE <button class="copy-btn">Copy</button></div>
+            <div class="expand-val">dark trip hop, grand piano, husky male vocal, intense, emotional, 95 BPM</div>
+          </div>
+          <div class="expand-section">
+            <div class="expand-label">LYRICS <button class="copy-btn">Copy</button></div>
+            <div class="expand-val">[Intro]
+(Dark piano melody begins)
+Yeah, it's cold out here...
+Just me and these keys.
+
+[Verse 1]
+I'm staring at the dust on the picture frame
+Every shadow in this room still screams your name
+I used to play the melody we sang along
+Now the grand piano's out of tune, it's all gone wrong</div>
+          </div>
+        </div>
+        <div class="result-card" style="opacity:.5;">
+          <div class="result-num">2</div>
+          <div class="result-body">
+            <div class="result-title">Void in the Frame</div>
+            <div class="result-tags-line">R&B, trap, female vocal · <span class="bpm">88 BPM</span></div>
+          </div>
+          <div class="result-arrow">▼</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr class="div">
+
+<!-- ════════════════════════════════════════ -->
+<!-- SECTION E — 칩 데이터 전체 목록 -->
+<!-- ════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-header">
+    <h2>📦 전체 칩 데이터 (수집 완료)</h2>
+    <div class="accent-line"></div>
+  </div>
+  <p style="font-size:12px;color:var(--muted);margin-bottom:14px;">
+    <span class="tag-ref src-ss">SS</span> 스크린샷 분석 (Playlist Agent 사이트 — 7장) &nbsp;
+    <span class="tag-ref src-mp">MP</span> MusePilot BrandKit 크롤링
+    &nbsp;·&nbsp; <b style="color:var(--text)">빨간(SS)</b>=스크린샷 확인 칩 &nbsp; <b style="color:#a78bfa">보라(MP)</b>=BrandKit 추가 칩
+  </p>
+  <table class="chip-data">
+    <tr>
+      <th style="width:130px;">섹션</th>
+      <th style="width:60px;">개수</th>
+      <th>프리셋 칩 목록</th>
+    </tr>
+    <tr>
+      <td><b>1. 장르</b></td>
+      <td style="color:var(--pink);font-weight:700;">33개</td>
+      <td>
+        <span class="cm a">🏙 시티팝(City Pop)</span><span class="cm a">🎵 인디팝(Lo-fi)</span><span class="cm a">⚡ 일렉트로닉</span><span class="cm a">🎸 K-록</span><span class="cm a">🥁 트로트/동양</span><span class="cm a">🌿 앰비언트/자연</span><span class="cm a">✝ CCM/찬양</span><span class="cm a">🎵 K-pop</span><span class="cm a">💔 발라드</span><span class="cm a">🎺 재즈</span><span class="cm a">🎙 팝</span><span class="cm a">🎧 힙합</span><span class="cm a">🔊 뉴메탈</span><span class="cm a">🎤 어반/R&amp;B</span><span class="cm a">🌴 트로피칼</span><span class="cm a">🌙 드림팝</span><span class="cm a">🌲 포크</span><span class="cm a">🎸 로큰롤</span><span class="cm a">✝ 가스펠</span><span class="cm a">💫 소울</span>
+        <span class="cm b">🎸 블루스</span><span class="cm b">🤠 컨트리</span><span class="cm b">🌍 레게</span><span class="cm b">⚡ EDM</span><span class="cm b">🔊 트랩</span><span class="cm b">🎵 펑크</span><span class="cm b">💃 디스코</span><span class="cm b">🎵 하우스</span><span class="cm b">🔊 드릴</span><span class="cm b">🌍 아프로비트</span><span class="cm b">🎵 라틴</span><span class="cm b">🎵 테크노</span><span class="cm b">🎵 더브스텝</span>
+        <br><small style="color:var(--muted);">🔴 스크린샷 <span class="tag-ref src-ss">SS</span> 순서 기준 + 보라 MusePilot <span class="tag-ref src-mp">MP</span></small>
+      </td>
+    </tr>
+    <tr>
+      <td><b>2. 분위기/감성</b></td>
+      <td style="color:var(--pink);font-weight:700;">29개</td>
+      <td>
+        <span class="cm a">🌙 몽환적(코스믹)</span><span class="cm a">💔 감동의 슬픔</span><span class="cm a">🌑 무거운 색채</span><span class="cm a">⛪ 경건하고 차분한</span><span class="cm a">🍂 세피아 감성</span><span class="cm a">☀ 순수한 청춘</span><span class="cm a">🔥 도전과 열정</span><span class="cm a">💕 로맨틱 낭만</span><span class="cm a">💜 다크하고 강렬</span><span class="cm a">👥 함께하는 위로</span><span class="cm a">🎭 강렬한 드라마</span><span class="cm a">🌅 일몰의 감성</span><span class="cm a">⚡ 도전적인</span><span class="cm a">🌟 희망찬</span><span class="cm a">✨ 꿈꾸는 감성</span>
+        <span class="cm b">🕊 Peaceful</span><span class="cm b">🌀 Mysterious</span><span class="cm b">🎉 Euphoric</span><span class="cm b">😤 Aggressive</span><span class="cm b">💭 Anxious</span><span class="cm b">🍂 Bittersweet</span><span class="cm b">🌊 Chill</span><span class="cm b">🏆 Triumphant</span><span class="cm b">🎈 Playful</span><span class="cm b">💖 Romantic</span><span class="cm b">🎸 Groovy</span><span class="cm b">🔥 Intense</span><span class="cm b">🌫 Ethereal</span><span class="cm b">⚡ Energetic</span>
+      </td>
+    </tr>
+    <tr>
+      <td><b>3. 보컬/창법</b></td>
+      <td style="color:var(--pink);font-weight:700;">25개</td>
+      <td>
+        <span class="cm a">🎤 이야기형 담담한 보컬</span><span class="cm a">🌙 서정적 담담한 보컬</span><span class="cm a">🌸 부드러운 고조 여성 보컬</span><span class="cm a">💪 파워풀한 여성 보컬</span><span class="cm a">🔥 강렬한 남성 보컬</span><span class="cm a">❄ 날카로운 남성 보컬</span><span class="cm a">👦 소년 보컬</span><span class="cm a">🎵 언더 보컬</span><span class="cm a">👫 합창 보컬</span><span class="cm a">💫 보컬 하모니</span><span class="cm a">🌍 아시아 여성 보컬</span><span class="cm a">🎙 영어 보컬(남)</span><span class="cm a">🎤 영어 보컬(여)</span><span class="cm a">🎵 뮤지컬 남성</span><span class="cm a">🎵 뮤지컬 여성</span><span class="cm a">🎸 기악 연주곡(무보컬)</span>
+        <span class="cm b">🌊 Raspy Voice</span><span class="cm b">🌟 Falsetto</span><span class="cm b">🎵 Choir Vocals</span><span class="cm b">🌊 Breathy Vocals</span><span class="cm b">🎵 Rap Vocals</span><span class="cm b">🌀 Auto-tuned</span><span class="cm b">🎤 Belting</span><span class="cm b">🌀 Vibrato</span><span class="cm b">🌬 Whisper</span>
+      </td>
+    </tr>
+    <tr>
+      <td><b>4. 용도/상황</b></td>
+      <td style="color:var(--pink);font-weight:700;">10개</td>
+      <td>
+        <span class="cm a">📹 유튜브 브이로그 BGM</span><span class="cm a">🎬 개인 활동 배경음악</span><span class="cm a">📚 공부/집중력 향상</span><span class="cm a">💆 힐링/자연스러운</span><span class="cm a">😴 수면 영상</span><span class="cm a">☕ 카페 분위기</span><span class="cm a">🎵 감성 소스/악기</span><span class="cm a">⛪ 교회 예배/찬양</span><span class="cm a">💪 운동/피트니스</span><span class="cm a">🎮 게임 BGM</span>
+      </td>
+    </tr>
+    <tr>
+      <td><b>5. 주요 악기</b></td>
+      <td style="color:var(--pink);font-weight:700;">22개</td>
+      <td>
+        <span class="cm a">🎹 그랜드 피아노</span><span class="cm a">🎸 어쿠스틱 기타</span><span class="cm a">⚡ 일렉 기타</span><span class="cm a">🥁 드럼킷</span><span class="cm a">🎷 색소폰</span><span class="cm a">🎻 바이올린</span><span class="cm a">🎻 첼로</span><span class="cm a">🔔 실로폰</span><span class="cm a">🎹 신디사이저</span><span class="cm a">🎵 베이스</span>
+        <span class="cm b">🎺 트럼펫</span><span class="cm b">🪗 하모니카</span><span class="cm b">🎸 우쿨렐레</span><span class="cm b">🪘 퍼커션</span><span class="cm b">🎸 하프</span><span class="cm b">🎹 키보드</span><span class="cm b">🥁 드럼머신</span><span class="cm b">🎻 현악 섹션</span><span class="cm b">🎺 플루트</span><span class="cm b">🪘 탬버린</span><span class="cm b">🎵 오르간</span><span class="cm b">🎵 비브라폰</span>
+      </td>
+    </tr>
+    <tr>
+      <td><b>6. BPM</b></td>
+      <td style="color:var(--pink);font-weight:700;">15개</td>
+      <td>
+        <span class="cm a">🐢 초조하(40-50)</span><span class="cm a">🌊 매우 느림(50-70)</span><span class="cm a">🌿 느림(70-90)</span><span class="cm a">💜 보통(90-110)</span><span class="cm a">⚡ 약간 빠름(120-130)</span><span class="cm a">🚀 빠름(130-150)</span><span class="cm a">⚡ 매우 빠름(150-170)</span><span class="cm a">🔥 초고속(170+)</span>
+        <span class="cm b">Largo(40-60)</span><span class="cm b">Adagio(60-80)</span><span class="cm b">Andante(80-100)</span><span class="cm b">Moderato(100-120)</span><span class="cm b">Allegro(120-140)</span><span class="cm b">Vivace(140-160)</span><span class="cm b">Presto(160-200)</span>
+      </td>
+    </tr>
+    <tr>
+      <td><b>7. 연령대</b></td>
+      <td style="color:var(--pink);font-weight:700;">6개</td>
+      <td>
+        <span class="cm a">👶 어린이(0-7세)</span><span class="cm a">🏫 10대(청소년)</span><span class="cm a">💫 20대(청춘)</span><span class="cm a">👔 30-40대(직장인/부모)</span><span class="cm a">👴 50-60대(시/중년)</span><span class="cm a">🌍 전 연령대</span>
+      </td>
+    </tr>
+    <tr>
+      <td><b>8. 가사 언어</b></td>
+      <td style="color:var(--pink);font-weight:700;">9개</td>
+      <td>
+        <span class="cm a">🇰🇷 한국어</span><span class="cm a">🇺🇸 영어</span><span class="cm a">🔀 한국어+영어 혼합</span>
+        <span class="cm b">🇯🇵 일본어</span><span class="cm b">🇨🇳 중국어</span><span class="cm b">🇪🇸 스페인어</span><span class="cm b">🇫🇷 프랑스어</span><span class="cm b">🇩🇪 독일어</span><span class="cm b">🇵🇹 포르투갈어</span>
+        <br><small style="color:var(--muted);">스크린샷에서 한국어·영어·혼합 3가지 확인</small>
+      </td>
+    </tr>
+    <tr>
+      <td><b>9. 가사 주제</b></td>
+      <td style="color:var(--pink);font-weight:700;">18개</td>
+      <td>
+        <span class="cm a">❤ 첫사랑</span><span class="cm a">🕊 자유로움</span><span class="cm a">🌸 새벽 묵상</span><span class="cm a">💔 이별과 그리움</span><span class="cm a">🔄 재회</span><span class="cm a">💪 자기 사랑</span><span class="cm a">👤 과거의 나</span><span class="cm a">🌟 용기</span><span class="cm a">🎭 감성</span><span class="cm a">🌙 무해한 나</span><span class="cm a">🌊 삶과의 화해</span><span class="cm a">⚡ 자신감</span><span class="cm a">💧 감수성</span><span class="cm a">🌧 비 오는 날</span><span class="cm a">✈ 여행</span><span class="cm a">🙏 감사와 기도</span><span class="cm a">🎵 가사 없는 반주</span><span class="cm a">🎄 크리스마스</span>
+      </td>
+    </tr>
+    <tr>
+      <td><b>+ 추가(MP전용)</b><br><small style="color:var(--muted);">Phase 4</small></td>
+      <td style="color:var(--purple2);font-weight:700;">33개+</td>
+      <td>
+        <b style="font-size:10px;color:var(--purple2);">분위기 요소:</b>
+        <span class="cm p">🌧 빗소리</span><span class="cm p">🌊 파도소리</span><span class="cm p">☕ 카페 분위기</span><span class="cm p">🔥 벽난로</span><span class="cm p">🌿 바람소리</span><span class="cm p">🎵 바이닐 크래클</span><span class="cm p">🌀 리버브</span><span class="cm p">✨ 에코</span>
+        <br><b style="font-size:10px;color:var(--purple2);">프로덕션 스타일:</b>
+        <span class="cm p">📻 Lo-fi</span><span class="cm p">🎧 Studio Quality</span><span class="cm p">🔊 808 Sub-bass</span><span class="cm p">🔊 Heavy Bass</span><span class="cm p">🎵 Layered Vocals</span><span class="cm p">🌀 Reverb/Delay</span>
+        <br><b style="font-size:10px;color:var(--purple2);">AI 창의성:</b>
+        <span class="cm p">🛡 보수적(일관된 스타일)</span><span class="cm p">⚖ 중립적(균형)</span><span class="cm p">🎨 창의적(다양한 시도)</span>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<hr class="div">
+
+<!-- ════════════════════════════════════════ -->
+<!-- SECTION SS — 스크린샷 매핑 -->
+<!-- ════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-header">
+    <h2>📸 스크린샷 7장 → 섹션 매핑</h2>
+    <div class="accent-line"></div>
+  </div>
+  <div class="grid4">
+    <div class="card-sm" style="border-left:3px solid var(--pink);">
+      <div class="card-label">SS #1 (202014)</div>
+      <div style="font-size:12px;color:#ccc;line-height:1.8;">
+        🎵 탭 3개 확인<br>
+        <b>1. 장르 선택</b> — 전체 행 확인<br>
+        행1: 시티팝·인디팝(Lo-fi)·일렉트로닉·K-록·트로트/동양·앰비언트/자연·CCM/찬양·K-pop<br>
+        행2~4: 발라드·재즈·팝·힙합·포크·R&amp;B·가스펠 등
+      </div>
+    </div>
+    <div class="card-sm" style="border-left:3px solid var(--blue);">
+      <div class="card-label">SS #2 (202042)</div>
+      <div style="font-size:12px;color:#ccc;line-height:1.8;">
+        <b>2. 분위기/감성</b> — 전체<br>
+        몽환적(코스믹)·감동의 슬픔·무거운 색채·경건하고 차분한·세피아 감성·순수한 청춘·도전과 열정<br>
+        <b>다크하고 강렬</b>(선택됨/핑크 하이라이트)<br>
+        <b>3. 보컬/창법</b> — 시작 부분<br>
+        이야기형 담담한·서정적·파워풀한 여성·강렬한 남성 보컬…
+      </div>
+    </div>
+    <div class="card-sm" style="border-left:3px solid var(--green);">
+      <div class="card-label">SS #3 (202051)</div>
+      <div style="font-size:12px;color:#ccc;line-height:1.8;">
+        <b>4. 사용 용도</b><br>
+        유튜브 브이로그 BGM·개인 활동 배경음악·공부/집중력·힐링/자연스러운·수면 영상·카페 분위기·감성 소스/악기·교회 예배/찬양<br>
+        <b>5. 주요 악기</b><br>
+        그랜드 피아노·어쿠스틱 기타·일렉기타·드럼셋·색소폰·바이올린·첼로·실로폰·<b>신디사이저</b>(선택됨)
+      </div>
+    </div>
+    <div class="card-sm" style="border-left:3px solid var(--purple2);">
+      <div class="card-label">SS #4 (202101)</div>
+      <div style="font-size:12px;color:#ccc;line-height:1.8;">
+        <b>6. BPM</b><br>
+        조용한 느림(40-50)·꽤 느림(50-70)·느림(70-90)·<b>보통(90-110)</b>(보라 선택)·약간 빠름(110-130)·빠름(130-150)·매우 빠름(150-170)·초고속(170+)<br>
+        <b>7. 타겟 연령대</b><br>
+        어린이·<b>10대(청소년)</b>(선택됨)·20대·30-40대·50-60대·전 연령대<br>
+        <b>8. 가사 언어</b> (일부)
+      </div>
+    </div>
+    <div class="card-sm" style="border-left:3px solid var(--pink);">
+      <div class="card-label">SS #5 (202110)</div>
+      <div style="font-size:12px;color:#ccc;line-height:1.8;">
+        <b>8. 가사 언어</b><br>
+        <b>한국어</b>(선택됨)·영어·한국어+영어 혼합<br>
+        <b>9. 가사 주제</b><br>
+        첫사랑·자유로움·새벽 묵상·<b>이별과 그리움</b>(선택)·재회·자기 사랑·용기·감성·무해한 나·삶의 화해·비 오는 날·감사와 기도·가사 없는 반주·<b>크리스마스</b>(선택)<br>
+        ▶ <b>10곡 생성하기</b> 버튼 (핑크 그라디언트)
+      </div>
+    </div>
+    <div class="card-sm" style="border-left:3px solid var(--blue);">
+      <div class="card-label">SS #6 (202134)</div>
+      <div style="font-size:12px;color:#ccc;line-height:1.8;">
+        <b>결과 화면 — 접힌 상태</b><br>
+        1. Shattered Keys (핑크 원형 번호)<br>
+        2. Void in the Frame<br>
+        3. Midnight Whiskey<br>
+        4. Echoes of Us<br>
+        5. Gray Skyline<br>
+        6. Broken Strings<br>
+        각 카드: 제목 + 태그/BPM + 화살표(▼)
+      </div>
+    </div>
+    <div class="card-sm" style="border-left:3px solid var(--green);">
+      <div class="card-label">SS #7 (202143)</div>
+      <div style="font-size:12px;color:#ccc;line-height:1.8;">
+        <b>결과 화면 — 펼친 상태</b> (1번 카드)<br>
+        TITLE: Shattered Keys + Copy<br>
+        GENRE / STYLE: dark trip hop, grand piano, husky male vocal, intense, emotional, 95 BPM + Copy<br>
+        LYRICS: [Intro] + [Verse 1] 전체 가사 + Copy
+      </div>
+    </div>
+    <div class="card-sm" style="border-left:3px solid var(--yellow);background:rgba(234,179,8,.05);">
+      <div class="card-label" style="color:var(--yellow);">분석 요약</div>
+      <div style="font-size:12px;color:#ccc;line-height:1.8;">
+        ✅ 9개 섹션 전체 확인<br>
+        ✅ 10곡 생성하기 버튼<br>
+        ✅ 결과 카드 접힘/펼침<br>
+        ✅ TITLE/STYLE/LYRICS + Copy<br>
+        ✅ 3탭 구조 확인<br>
+        ✅ Flash/Pro 모델 선택<br>
+        ✅ Shorts 토글
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr class="div">
+
+<!-- ════════════════════════════════════════ -->
+<!-- SECTION F — 구현 계획 -->
+<!-- ════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-header">
+    <h2>🚀 구현 계획 — 음원 패키지 전체</h2>
+    <div class="accent-line"></div>
+  </div>
+  <div class="grid2">
+    <div class="phase-card">
+      <div class="phase-head">
+        <div class="phase-n">1</div>
+        <div><div class="phase-h4">초기 셋팅 &amp; 라우트</div><div class="phase-sub">신규 페이지 구조 생성</div></div>
+      </div>
+      <ul class="phase-list">
+        <li>/music-generator 라우트 생성</li>
+        <li>사이드바 크리에이티브 섹션 항목 추가</li>
+        <li>layout.tsx 탭 구조 (3탭)</li>
+        <li>src/data/music-chips.ts 칩 데이터</li>
+        <li>src/types/music-generator.ts 타입 정의</li>
+      </ul>
+    </div>
+    <div class="phase-card p2">
+      <div class="phase-head">
+        <div class="phase-n">2</div>
+        <div><div class="phase-h4">음악생성 탭 UI 구현</div><div class="phase-sub">9개 섹션 + 컨트롤</div></div>
+      </div>
+      <ul class="phase-list">
+        <li>⚡ Shorts 모드 토글 + 🆓/🔥 모델 선택</li>
+        <li>ChipSelector 컴포넌트 (다중선택+직접입력)</li>
+        <li>9개 섹션 전체 구현 (180+ 칩)</li>
+        <li>▶ 10곡 생성하기 버튼 (풀너비 그라디언트)</li>
+        <li>로딩 스켈레톤 10개</li>
+      </ul>
+    </div>
+    <div class="phase-card p3">
+      <div class="phase-head">
+        <div class="phase-n">3</div>
+        <div><div class="phase-h4">Gemini API + 결과 화면</div><div class="phase-sub">10곡 생성 + 아코디언 카드</div></div>
+      </div>
+      <ul class="phase-list">
+        <li>POST /api/music-generator route</li>
+        <li>Flash/Pro 분기 + Shorts 4줄 제한</li>
+        <li>SongResultCard 아코디언 컴포넌트</li>
+        <li>타이틀 / 장르스타일 / 가사 + Copy 버튼</li>
+        <li>Supabase music_generations 저장</li>
+        <li>Suno로 전송 버튼 (Extension 연동)</li>
+      </ul>
+    </div>
+    <div class="phase-card p4">
+      <div class="phase-head">
+        <div class="phase-n">4</div>
+        <div><div class="phase-h4">저장 모달 + Sidebar + API 완성</div><div class="phase-sub">음악생성 100% 완성</div></div>
+      </div>
+      <ul class="phase-list">
+        <li>SaveToSheetModal 컴포넌트 (시트 선택)</li>
+        <li>저장 후 Suno.com 바로 열기 체크박스</li>
+        <li>Extension 미설치 분기 안내</li>
+        <li>저장 완료 Toast + 시트 이동 링크</li>
+        <li>Sidebar 🎵 음악생성 항목 추가</li>
+        <li>POST /api/music-generator route 완성</li>
+      </ul>
+    </div>
+    <div class="phase-card p5" style="border-left-color:var(--purple2);">
+      <div class="phase-head">
+        <div class="phase-n" style="background:var(--purple2);">5</div>
+        <div><div class="phase-h4">🖼 커버 이미지 생성기</div><div class="phase-sub">/cover-image-generator 신규 페이지</div></div>
+      </div>
+      <ul class="phase-list">
+        <li>cover-chips.ts 8카테고리 칩 데이터</li>
+        <li>CoverChipSelector (기타 추가/삭제 포함)</li>
+        <li>SheetCommandPalette (VS Code 스타일 검색)</li>
+        <li>자유 무드 입력 textarea</li>
+        <li>Claude 작업지시서 / Gemini 프롬프트 출력</li>
+        <li>Sidebar 🖼 커버이미지 항목 추가</li>
+      </ul>
+    </div>
+    <div class="phase-card p5" style="border-left-color:var(--green);grid-column:1/-1;">
+      <div class="phase-head">
+        <div class="phase-n" style="background:var(--green);">6</div>
+        <div><div class="phase-h4">🔍 SEO 최적화 패키지</div><div class="phase-sub">/seo-package 신규 페이지 — Claude 작업지시서 체인</div></div>
+      </div>
+      <ul class="phase-list" style="columns:2;gap:24px;">
+        <li>seo-chips.ts 7섹션 칩 (타겟연령·언어·카테고리·형식·상황·지역·전략)</li>
+        <li>모든 섹션에 기타 직접입력+삭제 지원</li>
+        <li>RegionTimeslot — 7개 지역 × 한국시간 변환</li>
+        <li>출력: 제목후보 5개 / Main·Long-tail 키워드</li>
+        <li>출력: 설명문 / 태그 30개 / 업로드 최적시간</li>
+        <li>Claude 작업지시서 → claude.ai 복붙 워크플로우</li>
+        <li>Sidebar 🔍 SEO패키지 항목 추가</li>
+        <li>POST /api/seo-package route 완성</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<hr class="div">
+
+<!-- ════════════════════════════════════════ -->
+<!-- SECTION NEW — 신규 페이지 시안 참조 -->
+<!-- ════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-header">
+    <h2>🖼🔍 신규 페이지 UI 시안 참조</h2>
+    <div class="accent-line"></div>
+  </div>
+  <div class="grid2">
+    <div class="card" style="border-left:4px solid var(--purple2);">
+      <div class="card-label" style="color:var(--purple2);">🖼 커버 이미지 생성기 시안</div>
+      <div style="font-size:12px;color:#ccc;line-height:2;">
+        <b style="color:#fff;">파일:</b> mockup-cover-image.html<br>
+        <b style="color:#fff;">입력 구조:</b><br>
+        &nbsp;· 음악생성 연동 + 시트 선택 (Command Palette)<br>
+        &nbsp;· 자유 무드 설명 textarea<br>
+        &nbsp;· 8카테고리 칩 (분위기·색감·비주얼컨셉·아트스타일·조명·계절시간대·텍스트스타일·구도)<br>
+        &nbsp;· <b>모든 카테고리에 기타 추가/삭제</b><br>
+        &nbsp;· 이미지 비율 선택 (16:9·1:1·4:5·9:16)<br>
+        <b style="color:#fff;">출력 3탭:</b><br>
+        &nbsp;① Claude 작업지시서 (복사 → claude.ai)<br>
+        &nbsp;② Gemini 프롬프트 예시 3변형<br>
+        &nbsp;③ 컨셉 컬러 미리보기<br>
+        <b style="color:#fff;">QA 완료 (2026-03-24):</b> applySheetChips 커스텀칩 텍스트 매칭 픽스
+      </div>
+    </div>
+    <div class="card" style="border-left:4px solid var(--green);">
+      <div class="card-label" style="color:var(--green);">🔍 SEO 최적화 패키지 시안</div>
+      <div style="font-size:12px;color:#ccc;line-height:2;">
+        <b style="color:#fff;">파일:</b> mockup-seo.html<br>
+        <b style="color:#fff;">입력 구조 (7섹션):</b><br>
+        &nbsp;· 타겟 연령대 (12칩, 다중선택 + 기타)<br>
+        &nbsp;· 출력 언어 (7칩, 단일선택 + 기타)<br>
+        &nbsp;· 채널 카테고리 (24칩, 다중선택 + 기타)<br>
+        &nbsp;· 콘텐츠 형식 (9칩, 다중선택 + 기타)<br>
+        &nbsp;· 타겟 청취 상황 (13칩, 다중선택 + 기타)<br>
+        &nbsp;· 타겟 지역 (7칩, 단일선택 + 기타, timezone 연동)<br>
+        &nbsp;· SEO 전략 (5칩, 단일선택)<br>
+        <b style="color:#fff;">출력 카드:</b><br>
+        &nbsp;SEO점수 → 제목5개 → Main/Long-tail 키워드 → 설명문 → 태그30개 → 최적업로드시간 → Claude작업지시서<br>
+        <b style="color:#fff;">QA 완료 (2026-03-24):</b> clearAll 후 단일선택 그룹 기본값 복원 픽스
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:20px;">
+    <div class="card-label">🔗 2단계 작업지시서 체인 워크플로우</div>
+    <div style="display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:12px;align-items:center;margin-top:14px;">
+      <div style="background:var(--bg4);border:1px solid var(--border2);border-radius:10px;padding:14px;text-align:center;">
+        <div style="font-size:18px;margin-bottom:6px;">🎯</div>
+        <div style="font-size:12px;font-weight:700;color:#fff;margin-bottom:4px;">우리 사이트</div>
+        <div style="font-size:11px;color:var(--muted);">칩 선택 → 작업지시서 생성<br>API 비용 0원</div>
+      </div>
+      <div style="font-size:20px;color:var(--muted);">→</div>
+      <div style="background:rgba(217,119,6,.08);border:1px solid rgba(217,119,6,.3);border-radius:10px;padding:14px;text-align:center;">
+        <div style="font-size:18px;margin-bottom:6px;">🤖</div>
+        <div style="font-size:12px;font-weight:700;color:#d97706;margin-bottom:4px;">Claude.ai</div>
+        <div style="font-size:11px;color:var(--muted);">복붙 → SEO 패키지<br>또는 Gemini 프롬프트 변환</div>
+      </div>
+      <div style="font-size:20px;color:var(--muted);">→</div>
+      <div style="background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.3);border-radius:10px;padding:14px;text-align:center;">
+        <div style="font-size:18px;margin-bottom:6px;">🖼</div>
+        <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:4px;">Gemini.google.com</div>
+        <div style="font-size:11px;color:var(--muted);">커버이미지만<br>이미지 생성 담당</div>
+      </div>
+    </div>
+    <div style="text-align:center;font-size:11px;color:var(--muted);margin-top:12px;">구독 중인 서비스 활용 — 추가 API 비용 없음 · 이후 수요 확인 후 Claude API 직접 연동으로 업그레이드 가능</div>
+  </div>
+</div>
+
+<hr class="div">
+
+<!-- ════════════════════════════════════════ -->
+<!-- SECTION COVER — 커버이미지 UI 시안 (인터랙티브) -->
+<!-- ════════════════════════════════════════ -->
+<div class="section iframe-section">
+  <div class="section-header">
+    <h2>🖼 커버 이미지 생성기 — UI 시안 (인터랙티브)</h2>
+    <div class="accent-line"></div>
+  </div>
+  <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">
+    칩 선택 · 시트 연동 · 기타 추가/삭제 · 출력 3탭 전부 동작합니다. 실제 구현 시 이 시안 기준으로 React 컴포넌트화 합니다.
+  </p>
+  <div class="iframe-wrap">
+    <iframe src="../../mockup-cover-image.html" height="900" scrolling="auto" title="커버 이미지 생성기 UI 시안"></iframe>
+  </div>
+  <div class="anno" style="margin-top:10px;">↑ mockup-cover-image.html — QA 완료 (2026-03-24) · 8카테고리 × 기타추가/삭제 · 시트 Command Palette</div>
+</div>
+
+<hr class="div">
+
+<!-- ════════════════════════════════════════ -->
+<!-- SECTION SEO — SEO 패키지 UI 시안 (인터랙티브) -->
+<!-- ════════════════════════════════════════ -->
+<div class="section iframe-section">
+  <div class="section-header">
+    <h2>🔍 SEO 최적화 패키지 — UI 시안 (인터랙티브)</h2>
+    <div class="accent-line"></div>
+  </div>
+  <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">
+    모든 섹션의 기타 추가/삭제 · 타겟 지역 선택 시 업로드 최적 시간대 한국 시간 자동 변환 · 출력 카드 복사 버튼 전부 동작합니다.
+  </p>
+  <div class="iframe-wrap">
+    <iframe src="../../mockup-seo.html" height="960" scrolling="auto" title="SEO 최적화 패키지 UI 시안"></iframe>
+  </div>
+  <div class="anno" style="margin-top:10px;">↑ mockup-seo.html — QA 완료 (2026-03-24) · 7섹션 × 기타추가/삭제 · 타겟지역→KST 시간 변환</div>
+</div>
+
+<!-- ════ CONFIRM MODAL OVERLAY ════ -->
+<div class="modal-live-overlay" id="confirmModal" onclick="handleConfirmOverlayClick(event)">
+  <div class="modal-live-box" style="width:440px;max-height:85vh;display:flex;flex-direction:column;">
+    <div class="modal-hdr">
+      <div class="modal-hdr-icon">✅</div>
+      <div>
+        <div class="modal-title">이렇게 생성할까요?</div>
+        <div class="modal-sub-text">선택한 옵션을 확인해주세요</div>
+      </div>
+    </div>
+    <div class="modal-body" id="confirmBody" style="overflow-y:auto;flex:1;"></div>
+    <div class="modal-footer">
+      <button class="modal-btn-cancel" onclick="closeConfirmModal()">← 돌아가기</button>
+      <button class="modal-btn-ok" id="confirmOkBtn" onclick="confirmAndSave()">✅ 확인 후 생성하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ LIVE SAVE MODAL OVERLAY ════ -->
+<div class="modal-live-overlay" id="saveModal" onclick="handleOverlayClick(event)">
+  <div class="modal-live-box">
+    <div class="modal-hdr">
+      <div class="modal-hdr-icon">💾</div>
+      <div>
+        <div class="modal-title">어디에 저장할까요?</div>
+        <div class="modal-sub-text">10곡 생성 후 스크랩시트에 저장됩니다</div>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="modal-label">기존 시트 선택</div>
+      <div class="sheet-option sel" onclick="selectSheet(this)">
+        <div class="sheet-option-dot"><div class="sheet-option-dot-inner"></div></div>
+        <div class="sheet-option-name">🎵 K-pop 발라드 모음</div>
+        <div class="sheet-option-count">12곡</div>
+      </div>
+      <div class="sheet-option" onclick="selectSheet(this)">
+        <div class="sheet-option-dot"></div>
+        <div class="sheet-option-name">🌙 새벽감성 시리즈</div>
+        <div class="sheet-option-count">8곡</div>
+      </div>
+      <div class="sheet-option" onclick="selectSheet(this)">
+        <div class="sheet-option-dot"></div>
+        <div class="sheet-option-name">⚡ 일렉트로닉 실험</div>
+        <div class="sheet-option-count">5곡</div>
+      </div>
+
+      <div class="modal-divider"></div>
+      <div class="modal-label">새 시트 만들기</div>
+      <div class="new-sheet-row">
+        <input class="new-sheet-input" id="newSheetInput" placeholder="새 시트 이름 입력...">
+        <button class="new-sheet-btn" onclick="createNewSheet()">+ 만들기</button>
+      </div>
+
+      <div class="modal-divider"></div>
+      <div class="modal-check-row" onclick="toggleCheck('chk-suno')">
+        <div class="modal-check on" id="chk-suno">✓</div>
+        <div>
+          <div class="modal-check-text">저장 후 Suno.com 바로 열기</div>
+          <div class="modal-check-sub">Extension이 자동으로 첫 번째 곡을 주입합니다</div>
+        </div>
+      </div>
+      <div class="modal-check-row" onclick="toggleCheck('chk-goto')">
+        <div class="modal-check" id="chk-goto"></div>
+        <div>
+          <div class="modal-check-text">저장 완료 후 시트 페이지로 이동</div>
+          <div class="modal-check-sub">생성 결과를 시트에서 확인합니다</div>
+        </div>
+      </div>
+      <div class="modal-check-row" onclick="toggleCheck('chk-continue')">
+        <div class="modal-check" id="chk-continue"></div>
+        <div>
+          <div class="modal-check-text">이어서 만들기</div>
+          <div class="modal-check-sub">저장 후 같은 조건으로 다음 배치를 자동 시작합니다</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn-cancel" onclick="closeSaveModal()">취소</button>
+      <button class="modal-btn-ok" onclick="confirmSave()">💾 저장하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="saveToast" style="position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:#1a1a1a;border:1px solid var(--pink);color:#fff;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:600;display:none;z-index:2000;box-shadow:0 8px 32px rgba(0,0,0,.8);white-space:nowrap;">
+  ✅ <span id="saveToastText">K-pop 발라드 모음에 저장됨</span> &nbsp;<span style="color:var(--pink);cursor:pointer;">시트 보기 →</span>
+</div>
+
+<!-- FOOTER -->
+<div style="text-align:center;padding:40px 0 60px;color:var(--muted);font-size:12px;">
+  <div style="font-size:24px;margin-bottom:10px;">🎵🖼🔍</div>
+  <b style="color:var(--text);font-size:14px;">간편화 재구축 프로젝트 — 음원 패키지 생성 기획서</b><br>
+  음악 생성 · 커버 이미지 생성 · SEO 최적화 패키지 3개 서브페이지<br>
+  최초 작성: 2026-03-21 | 업데이트: 2026-03-24 | suno-yt-dashboard
+</div>
+
+</div><!-- /container -->
+
+<script>
+// ── 체크리스트 로직 ──
+const STORE_KEY = 'music-gen-checklist-v1';
+let state = JSON.parse(localStorage.getItem(STORE_KEY) || '{}');
+
+/* 체크아이템에 data-idx 부여 — 초기화 시 */
+function initItems() {
+  document.querySelectorAll('.check-item').forEach((el, i) => {
+    el.dataset.idx = i;
+  });
+}
+
+function toggle(el) {
+  const key = 'i' + el.dataset.idx;
+  const done = !el.classList.contains('done');
+  state[key] = done;
+  localStorage.setItem(STORE_KEY, JSON.stringify(state));
+  renderAll();
+}
+
+function renderAll() {
+  const items = document.querySelectorAll('.check-item');
+  let total = items.length, checked = 0;
+  items.forEach((el, i) => {
+    const key = 'i' + (el.dataset.idx !== undefined ? el.dataset.idx : i);
+    const done = state[key] === true;
+    el.classList.toggle('done', done);
+    el.querySelector('.check-box').textContent = done ? '✓' : '';
+    if (done) checked++;
+  });
+  document.getElementById('prog-text').textContent = `${checked} / ${total} 완료`;
+  document.getElementById('prog-bar').style.width = (total ? (checked / total * 100) : 0) + '%';
+}
+
+// ── Claude Kit 토글 ──
+var claudeKitOn = false;
+function toggleClaudeKit() {
+  claudeKitOn = !claudeKitOn;
+  var btn = document.getElementById('mockKitBtn');
+  var label = document.getElementById('mockKitLabel');
+  var banner = document.getElementById('mockInfoBanner');
+  var genBtn = document.getElementById('mockGenBtn');
+  if (!btn || !banner || !genBtn) return;
+
+  btn.classList.toggle('kit-on', claudeKitOn);
+  label.textContent = claudeKitOn ? 'Claude 작업지시 ON' : 'Claude 작업지시';
+
+  if (claudeKitOn) {
+    banner.className = 'mock-info-banner mode-claude';
+    banner.textContent = '🤖 Claude 작업지시 모드 ON — 지시서를 복사해서 claude.ai에 붙여넣으세요. API 비용 0원';
+    genBtn.className = 'gen-btn claude-mode';
+    genBtn.textContent = '🤖 Claude 지시서 생성 (복사 후 claude.ai로)';
+  } else {
+    banner.className = 'mock-info-banner mode-default';
+    banner.textContent = '🎵 음악 스타일 및 옵션 선택 — 원하는 항목을 클릭하고 생성하기를 누르세요.';
+    genBtn.className = 'gen-btn';
+    genBtn.textContent = '▶ 생성하기 (Gemini 2.5 Flash)';
+  }
+}
+
+// ── 확인 모달 ──
+var SECTION_LABELS = ['장르','분위기/감성','보컬/창법','사용 용도','주요 악기','속도(BPM)','타겟 연령대','가사 언어','가사 주제'];
+
+function openConfirmModal() {
+  var body = document.getElementById('confirmBody');
+  if (!body) return;
+  while (body.firstChild) body.removeChild(body.firstChild);
+
+  // 섹션별 선택 칩 수집
+  var headers = document.querySelectorAll('.mock-body .mock-section-header');
+  var anySelected = false;
+
+  headers.forEach(function(hdr, idx) {
+    var chips = [];
+    var sibling = hdr.nextElementSibling;
+    while (sibling && !sibling.classList.contains('mock-section-header')) {
+      if (sibling.classList.contains('mock-chips')) {
+        sibling.querySelectorAll('.mc.sel, .mc.sel-pink').forEach(function(c) {
+          chips.push(c.textContent.trim());
+        });
+      }
+      sibling = sibling.nextElementSibling;
+    }
+    if (chips.length === 0) return;
+    anySelected = true;
+
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex;gap:10px;padding:7px 0;border-bottom:1px solid #1a1a2e;align-items:flex-start;';
+
+    var lbl = document.createElement('div');
+    lbl.style.cssText = 'font-size:10px;color:#555;width:72px;flex-shrink:0;padding-top:3px;font-weight:700;';
+    lbl.textContent = SECTION_LABELS[idx] || ('섹션' + (idx + 1));
+
+    var wrap = document.createElement('div');
+    wrap.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;flex:1;';
+    chips.forEach(function(text) {
+      var chip = document.createElement('span');
+      chip.style.cssText = 'background:rgba(233,30,140,.13);border:1px solid rgba(233,30,140,.3);color:#fb7185;padding:2px 9px;border-radius:12px;font-size:11px;';
+      chip.textContent = text;
+      wrap.appendChild(chip);
+    });
+
+    row.appendChild(lbl);
+    row.appendChild(wrap);
+    body.appendChild(row);
+  });
+
+  // 아무것도 선택 안 한 경우
+  if (!anySelected) {
+    var empty = document.createElement('div');
+    empty.style.cssText = 'text-align:center;color:#555;font-size:12px;padding:20px 0;';
+    empty.textContent = '선택된 옵션이 없어요. 칩을 클릭해서 스타일을 골라주세요.';
+    body.appendChild(empty);
+  }
+
+  // 요약 행 (곡 수 + 모델)
+  var countEl = document.querySelector('.mock-cnt-group .mock-cnt.sel');
+  var count = countEl ? countEl.textContent : '10곡';
+  var isClaudeOn = claudeKitOn;
+  var modelPro = document.querySelector('.model-pro.on');
+  var model = modelPro ? 'Gemini 2.5 Pro' : 'Gemini 2.5 Flash';
+
+  var summary = document.createElement('div');
+  summary.style.cssText = 'background:rgba(124,58,237,.07);border:1px solid rgba(124,58,237,.2);border-radius:8px;padding:10px 14px;margin-top:14px;display:flex;gap:16px;flex-wrap:wrap;';
+
+  var items = [
+    '🎵 ' + count,
+    isClaudeOn ? '🤖 Claude 경유' : ('⚡ ' + model),
+    '📱 Shorts OFF'
+  ];
+  items.forEach(function(text) {
+    var s = document.createElement('span');
+    s.style.cssText = 'font-size:12px;color:#a78bfa;font-weight:700;';
+    s.textContent = text;
+    summary.appendChild(s);
+  });
+  body.appendChild(summary);
+
+  // 확인 버튼 텍스트 (Claude 모드면 다름)
+  var okBtn = document.getElementById('confirmOkBtn');
+  if (okBtn) {
+    okBtn.textContent = isClaudeOn ? '🤖 Claude 지시서 생성하기' : '✅ 확인 후 생성하기';
+  }
+
+  document.getElementById('confirmModal').classList.add('open');
+}
+function closeConfirmModal() {
+  document.getElementById('confirmModal').classList.remove('open');
+}
+function handleConfirmOverlayClick(e) {
+  if (e.target === document.getElementById('confirmModal')) closeConfirmModal();
+}
+function confirmAndSave() {
+  closeConfirmModal();
+  if (!claudeKitOn) openSaveModal();
+}
+
+// ── 저장 모달 ──
+function openSaveModal() {
+  document.getElementById('saveModal').classList.add('open');
+}
+function closeSaveModal() {
+  document.getElementById('saveModal').classList.remove('open');
+}
+function handleOverlayClick(e) {
+  if (e.target === document.getElementById('saveModal')) closeSaveModal();
+}
+function selectSheet(el) {
+  document.querySelectorAll('.modal-live-box .sheet-option').forEach(function(opt) {
+    opt.classList.remove('sel');
+    opt.querySelector('.sheet-option-dot').textContent = '';
+  });
+  el.classList.add('sel');
+  var inner = document.createElement('div');
+  inner.className = 'sheet-option-dot-inner';
+  el.querySelector('.sheet-option-dot').appendChild(inner);
+}
+function toggleCheck(id) {
+  var el = document.getElementById(id);
+  var isOn = el.classList.contains('on');
+  el.classList.toggle('on', !isOn);
+  el.textContent = isOn ? '' : '✓';
+}
+function createNewSheet() {
+  var input = document.getElementById('newSheetInput');
+  var name = input.value.trim();
+  if (!name) return;
+
+  var dot = document.createElement('div');
+  dot.className = 'sheet-option-dot';
+
+  var nameEl = document.createElement('div');
+  nameEl.className = 'sheet-option-name';
+  nameEl.textContent = '📋 ' + name;
+
+  var countEl = document.createElement('div');
+  countEl.className = 'sheet-option-count';
+  countEl.textContent = '0곡';
+
+  var newOpt = document.createElement('div');
+  newOpt.className = 'sheet-option';
+  newOpt.appendChild(dot);
+  newOpt.appendChild(nameEl);
+  newOpt.appendChild(countEl);
+  newOpt.onclick = function() { selectSheet(newOpt); };
+
+  var lastOpt = document.querySelector('.modal-live-box .sheet-option:last-of-type');
+  lastOpt.insertAdjacentElement('afterend', newOpt);
+  selectSheet(newOpt);
+  input.value = '';
+}
+function confirmSave() {
+  var selected = document.querySelector('.modal-live-box .sheet-option.sel .sheet-option-name');
+  var sheetName = selected ? selected.textContent : '선택된 시트';
+  var sunoOn = document.getElementById('chk-suno').classList.contains('on');
+  closeSaveModal();
+  if (sunoOn) {
+    window.open('https://suno.com/create', '_blank', 'noopener,noreferrer');
+  }
+  var toast = document.getElementById('saveToast');
+  document.getElementById('saveToastText').textContent = sheetName + '에 저장됨';
+  toast.style.display = 'block';
+  setTimeout(function() { toast.style.display = 'none'; }, 3000);
+}
+function selectCount(el) {
+  document.querySelectorAll('.mock-cnt-group .mock-cnt').forEach(function(c) { c.classList.remove('sel'); });
+  el.classList.add('sel');
+}
+
+function filterPhase(phase, el) {
+  document.querySelectorAll('.phase-pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.check-item').forEach(el => {
+    if (phase === 'all') { el.style.display = ''; return; }
+    el.style.display = el.dataset.phase === phase ? '' : 'none';
+  });
+}
+
+initItems();
+renderAll();
+</script>
+</body>
+</html>
