@@ -52,6 +52,8 @@ const navItems: { section: string; items: NavItem[] }[] = [
       { href: '/cover', icon: '🎨', label: 'Cover Generator', badge: 'NEW', badgeType: 'new' },
       { href: '/library', icon: '📚', label: '프롬프트 라이브러리', badge: 'NEW', badgeType: 'new' },
       { href: '/music-generator', icon: '🎵', label: '음악생성', badge: 'NEW', badgeType: 'new' },
+      { href: '/cover-image-generator', icon: '🖼', label: '커버이미지', badge: 'NEW', badgeType: 'new' as const },
+      { href: '/seo-package', icon: '🔍', label: 'SEO패키지', badge: 'NEW', badgeType: 'new' as const },
     ],
   },
   {
