@@ -7,7 +7,7 @@ Suno AI + YouTube 대시보드 — MusePilot.pro 클론 프로젝트
 ```bash
 cp .env.local.example .env.local
 # .env.local 에 키 입력 후 →
-npm run dev   # http://localhost:3001
+npm run dev   # http://localhost:3000
 ```
 
 ## Phase 6 신규 기능
@@ -51,7 +51,7 @@ cp .env.local.example .env.local
 | `YOUTUBE_API_KEY` | YouTube Data API v3 키 | Google Cloud Console → YouTube Data API v3 사용 설정 |
 | `GEMINI_API_KEY` | Gemini API 키 | [Google AI Studio](https://aistudio.google.com/app/apikey) |
 | `NEXTAUTH_SECRET` | 세션 서명 키 (`openssl rand -base64 32`) | 직접 생성 |
-| `NEXTAUTH_URL` | 앱 기본 URL | 로컬: `http://localhost:3001`, 배포: Vercel 도메인 |
+| `NEXTAUTH_URL` | 앱 기본 URL | 로컬: `http://localhost:3000`, 배포: Vercel 도메인 |
 
 > **주의**: `NEXT_PUBLIC_` 접두사 변수는 브라우저에 노출됩니다.
 > `SUPABASE_SERVICE_ROLE_KEY`, `GOOGLE_CLIENT_SECRET`, `NEXTAUTH_SECRET` 은 절대 `NEXT_PUBLIC_` 로 시작하면 안 됩니다.
@@ -62,7 +62,7 @@ cp .env.local.example .env.local
 
 ```
 # 개발
-http://localhost:3001/api/auth/callback/google
+http://localhost:3000/api/auth/callback/google
 
 # 배포
 https://your-app.vercel.app/api/auth/callback/google
@@ -132,12 +132,12 @@ npm run build   # dist/ 폴더 생성
 
 ### 배치 전송 방법
 
-1. 대시보드(`http://localhost:3001`)에서 스크랩시트에 프롬프트 추가
+1. 대시보드(`http://localhost:3000`)에서 스크랩시트에 프롬프트 추가
 2. Chrome Extension 아이콘 클릭 → **배치 전송 시작** 버튼 클릭
 3. Extension이 자동으로 [suno.com](https://suno.com) 에 프롬프트를 순서대로 주입
 4. 완료 시 대시보드로 결과 전송 (PING/PONG 메시지 브리지)
 
-> **참고**: 대시보드(`http://localhost:3001`)가 실행 중이어야 Extension과 연동됩니다.
+> **참고**: 대시보드(`http://localhost:3000`)가 실행 중이어야 Extension과 연동됩니다.
 
 ## Vercel 배포 설정
 

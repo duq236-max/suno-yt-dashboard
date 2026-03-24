@@ -41,7 +41,7 @@ npm run build          # dist/ 산출물 확인
 
 ```bash
 cd scratch/suno-yt-dashboard
-npm run dev            # http://localhost:3001
+npm run dev            # http://localhost:3000
 ```
 
 ### 4. suno.com 로그인
@@ -61,7 +61,7 @@ npm run dev            # http://localhost:3001
 
 | # | 위치 | 액션 | 기대 결과 |
 |---|------|------|-----------|
-| 1 | `localhost:3001/lyrics` | 페이지 접속 | "Suno로 전송" 버튼 표시 |
+| 1 | `localhost:3000/lyrics` | 페이지 접속 | "Suno로 전송" 버튼 표시 |
 | 2 | `/lyrics` | 장르·분위기·테마 입력 후 **생성** 클릭 | AI 가사 + Suno 프롬프트 생성됨 |
 | 3 | `/lyrics` | **Suno로 전송** 버튼 클릭 | 버튼 "✓ 큐에 추가됨"으로 변경 |
 | 4 | suno.com | 새 탭이 `suno.com/create`로 열림 | suno.com `/create` 페이지 로드 |
@@ -119,7 +119,7 @@ document.querySelector('[data-testid="prompt-input"]')
 
 | # | 위치 | 액션 | 기대 결과 |
 |---|------|------|-----------|
-| 1 | `localhost:3001/lyrics` | 가사 생성 #1 → **Suno로 전송** | "큐에 추가됨" |
+| 1 | `localhost:3000/lyrics` | 가사 생성 #1 → **Suno로 전송** | "큐에 추가됨" |
 | 2 | `/lyrics` | 다른 장르/분위기로 가사 생성 #2 → **Suno로 전송** | "큐에 추가됨" |
 | 3 | `/lyrics` | 가사 생성 #3 → **Suno로 전송** | "큐에 추가됨" |
 
@@ -161,7 +161,7 @@ chrome://extensions → Suno Batch Creator → "서비스 워커" 검사 → Con
 → [background] processing job: <id>
 
 # dashboard-bridge.js 디버깅 (대시보드 탭)
-localhost:3001 탭 → F12 → Console
+localhost:3000 탭 → F12 → Console
 → SUNO_BATCH_PING 발송 확인
 → SUNO_BATCH_PONG 수신 확인 (1초 내)
 → ADD_TO_QUEUE postMessage 발송 확인
