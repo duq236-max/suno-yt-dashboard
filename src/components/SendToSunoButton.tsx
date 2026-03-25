@@ -26,7 +26,6 @@ export default function SendToSunoButton({ lyrics, sunoPrompt }: Props) {
     const [sendError, setSendError] = useState<string | null>(null);
 
     const detect = useCallback(() => {
-        setExtStatus('detecting');
         let resolved = false;
 
         function handlePong(event: MessageEvent) {

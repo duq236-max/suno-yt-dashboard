@@ -30,11 +30,12 @@ const EMPTY_YT: Omit<YoutubeChannel, 'id' | 'connectedAt'> = {
 export default function DashboardPage() {
     const [data, setData] = useState<AppData | null>(null);
 
+    const [lyricsCount, setLyricsCount] = useState(0);
+
     useEffect(() => {
         loadData().then(setData);
         loadLyricsHistory().then(h => setLyricsCount(h.length));
     }, []);
-    const [lyricsCount, setLyricsCount] = useState(0);
     const [showYtModal, setShowYtModal] = useState(false);
     const [ytForm, setYtForm] = useState(EMPTY_YT);
     const [editingYtId, setEditingYtId] = useState<string | null>(null);
