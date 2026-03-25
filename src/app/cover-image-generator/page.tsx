@@ -4,10 +4,11 @@ import { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import CoverChipSelector from '@/components/CoverChipSelector';
 import SheetCommandPalette from '@/components/SheetCommandPalette';
+import SaveToSheetModal from '@/components/SaveToSheetModal';
 import { COVER_CHIPS } from '@/data/cover-chips';
 import type { CoverImageForm, CoverImageOutput } from '@/types/cover-image';
 import type { ScrapSheet } from '@/types';
-import { loadData } from '@/lib/supabase-storage';
+import { loadData, saveData, generateId } from '@/lib/supabase-storage';
 
 const RATIO_DIMS: Record<string, { width: number; height: number }> = {
   '16:9': { width: 1280, height: 720 },
@@ -56,6 +57,9 @@ export default function CoverImageGeneratorPage() {
   const [activeTab, setActiveTab] = useState<OutputTab>('claude');
   const [apiKey, setApiKey] = useState('');
   const [copyFeedback, setCopyFeedback] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [selectedRatio, setSelectedRatio] = useState<string>('16:9');
 
   useEffect(() => {
     loadData()
@@ -96,8 +100,9 @@ export default function CoverImageGeneratorPage() {
   );
 
   async function handleGenerate() {
+    setErrorMsg('');
     if (!apiKey) {
-      alert('Settings에서 Gemini API 키를 먼저 입력하세요.');
+      setErrorMsg('Settings에서 Gemini API 키를 먼저 입력하세요.');
       return;
     }
     setIsGenerating(true);
@@ -108,14 +113,43 @@ export default function CoverImageGeneratorPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ form, apiKey }),
       });
-      const data = (await res.json()) as CoverImageOutput;
+      const data = await res.json() as CoverImageOutput & { error?: string };
+      if (!res.ok) {
+        setErrorMsg(data.error ?? '생성 중 오류가 발생했습니다.');
+        return;
+      }
       setOutput(data);
       setActiveTab('claude');
     } catch {
-      alert('생성 중 오류가 발생했습니다.');
+      setErrorMsg('생성 중 오류가 발생했습니다.');
     } finally {
       setIsGenerating(false);
     }
+  }
+
+  async function handleSaveConfirm(sheetId: string, openSuno: boolean) {
+    if (!output) return;
+    const appData = await loadData();
+    const sheets = appData.sheets ?? [];
+    const target = sheets.find((s) => s.id === sheetId);
+    if (!target) return;
+    const newItem = {
+      id: generateId(),
+      title: '커버 이미지 프롬프트',
+      prompt: output.geminiPrompt,
+      lyrics: output.claudeInstruction,
+      genre: '',
+      status: 'unused' as const,
+      instruments: '',
+      mood_tags: form.mood,
+      is_instrumental: false,
+      createdAt: new Date().toISOString(),
+    };
+    const updatedSheet = { ...target, items: [...target.items, newItem] };
+    const updatedSheets = sheets.map((s) => (s.id === sheetId ? updatedSheet : s));
+    await saveData({ ...appData, sheets: updatedSheets });
+    setShowSaveModal(false);
+    if (openSuno) window.open('https://suno.com', '_blank');
   }
 
   function handleCopy(text: string) {
@@ -133,11 +167,6 @@ export default function CoverImageGeneratorPage() {
       : activeTab === 'gemini'
       ? output.geminiPrompt
       : output.conceptPreview;
-
-  const previewImageUrl =
-    output && activeTab === 'preview'
-      ? pollinationsUrl(output.geminiPrompt, form.aspectRatio)
-      : null;
 
   return (
     <div className="page-content">
@@ -213,6 +242,11 @@ export default function CoverImageGeneratorPage() {
         >
           {isGenerating ? '생성 중...' : '🖼 커버 이미지 프롬프트 생성'}
         </button>
+        {errorMsg && (
+          <p style={{ marginTop: 8, color: 'var(--accent)', fontSize: 13 }}>
+            {errorMsg}
+          </p>
+        )}
       </div>
 
       {/* 결과 */}
@@ -235,19 +269,59 @@ export default function CoverImageGeneratorPage() {
               </button>
             ))}
           </div>
-          {previewImageUrl ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={previewImageUrl}
-                alt="Pollinations 이미지 미리보기"
+          {activeTab === 'preview' ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div
                 style={{
-                  width: '100%',
-                  borderRadius: 8,
-                  border: '1px solid var(--border)',
-                  objectFit: 'cover',
+                  display: 'grid',
+                  gridTemplateColumns: '2fr 1fr 1fr',
+                  gap: 12,
+                  alignItems: 'start',
                 }}
-              />
+              >
+                {(['16:9', '1:1', '9:16'] as const).map((ratio) => {
+                  const imgUrl = output ? pollinationsUrl(output.geminiPrompt, ratio) : null;
+                  const isSelected = selectedRatio === ratio;
+                  return (
+                    <div
+                      key={ratio}
+                      onClick={() => setSelectedRatio(ratio)}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <div
+                        style={{
+                          borderRadius: 8,
+                          border: `2px solid ${isSelected ? 'var(--accent)' : 'var(--border)'}`,
+                          overflow: 'hidden',
+                          background: 'var(--bg-secondary)',
+                          aspectRatio: ratio.replace(':', '/'),
+                          position: 'relative',
+                        }}
+                      >
+                        {imgUrl && (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={imgUrl}
+                            alt={`${ratio} 미리보기`}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                          />
+                        )}
+                      </div>
+                      <p
+                        style={{
+                          textAlign: 'center',
+                          fontSize: 11,
+                          marginTop: 4,
+                          color: isSelected ? 'var(--accent)' : 'var(--text-muted)',
+                          fontWeight: isSelected ? 600 : 400,
+                        }}
+                      >
+                        {ratio}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
               <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6 }}>
                 {output?.conceptPreview}
               </p>
@@ -278,6 +352,25 @@ export default function CoverImageGeneratorPage() {
             </div>
           )}
         </div>
+      )}
+
+      {output && (
+        <div className="card" style={{ marginTop: 12 }}>
+          <button
+            className="btn btn-secondary btn-sm"
+            onClick={() => setShowSaveModal(true)}
+          >
+            💾 스크랩시트에 저장
+          </button>
+        </div>
+      )}
+
+      {showSaveModal && (
+        <SaveToSheetModal
+          isOpen={showSaveModal}
+          onClose={() => setShowSaveModal(false)}
+          onConfirm={handleSaveConfirm}
+        />
       )}
     </div>
   );
