@@ -1063,9 +1063,8 @@ export async function deleteSong(id: string): Promise<Song[]> {
 }
 
 // ──────────────────────────────────────────────────────────
-// SEO 이력 (localStorage 기반)
+// SEO 이력 (Supabase user_settings.seo_history jsonb)
 // ──────────────────────────────────────────────────────────
-const SEO_HISTORY_KEY = 'suno_seo_history';
 const SEO_HISTORY_MAX = 20;
 
 export interface SeoHistoryEntry {
@@ -1078,25 +1077,45 @@ export interface SeoHistoryEntry {
     tags: string[];
 }
 
-export function saveSeoHistory(entry: Omit<SeoHistoryEntry, 'id' | 'createdAt'>): void {
-    const prev = loadSeoHistory();
-    const next: SeoHistoryEntry[] = [
+export async function saveSeoHistory(entry: Omit<SeoHistoryEntry, 'id' | 'createdAt'>): Promise<void> {
+    const userId = await getCurrentUserId();
+    if (!userId) return;
+
+    const existing = await loadSeoHistory();
+    const updated: SeoHistoryEntry[] = [
         { ...entry, id: `seo_${Date.now()}`, createdAt: new Date().toISOString() },
-        ...prev,
+        ...existing,
     ].slice(0, SEO_HISTORY_MAX);
-    try {
-        localStorage.setItem(SEO_HISTORY_KEY, JSON.stringify(next));
-    } catch {
-        // localStorage 용량 초과 등 무시
+
+    const { error } = await supabase
+        .from('user_settings')
+        .upsert(
+            { user_id: userId, seo_history: updated },
+            { onConflict: 'user_id' }
+        );
+
+    if (error) {
+        console.error('saveSeoHistory error:', error.message);
+        throw new Error(`SEO 히스토리 저장 실패: ${error.message}`);
     }
 }
 
-export function loadSeoHistory(): SeoHistoryEntry[] {
-    try {
-        const raw = localStorage.getItem(SEO_HISTORY_KEY);
-        if (!raw) return [];
-        return JSON.parse(raw) as SeoHistoryEntry[];
-    } catch {
+export async function loadSeoHistory(): Promise<SeoHistoryEntry[]> {
+    const userId = await getCurrentUserId();
+    if (!userId) return [];
+
+    const { data, error } = await supabase
+        .from('user_settings')
+        .select('seo_history')
+        .eq('user_id', userId)
+        .single();
+
+    if (error) {
+        if (error.code !== 'PGRST116') {
+            console.error('loadSeoHistory error:', error.message);
+        }
         return [];
     }
+
+    return (data?.seo_history as SeoHistoryEntry[] | null) ?? [];
 }

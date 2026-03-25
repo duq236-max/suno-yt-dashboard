@@ -65,6 +65,7 @@ export type DbUserSettings = {
     email_address: string | null;
     gemini_api_key: string | null;
     music_gen_history: unknown[] | null;
+    seo_history: unknown[] | null;
     created_at: string;
     updated_at: string;
 };
@@ -199,6 +200,7 @@ export type DbUserSettingsInsert = {
     email_address?: string | null;
     gemini_api_key?: string | null;
     music_gen_history?: unknown[] | null;
+    seo_history?: unknown[] | null;
 }
 
 export type DbYoutubeChannelInsert = {

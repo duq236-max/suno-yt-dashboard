@@ -43,7 +43,7 @@ export default function SeoPackagePage() {
         loadData().then((data) => {
             setApiKey(data.geminiApiKey ?? '');
         }).catch(() => {});
-        setSeoHistory(loadSeoHistory());
+        loadSeoHistory().then(setSeoHistory).catch(() => {});
     }, []);
 
     function handleChipSelect(sectionId: string, value: string) {
@@ -100,14 +100,14 @@ export default function SeoPackagePage() {
                 setOutput(data.output);
                 setUploadTime(data.uploadTime ?? '');
                 setActiveTab('score');
-                saveSeoHistory({
+                await saveSeoHistory({
                     titleInput,
                     seoScore: data.output.seoScore,
                     titles: data.output.titles,
                     mainKeywords: data.output.mainKeywords,
                     tags: data.output.tags,
                 });
-                setSeoHistory(loadSeoHistory());
+                loadSeoHistory().then(setSeoHistory).catch(() => {});
             }
         } catch {
             setErrorMsg('서버 오류가 발생했습니다.');
