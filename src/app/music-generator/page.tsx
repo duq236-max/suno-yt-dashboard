@@ -8,6 +8,7 @@ import SaveToSheetModal from '@/components/SaveToSheetModal';
 import { MUSIC_CHIPS } from '@/data/music-chips';
 import type { MusicGeneratorForm, GeneratedSong, MusicGenHistory } from '@/types/music-generator';
 import { loadData, saveMusicGenHistory, loadMusicGenHistory, generateId } from '@/lib/supabase-storage';
+import styles from './page.module.css';
 
 type ActiveTab = 'generate' | 'cover' | 'marketing';
 
@@ -247,6 +248,7 @@ export default function MusicGeneratorPage() {
 
             {/* 탭 네비게이션 */}
             <div
+                className={styles.tabBar}
                 style={{
                     display: 'flex',
                     gap: '4px',
@@ -302,7 +304,7 @@ export default function MusicGeneratorPage() {
                     )}
 
                     {/* ChipSelector 9개 섹션 */}
-                    <div className="card" style={{ padding: '20px', marginBottom: '16px' }}>
+                    <div className={`card ${styles.chipCard}`} style={{ padding: '20px', marginBottom: '16px' }}>
                         {MUSIC_CHIPS.map((section) => (
                             <ChipSelector
                                 key={section.id}
@@ -413,7 +415,7 @@ export default function MusicGeneratorPage() {
 
                     {/* 결과 카드 */}
                     {!isGenerating && results.length > 0 && (
-                        <div ref={resultsRef}>
+                        <div ref={resultsRef} className={styles.outputSection}>
                             <div
                                 style={{
                                     display: 'flex',

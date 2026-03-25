@@ -135,6 +135,8 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
                 href={item.href}
                 className={`sidebar-link ${pathname === item.href || (item.href !== '#' && pathname.startsWith(item.href) && item.href !== '/') ? 'active' : ''}`}
                 style={item.href === '#' ? { pointerEvents: 'none', opacity: 0.5 } : {}}
+                onClick={item.href === '#' ? (e) => e.preventDefault() : undefined}
+                aria-disabled={item.href === '#' ? true : undefined}
               >
                 <span className="icon">{item.icon}</span>
                 {item.label}
