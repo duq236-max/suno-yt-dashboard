@@ -15,6 +15,9 @@ function buildPrompt(form: MusicGeneratorForm): string {
     if (form.targetAge) parts.push(`타겟 연령: ${form.targetAge}`);
     if (form.language) parts.push(`가사 언어: ${form.language}`);
     if (form.theme.length > 0) parts.push(`주제: ${form.theme.join(', ')}`);
+    if (form.atmosphere.length > 0) parts.push(`분위기 요소: ${form.atmosphere.join(', ')}`);
+    if (form.production.length > 0) parts.push(`프로덕션 스타일: ${form.production.join(', ')}`);
+    if (form.creativity) parts.push(`AI 창의성: ${form.creativity}`);
     if (form.customRequest) parts.push(`추가 요청: ${form.customRequest}`);
 
     const lyricsNote = form.shortsMode
