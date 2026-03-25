@@ -1,0 +1,41 @@
+/* music-generator — 모바일 반응형 오버라이드 */
+
+/* 탭 네비게이션 바 */
+.tabBar {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: nowrap;
+}
+
+/* 칩 카드 래퍼 */
+.chipCard {
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+/* 결과 출력 섹션 */
+.outputSection {
+  padding: 16px;
+}
+
+@media (max-width: 768px) {
+  /* 탭 바: 줄바꿈 허용 */
+  .tabBar {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  /* 칩 그리드: 3열 고정 */
+  .chipCard > div > div {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+
+  /* 결과 섹션: 패딩 축소 */
+  .outputSection {
+    padding: 1rem;
+  }
+}
