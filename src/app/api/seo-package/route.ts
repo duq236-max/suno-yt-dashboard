@@ -19,9 +19,12 @@ ${JSON.stringify(form, null, 2)}
   "longTailKeywords": ["롱테일1", "롱테일2", "롱테일3", "롱테일4", "롱테일5"],
   "description": "유튜브 영상 설명문 (출력 언어 기준, 500자 내외, 해시태그 포함)",
   "tags": ["태그1", "태그2", ..., "태그30개"],
+  "chapters": ["0:00 인트로", "1:30 메인 섹션", "3:00 하이라이트", "5:00 아웃트로"],
   "uploadTime": "타겟 지역·요일·시간대 기반 최적 업로드 시간 설명 (2-3문장)",
   "claudeInstruction": "Claude.ai에 붙여넣을 수 있는 작업지시서 (마크다운 형식, 콘텐츠 제작 지침 포함)"
-}`;
+}
+
+chapters는 유튜브 영상 목차 형식(MM:SS 제목)으로 4-6개를 생성하세요.`;
 }
 
 export async function POST(req: NextRequest) {
@@ -76,6 +79,7 @@ export async function POST(req: NextRequest) {
             longTailKeywords?: string[];
             description?: string;
             tags?: string[];
+            chapters?: string[];
             uploadTime?: string;
             claudeInstruction?: string;
         };
@@ -87,6 +91,7 @@ export async function POST(req: NextRequest) {
             longTailKeywords: parsed.longTailKeywords ?? [],
             description: parsed.description ?? '',
             tags: parsed.tags ?? [],
+            chapters: parsed.chapters ?? [],
             uploadTimes: [],
             claudeInstruction: parsed.claudeInstruction ?? '',
         };
