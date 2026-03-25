@@ -9,6 +9,7 @@ import type { SeoForm, SeoOutput } from '@/types/seo-package';
 import { loadData } from '@/lib/supabase-storage';
 import { saveSeoHistory, loadSeoHistory, type SeoHistoryEntry } from '@/lib/supabase-storage';
 import SaveToSheetModal from '@/components/SaveToSheetModal';
+import styles from './page.module.css';
 
 type OutputTab = 'score' | 'desc' | 'claude';
 
@@ -120,6 +121,30 @@ export default function SeoPackagePage() {
             setCopied(key);
             setTimeout(() => setCopied(null), 1500);
         }).catch(() => {});
+    }
+
+    function copyAll() {
+        if (!output) return;
+        const parts = [
+            '[제목 후보]',
+            output.titles.join('\n'),
+            '',
+            '[메인 키워드]',
+            output.mainKeywords.join(', '),
+            '',
+            '[롱테일 키워드]',
+            output.longTailKeywords.join(', '),
+            '',
+            '[영상 설명문]',
+            output.description,
+            '',
+            '[업로드 최적 시간]',
+            uploadTime,
+            '',
+            '[태그]',
+            output.tags.join(', '),
+        ];
+        copy(parts.join('\n'), 'all');
     }
 
     const scoreColor = output
@@ -248,8 +273,16 @@ export default function SeoPackagePage() {
 
                     {output && (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                            {/* 저장 버튼 */}
-                            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                            {/* 저장 / 전체 복사 버튼 */}
+                            <div className={styles.outputActions}>
+                                <button
+                                    type="button"
+                                    className="btn btn-ghost"
+                                    style={{ display: 'flex', alignItems: 'center', gap: 6 }}
+                                    onClick={copyAll}
+                                >
+                                    {copied === 'all' ? '✅ 복사 완료!' : '📋 전체 복사'}
+                                </button>
                                 <button
                                     type="button"
                                     className="btn btn-secondary"
@@ -262,7 +295,7 @@ export default function SeoPackagePage() {
 
                             {/* SEO 점수 요약 */}
                             <div className="card" style={{ padding: '14px 18px' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                <div className={styles.scoreInner}>
                                     <div
                                         style={{
                                             width: 56,
@@ -305,7 +338,7 @@ export default function SeoPackagePage() {
                                             />
                                         </div>
                                     </div>
-                                    <div style={{ marginLeft: 'auto', display: 'flex', gap: 6 }}>
+                                    <div className={styles.tabsRow}>
                                         {tabs.map((tab) => (
                                             <button
                                                 key={tab.id}
