@@ -887,3 +887,31 @@ tbody tr:hover td {
 .chip-del:hover {
   color: var(--accent);
 }
+
+/* ── 음원 패키지 SEO 그리드 ── */
+.seo-grid {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 768px) {
+  .seo-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── 음원 패키지 칩 그리드 ── */
+.sound-pkg-chips-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 768px) {
+  .sound-pkg-chips-grid {
+    grid-template-columns: 1fr;
+  }
+}

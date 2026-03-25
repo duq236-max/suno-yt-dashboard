@@ -46,12 +46,17 @@ const navItems: { section: string; items: NavItem[] }[] = [
   {
     section: '크리에이티브',
     items: [
-      { href: '/brand-kit', icon: '🎨', label: 'BrandKit', badge: 'NEW', badgeType: 'new' },
-      { href: '/ideation', icon: '🧠', label: 'Ideation', badge: 'NEW', badgeType: 'new' },
-      { href: '/lyrics', icon: '📝', label: 'Lyrics', badge: 'NEW', badgeType: 'new' },
-      { href: '/cover', icon: '🎨', label: 'Cover Generator', badge: 'NEW', badgeType: 'new' },
-      { href: '/library', icon: '📚', label: '프롬프트 라이브러리', badge: 'NEW', badgeType: 'new' },
-      { href: '/music-generator', icon: '🎵', label: '음악생성', badge: 'NEW', badgeType: 'new' },
+      { href: '/brand-kit', icon: '🎨', label: 'BrandKit', badge: 'NEW', badgeType: 'new' as const },
+      { href: '/ideation', icon: '🧠', label: 'Ideation', badge: 'NEW', badgeType: 'new' as const },
+      { href: '/lyrics', icon: '📝', label: 'Lyrics', badge: 'NEW', badgeType: 'new' as const },
+      { href: '/cover', icon: '🎨', label: 'Cover Generator', badge: 'NEW', badgeType: 'new' as const },
+      { href: '/library', icon: '📚', label: '프롬프트 라이브러리', badge: 'NEW', badgeType: 'new' as const },
+    ],
+  },
+  {
+    section: '음원 패키지',
+    items: [
+      { href: '/music-generator', icon: '🎵', label: '음악생성', badge: 'NEW', badgeType: 'new' as const },
       { href: '/cover-image-generator', icon: '🖼', label: '커버이미지', badge: 'NEW', badgeType: 'new' as const },
       { href: '/seo-package', icon: '🔍', label: 'SEO패키지', badge: 'NEW', badgeType: 'new' as const },
     ],
