@@ -8,6 +8,7 @@ import SaveToSheetModal from '@/components/SaveToSheetModal';
 import { COVER_CHIPS } from '@/data/cover-chips';
 import type { CoverImageForm, CoverImageOutput, CoverImageHistory } from '@/types/cover-image';
 import type { ScrapSheet } from '@/types';
+import styles from './page.module.css';
 import {
   loadData,
   saveData,
@@ -236,7 +237,7 @@ export default function CoverImageGeneratorPage() {
 
         <div className="form-group">
           <label className="form-label">이미지 비율</label>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <div className={styles.ratioRow}>
             {(['16:9', '1:1', '4:5', '9:16'] as const).map((ratio) => (
               <button
                 key={ratio}
@@ -272,7 +273,7 @@ export default function CoverImageGeneratorPage() {
       {/* 결과 */}
       {output && (
         <div className="card" style={{ marginTop: 16 }}>
-          <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+          <div className={styles.tabRow}>
             {(['claude', 'gemini', 'preview'] as const).map((tab) => (
               <button
                 key={tab}
@@ -291,14 +292,7 @@ export default function CoverImageGeneratorPage() {
           </div>
           {activeTab === 'preview' ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '2fr 1fr 1fr',
-                  gap: 12,
-                  alignItems: 'start',
-                }}
-              >
+              <div className={styles.previewGrid}>
                 {(['16:9', '1:1', '9:16'] as const).map((ratio) => {
                   const imgUrl = output ? pollinationsUrl(output.geminiPrompt, ratio) : null;
                   const isSelected = selectedRatio === ratio;
