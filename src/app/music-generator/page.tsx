@@ -211,33 +211,6 @@ export default function MusicGeneratorPage() {
 
                 <div style={{ width: '1px', height: '24px', background: 'var(--border)' }} />
 
-                {/* 곡 수 선택 */}
-                <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                    <span style={{ fontSize: '12px', color: 'var(--text-muted)', flexShrink: 0 }}>곡 수</span>
-                    {[1, 3, 5, 10].map((n) => (
-                        <button
-                            key={n}
-                            type="button"
-                            onClick={() => setForm(prev => ({ ...prev, count: n }))}
-                            style={{
-                                padding: '6px 12px',
-                                borderRadius: '20px',
-                                border: `1px solid ${form.count === n ? 'var(--accent)' : 'var(--border)'}`,
-                                background: form.count === n ? 'rgba(229,62,62,0.15)' : 'transparent',
-                                color: form.count === n ? 'var(--accent)' : 'var(--text-muted)',
-                                fontSize: '13px',
-                                fontWeight: form.count === n ? 700 : 400,
-                                cursor: 'pointer',
-                                transition: 'var(--transition)',
-                            }}
-                        >
-                            {n}곡
-                        </button>
-                    ))}
-                </div>
-
-                <div style={{ width: '1px', height: '24px', background: 'var(--border)' }} />
-
                 {/* 모델 선택 */}
                 <div style={{ display: 'flex', gap: '6px' }}>
                     {(['flash', 'pro'] as const).map((m) => (
@@ -354,6 +327,45 @@ export default function MusicGeneratorPage() {
                                 onChange={e => setForm(prev => ({ ...prev, customRequest: e.target.value }))}
                                 style={{ minHeight: '80px', marginTop: '6px' }}
                             />
+                        </div>
+                    </div>
+
+                    {/* 곡 수 선택 */}
+                    <div
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            marginBottom: '12px',
+                            padding: '12px 16px',
+                            background: 'var(--bg-card)',
+                            border: '1px solid var(--border)',
+                            borderRadius: 'var(--radius-md)',
+                        }}
+                    >
+                        <span style={{ fontSize: '13px', color: 'var(--text-muted)', flexShrink: 0 }}>몇 곡 생성?</span>
+                        <div style={{ display: 'flex', gap: '6px', flex: 1 }}>
+                            {[1, 3, 5, 10].map((n) => (
+                                <button
+                                    key={n}
+                                    type="button"
+                                    onClick={() => setForm(prev => ({ ...prev, count: n }))}
+                                    style={{
+                                        flex: 1,
+                                        padding: '8px 0',
+                                        borderRadius: '10px',
+                                        border: `1px solid ${form.count === n ? 'var(--accent)' : 'var(--border)'}`,
+                                        background: form.count === n ? 'rgba(229,62,62,0.18)' : 'transparent',
+                                        color: form.count === n ? 'var(--accent)' : 'var(--text-muted)',
+                                        fontSize: '14px',
+                                        fontWeight: form.count === n ? 700 : 400,
+                                        cursor: 'pointer',
+                                        transition: 'var(--transition)',
+                                    }}
+                                >
+                                    {n}곡
+                                </button>
+                            ))}
                         </div>
                     </div>
 
