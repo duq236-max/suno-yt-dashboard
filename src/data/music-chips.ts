@@ -233,7 +233,7 @@ export const MUSIC_CHIPS: ChipSection[] = [
     },
     {
         id: 'atmosphere',
-        label: '분위기 요소',
+        label: '10. 분위기 요소',
         multi: true,
         chips: [
             { emoji: '🌧️', label: '빗소리' },
@@ -248,7 +248,7 @@ export const MUSIC_CHIPS: ChipSection[] = [
     },
     {
         id: 'production',
-        label: '프로덕션 스타일',
+        label: '11. 프로덕션 스타일',
         multi: true,
         chips: [
             { emoji: '☕', label: 'Lo-fi' },
@@ -261,7 +261,7 @@ export const MUSIC_CHIPS: ChipSection[] = [
     },
     {
         id: 'creativity',
-        label: 'AI 창의성',
+        label: '12. AI 창의성',
         multi: false,
         chips: [
             { emoji: '⭕', label: '보수적(일관된 스타일)' },

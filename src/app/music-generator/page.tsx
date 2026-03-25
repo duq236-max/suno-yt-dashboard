@@ -171,7 +171,7 @@ export default function MusicGeneratorPage() {
         <div className="page-content">
             <Header
                 title="🎵 음악생성"
-                subtitle="9개 섹션에서 옵션을 선택하면 AI가 10곡을 동시 생성합니다"
+                subtitle="12개 섹션에서 옵션을 선택하고 원하는 곡 수를 골라 AI로 생성하세요"
             />
 
             {/* 상단 컨트롤 바 */}
@@ -286,7 +286,7 @@ export default function MusicGeneratorPage() {
                 <div>
                     <div className="info-banner" style={{ marginBottom: '20px' }}>
                         🎵 음악 스타일 및 옵션 선택 — 원하는 항목을 클릭하고{' '}
-                        <strong>10곡 생성하기</strong>를 누르세요.
+                        <strong>{form.count}곡 생성하기</strong>를 누르세요.
                         {form.shortsMode && (
                             <span style={{ marginLeft: '8px', color: 'var(--accent)', fontWeight: 700 }}>
                                 ⚡ Shorts 모드: 가사 4줄 제한 적용
