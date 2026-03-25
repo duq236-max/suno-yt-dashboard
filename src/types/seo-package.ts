@@ -1,9 +1,6 @@
-export type SeoSelectMode = 'single' | 'multi';
-
 export interface SeoChipSection {
   id: string;
   label: string;
-  mode: SeoSelectMode;
   chips: string[];
 }
 
