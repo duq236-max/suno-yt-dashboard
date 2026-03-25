@@ -23,6 +23,7 @@ import type {
     Song,
 } from '@/types';
 import type { MusicGenHistory } from '@/types/music-generator';
+import type { CoverImageHistory } from '@/types/cover-image';
 import {
     supabase,
     getCurrentUserId,
@@ -1099,4 +1100,49 @@ export function loadSeoHistory(): SeoHistoryEntry[] {
     } catch {
         return [];
     }
+}
+
+// ──────────────────────────────────────────────────────────
+// 커버 이미지 이력 (Supabase user_settings.cover_image_history jsonb)
+// ──────────────────────────────────────────────────────────
+const COVER_IMAGE_HISTORY_MAX = 20;
+
+export async function saveCoverImageHistory(entry: CoverImageHistory): Promise<void> {
+    const userId = await getCurrentUserId();
+    if (!userId) return;
+
+    const existing = await loadCoverImageHistory();
+    const updated: CoverImageHistory[] = [entry, ...existing].slice(0, COVER_IMAGE_HISTORY_MAX);
+
+    const { error } = await supabase
+        .from('user_settings')
+        .upsert(
+            { user_id: userId, cover_image_history: updated },
+            { onConflict: 'user_id' }
+        );
+
+    if (error) {
+        console.error('saveCoverImageHistory error:', error.message);
+        throw new Error(`커버 이미지 이력 저장 실패: ${error.message}`);
+    }
+}
+
+export async function loadCoverImageHistory(): Promise<CoverImageHistory[]> {
+    const userId = await getCurrentUserId();
+    if (!userId) return [];
+
+    const { data, error } = await supabase
+        .from('user_settings')
+        .select('cover_image_history')
+        .eq('user_id', userId)
+        .single();
+
+    if (error) {
+        if (error.code !== 'PGRST116') {
+            console.error('loadCoverImageHistory error:', error.message);
+        }
+        return [];
+    }
+
+    return (data?.cover_image_history as CoverImageHistory[] | null) ?? [];
 }

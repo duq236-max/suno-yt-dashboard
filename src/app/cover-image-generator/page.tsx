@@ -6,9 +6,15 @@ import CoverChipSelector from '@/components/CoverChipSelector';
 import SheetCommandPalette from '@/components/SheetCommandPalette';
 import SaveToSheetModal from '@/components/SaveToSheetModal';
 import { COVER_CHIPS } from '@/data/cover-chips';
-import type { CoverImageForm, CoverImageOutput } from '@/types/cover-image';
+import type { CoverImageForm, CoverImageOutput, CoverImageHistory } from '@/types/cover-image';
 import type { ScrapSheet } from '@/types';
-import { loadData, saveData, generateId } from '@/lib/supabase-storage';
+import {
+  loadData,
+  saveData,
+  generateId,
+  saveCoverImageHistory,
+  loadCoverImageHistory,
+} from '@/lib/supabase-storage';
 
 const RATIO_DIMS: Record<string, { width: number; height: number }> = {
   '16:9': { width: 1280, height: 720 },
@@ -60,6 +66,7 @@ export default function CoverImageGeneratorPage() {
   const [errorMsg, setErrorMsg] = useState('');
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [selectedRatio, setSelectedRatio] = useState<string>('16:9');
+  const [history, setHistory] = useState<CoverImageHistory[]>([]);
 
   useEffect(() => {
     loadData()
@@ -68,6 +75,7 @@ export default function CoverImageGeneratorPage() {
         setApiKey(data.geminiApiKey ?? '');
       })
       .catch(() => {});
+    loadCoverImageHistory().then(setHistory).catch(() => {});
   }, []);
 
   function handleChipToggle(sectionId: string, value: string) {
@@ -120,6 +128,18 @@ export default function CoverImageGeneratorPage() {
       }
       setOutput(data);
       setActiveTab('claude');
+      // 이력 저장
+      const styleLabel = [...form.artStyle, ...form.mood].slice(0, 2).join(', ') || '기본';
+      const record: CoverImageHistory = {
+        id: generateId(),
+        prompt: data.geminiPrompt,
+        imageUrl: pollinationsUrl(data.geminiPrompt, form.aspectRatio),
+        style: styleLabel,
+        createdAt: new Date().toISOString(),
+      };
+      saveCoverImageHistory(record).catch(() => {});
+      const updated = await loadCoverImageHistory();
+      setHistory(updated);
     } catch {
       setErrorMsg('생성 중 오류가 발생했습니다.');
     } finally {
@@ -371,6 +391,79 @@ export default function CoverImageGeneratorPage() {
           onClose={() => setShowSaveModal(false)}
           onConfirm={handleSaveConfirm}
         />
+      )}
+
+      {/* 이력 패널 (최근 3개) */}
+      {history.length > 0 && (
+        <div className="card" style={{ marginTop: 16 }}>
+          <div
+            style={{
+              fontSize: 13,
+              fontWeight: 700,
+              color: 'var(--text-muted)',
+              marginBottom: 12,
+            }}
+          >
+            🕐 최근 생성 이력
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {history.slice(0, 3).map((item) => {
+              const date = new Date(item.createdAt).toLocaleDateString('ko-KR', {
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+              });
+              const shortPrompt =
+                item.prompt.length > 60
+                  ? item.prompt.slice(0, 60) + '…'
+                  : item.prompt;
+              return (
+                <div
+                  key={item.id}
+                  className="card"
+                  style={{
+                    padding: '10px 14px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 12,
+                  }}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={item.imageUrl}
+                    alt="커버 썸네일"
+                    style={{
+                      width: 56,
+                      height: 32,
+                      objectFit: 'cover',
+                      borderRadius: 4,
+                      flexShrink: 0,
+                      background: 'var(--bg-secondary)',
+                    }}
+                  />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div
+                      style={{
+                        fontSize: 12,
+                        fontWeight: 600,
+                        color: 'var(--text-primary)',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {shortPrompt}
+                    </div>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+                      {date} · {item.style}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       )}
     </div>
   );
