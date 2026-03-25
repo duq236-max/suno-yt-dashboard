@@ -7,6 +7,8 @@ import RegionTimeslot from '@/components/RegionTimeslot';
 import { SEO_CHIPS } from '@/data/seo-chips';
 import type { SeoForm, SeoOutput } from '@/types/seo-package';
 import { loadData } from '@/lib/supabase-storage';
+import { saveSeoHistory, loadSeoHistory, type SeoHistoryEntry } from '@/lib/supabase-storage';
+import SaveToSheetModal from '@/components/SaveToSheetModal';
 
 type OutputTab = 'score' | 'desc' | 'claude';
 
@@ -33,11 +35,14 @@ export default function SeoPackagePage() {
     const [copied, setCopied] = useState<string | null>(null);
     const [apiKey, setApiKey] = useState('');
     const [errorMsg, setErrorMsg] = useState('');
+    const [showSaveModal, setShowSaveModal] = useState(false);
+    const [seoHistory, setSeoHistory] = useState<SeoHistoryEntry[]>([]);
 
     useEffect(() => {
         loadData().then((data) => {
             setApiKey(data.geminiApiKey ?? '');
         }).catch(() => {});
+        setSeoHistory(loadSeoHistory());
     }, []);
 
     function handleChipSelect(sectionId: string, value: string) {
@@ -94,6 +99,14 @@ export default function SeoPackagePage() {
                 setOutput(data.output);
                 setUploadTime(data.uploadTime ?? '');
                 setActiveTab('score');
+                saveSeoHistory({
+                    titleInput,
+                    seoScore: data.output.seoScore,
+                    titles: data.output.titles,
+                    mainKeywords: data.output.mainKeywords,
+                    tags: data.output.tags,
+                });
+                setSeoHistory(loadSeoHistory());
             }
         } catch {
             setErrorMsg('서버 오류가 발생했습니다.');
@@ -144,14 +157,7 @@ export default function SeoPackagePage() {
                 </div>
             )}
 
-            <div
-                style={{
-                    display: 'grid',
-                    gridTemplateColumns: '360px 1fr',
-                    gap: 24,
-                    alignItems: 'start',
-                }}
-            >
+            <div className="seo-grid">
                 {/* ── 왼쪽: 입력 패널 ── */}
                 <div className="card" style={{ overflow: 'hidden' }}>
                     <div
@@ -242,6 +248,18 @@ export default function SeoPackagePage() {
 
                     {output && (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                            {/* 저장 버튼 */}
+                            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                                <button
+                                    type="button"
+                                    className="btn btn-secondary"
+                                    style={{ display: 'flex', alignItems: 'center', gap: 6 }}
+                                    onClick={() => setShowSaveModal(true)}
+                                >
+                                    💾 결과 저장
+                                </button>
+                            </div>
+
                             {/* SEO 점수 요약 */}
                             <div className="card" style={{ padding: '14px 18px' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -573,8 +591,72 @@ export default function SeoPackagePage() {
                             )}
                         </div>
                     )}
+
+                    {/* ── SEO 이력 패널 ── */}
+                    {seoHistory.length > 0 && (
+                        <div className="card" style={{ marginTop: 20, overflow: 'hidden' }}>
+                            <div className="card-header">
+                                <span className="card-title">🕒 최근 SEO 이력</span>
+                            </div>
+                            <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                                {seoHistory.slice(0, 3).map((entry) => {
+                                    const scoreColor = entry.seoScore >= 80
+                                        ? '#22c55e'
+                                        : entry.seoScore >= 60
+                                        ? '#f59e0b'
+                                        : '#ef4444';
+                                    return (
+                                        <div
+                                            key={entry.id}
+                                            style={{
+                                                background: 'var(--bg-secondary)',
+                                                border: '1px solid var(--border)',
+                                                borderRadius: 8,
+                                                padding: '10px 14px',
+                                                display: 'flex',
+                                                alignItems: 'flex-start',
+                                                gap: 12,
+                                            }}
+                                        >
+                                            <div
+                                                style={{
+                                                    fontSize: 14,
+                                                    fontWeight: 700,
+                                                    color: scoreColor,
+                                                    minWidth: 32,
+                                                    flexShrink: 0,
+                                                }}
+                                            >
+                                                {entry.seoScore}
+                                            </div>
+                                            <div style={{ flex: 1, minWidth: 0 }}>
+                                                <div style={{ fontSize: 12, color: 'var(--text-primary)', fontWeight: 600, marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                    {entry.titleInput || entry.titles[0] || '제목 없음'}
+                                                </div>
+                                                <div style={{ fontSize: 11, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                    {entry.mainKeywords.slice(0, 3).join(' · ')}
+                                                </div>
+                                            </div>
+                                            <div style={{ fontSize: 10, color: 'var(--text-muted)', flexShrink: 0 }}>
+                                                {new Date(entry.createdAt).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
+
+            {/* ── SaveToSheetModal ── */}
+            <SaveToSheetModal
+                isOpen={showSaveModal}
+                onClose={() => setShowSaveModal(false)}
+                onConfirm={() => {
+                    setShowSaveModal(false);
+                }}
+            />
         </div>
     );
 }

@@ -1061,3 +1061,42 @@ export async function deleteSong(id: string): Promise<Song[]> {
     }
     return loadSongs();
 }
+
+// ──────────────────────────────────────────────────────────
+// SEO 이력 (localStorage 기반)
+// ──────────────────────────────────────────────────────────
+const SEO_HISTORY_KEY = 'suno_seo_history';
+const SEO_HISTORY_MAX = 20;
+
+export interface SeoHistoryEntry {
+    id: string;
+    createdAt: string;
+    titleInput: string;
+    seoScore: number;
+    titles: string[];
+    mainKeywords: string[];
+    tags: string[];
+}
+
+export function saveSeoHistory(entry: Omit<SeoHistoryEntry, 'id' | 'createdAt'>): void {
+    const prev = loadSeoHistory();
+    const next: SeoHistoryEntry[] = [
+        { ...entry, id: `seo_${Date.now()}`, createdAt: new Date().toISOString() },
+        ...prev,
+    ].slice(0, SEO_HISTORY_MAX);
+    try {
+        localStorage.setItem(SEO_HISTORY_KEY, JSON.stringify(next));
+    } catch {
+        // localStorage 용량 초과 등 무시
+    }
+}
+
+export function loadSeoHistory(): SeoHistoryEntry[] {
+    try {
+        const raw = localStorage.getItem(SEO_HISTORY_KEY);
+        if (!raw) return [];
+        return JSON.parse(raw) as SeoHistoryEntry[];
+    } catch {
+        return [];
+    }
+}
