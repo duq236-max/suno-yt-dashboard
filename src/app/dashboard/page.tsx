@@ -558,6 +558,60 @@ export default function DashboardPage() {
                     </Link>
                 </div>
 
+                {/* ─── 음원 패키지 섹션 ─── */}
+                <div style={{ marginTop: '28px', marginBottom: '24px' }}>
+                    <div style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '14px' }}>
+                        🎵 음원 패키지
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+                        <Link href="/music-generator" style={{ textDecoration: 'none' }}>
+                            <div className="card" style={{ padding: '20px', cursor: 'pointer' }}
+                                onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(124,58,237,0.5)'; }}
+                                onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--border)'; }}
+                            >
+                                <div style={{
+                                    width: '44px', height: '44px', borderRadius: '10px',
+                                    background: 'linear-gradient(135deg, #7c3aed, #4f46e5)',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    fontSize: '22px', marginBottom: '12px',
+                                }}>🎵</div>
+                                <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>음악생성</div>
+                                <div style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: 1.5 }}>Suno용 프롬프트 자동 생성</div>
+                            </div>
+                        </Link>
+                        <Link href="/cover-image-generator" style={{ textDecoration: 'none' }}>
+                            <div className="card" style={{ padding: '20px', cursor: 'pointer' }}
+                                onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(236,72,153,0.5)'; }}
+                                onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--border)'; }}
+                            >
+                                <div style={{
+                                    width: '44px', height: '44px', borderRadius: '10px',
+                                    background: 'linear-gradient(135deg, #ec4899, #db2777)',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    fontSize: '22px', marginBottom: '12px',
+                                }}>🖼</div>
+                                <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>커버이미지</div>
+                                <div style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: 1.5 }}>AI 커버 이미지 자동 생성</div>
+                            </div>
+                        </Link>
+                        <Link href="/seo-package" style={{ textDecoration: 'none' }}>
+                            <div className="card" style={{ padding: '20px', cursor: 'pointer' }}
+                                onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(16,185,129,0.5)'; }}
+                                onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--border)'; }}
+                            >
+                                <div style={{
+                                    width: '44px', height: '44px', borderRadius: '10px',
+                                    background: 'linear-gradient(135deg, #10b981, #059669)',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    fontSize: '22px', marginBottom: '12px',
+                                }}>🔍</div>
+                                <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>SEO 패키지</div>
+                                <div style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: 1.5 }}>제목·태그·설명 일괄 최적화</div>
+                            </div>
+                        </Link>
+                    </div>
+                </div>
+
                 {/* 최근 스크랩시트 */}
                 <div className="card">
                     <div className="card-header">
