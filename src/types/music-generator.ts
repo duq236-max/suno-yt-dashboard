@@ -20,9 +20,13 @@ export interface MusicGeneratorForm {
   targetAge: string;
   language: string;
   theme: string[];
+  atmosphere: string[];
+  production: string[];
+  creativity: string;
   customRequest: string;
   shortsMode: boolean;
   model: 'flash' | 'pro';
+  count: number;
 }
 
 export interface GeneratedSong {

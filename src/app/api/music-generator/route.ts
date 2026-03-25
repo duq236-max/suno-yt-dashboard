@@ -21,8 +21,10 @@ function buildPrompt(form: MusicGeneratorForm): string {
         ? '가사는 Shorts용으로 4줄 이내로 매우 짧게 작성하세요.'
         : '가사는 버스 1절 + 코러스 형태로 20~30줄로 작성하세요.';
 
+    const count = form.count ?? 5;
+
     return `당신은 Suno AI 전문 음악 프롬프트 작성가입니다.
-아래 조건으로 음악 10곡의 정보를 JSON으로 생성하세요.
+아래 조건으로 음악 총 ${count}개의 곡을 JSON으로 생성하세요.
 
 조건:
 ${parts.length > 0 ? parts.join('\n') : '조건 없음 — 자유롭게 다양한 음악 스타일로 생성하세요.'}
@@ -39,7 +41,8 @@ ${lyricsNote}
       "bpm": 120
     }
   ]
-}`;
+}
+songs 배열에 정확히 ${count}개의 곡이 있어야 합니다.`;
 }
 
 export async function POST(req: NextRequest) {
