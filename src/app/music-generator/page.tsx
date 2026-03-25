@@ -8,6 +8,7 @@ import SaveToSheetModal from '@/components/SaveToSheetModal';
 import { MUSIC_CHIPS } from '@/data/music-chips';
 import type { MusicGeneratorForm, GeneratedSong, MusicGenHistory } from '@/types/music-generator';
 import { loadData, saveMusicGenHistory, loadMusicGenHistory, generateId } from '@/lib/supabase-storage';
+import { useToast } from '@/components/Toast';
 import styles from './page.module.css';
 
 type ActiveTab = 'generate' | 'cover' | 'marketing';
@@ -48,7 +49,7 @@ export default function MusicGeneratorPage() {
 
     // 모달 / Toast / 이력
     const [showSaveModal, setShowSaveModal] = useState(false);
-    const [toast, setToast] = useState<string | null>(null);
+    const { toast } = useToast();
     const [history, setHistory] = useState<MusicGenHistory[]>([]);
 
     useEffect(() => {
@@ -61,13 +62,6 @@ export default function MusicGeneratorPage() {
     useEffect(() => {
         loadMusicGenHistory().then(setHistory).catch(() => {});
     }, []);
-
-    // Toast 자동 해제 (2초)
-    useEffect(() => {
-        if (!toast) return;
-        const timer = setTimeout(() => setToast(null), 2000);
-        return () => clearTimeout(timer);
-    }, [toast]);
 
     function handleChipToggle(sectionId: string, chip: string) {
         if (ARRAY_KEYS.has(sectionId)) {
@@ -105,7 +99,7 @@ export default function MusicGeneratorPage() {
             });
             const data = (await res.json()) as { songs?: GeneratedSong[]; error?: string };
             if (!res.ok || data.error) {
-                setToast('❌ ' + (data.error ?? '생성 오류'));
+                toast(data.error ?? '생성 오류', 'error');
                 return;
             }
             const songs = data.songs ?? [];
@@ -128,7 +122,7 @@ export default function MusicGeneratorPage() {
                 // Toast
                 const genreLabel = form.genres[0] ?? '음악';
                 const sheetLabel = sheetId ? ' 시트에 저장됨' : '';
-                setToast(`✅ ${genreLabel} ${songs.length}곡 생성 완료${sheetLabel}`);
+                toast(`${genreLabel} ${songs.length}곡 생성 완료${sheetLabel}`, 'success');
                 resultsRef.current?.scrollIntoView({ behavior: 'smooth' });
 
                 // Suno 열기 (Extension 전송)
@@ -139,7 +133,7 @@ export default function MusicGeneratorPage() {
             }
         } catch {
             setResults([]);
-            setToast('❌ 생성 중 오류가 발생했습니다');
+            toast('생성 중 오류가 발생했습니다', 'error');
         } finally {
             setIsGenerating(false);
         }
@@ -148,7 +142,7 @@ export default function MusicGeneratorPage() {
     /** SaveToSheetModal onConfirm 핸들러 — 결과 저장 후 Suno 열기 */
     async function handleSaveConfirm(sheetId: string, openSuno: boolean) {
         setShowSaveModal(false);
-        setToast('✅ 시트에 저장되었습니다');
+        toast('시트에 저장되었습니다', 'success');
         if (openSuno && results.length > 0) {
             window.postMessage({ type: SUNO_SEND_TYPE, songs: results }, '*');
             window.open('https://suno.com', '_blank', 'noopener');
@@ -171,7 +165,7 @@ export default function MusicGeneratorPage() {
         <div className="page-content">
             <Header
                 title="🎵 음악생성"
-                subtitle="9개 섹션에서 옵션을 선택하면 AI가 10곡을 동시 생성합니다"
+                subtitle="12개 섹션에서 옵션을 선택하고 원하는 곡 수를 골라 AI로 생성하세요"
             />
 
             {/* 상단 컨트롤 바 */}
@@ -286,7 +280,7 @@ export default function MusicGeneratorPage() {
                 <div>
                     <div className="info-banner" style={{ marginBottom: '20px' }}>
                         🎵 음악 스타일 및 옵션 선택 — 원하는 항목을 클릭하고{' '}
-                        <strong>10곡 생성하기</strong>를 누르세요.
+                        <strong>{form.count}곡 생성하기</strong>를 누르세요.
                         {form.shortsMode && (
                             <span style={{ marginLeft: '8px', color: 'var(--accent)', fontWeight: 700 }}>
                                 ⚡ Shorts 모드: 가사 4줄 제한 적용
@@ -672,35 +666,6 @@ export default function MusicGeneratorPage() {
                 onConfirm={handleSaveConfirm}
             />
 
-            {/* Toast (하단 고정, 2초 표시) */}
-            {toast && (
-                <div
-                    style={{
-                        position: 'fixed',
-                        bottom: '24px',
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                        padding: '12px 20px',
-                        borderRadius: '10px',
-                        background: 'var(--bg-card)',
-                        border: '1px solid var(--border)',
-                        boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
-                        fontSize: '13px',
-                        color: 'var(--text-primary)',
-                        zIndex: 9999,
-                        whiteSpace: 'nowrap',
-                        animation: 'toast-in 0.2s ease',
-                    }}
-                >
-                    {toast}
-                    <style>{`
-                        @keyframes toast-in {
-                            from { opacity: 0; transform: translateX(-50%) translateY(8px); }
-                            to   { opacity: 1; transform: translateX(-50%) translateY(0); }
-                        }
-                    `}</style>
-                </div>
-            )}
         </div>
     );
 }
