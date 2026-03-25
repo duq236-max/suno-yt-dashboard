@@ -9,6 +9,18 @@ import type { CoverImageForm, CoverImageOutput } from '@/types/cover-image';
 import type { ScrapSheet } from '@/types';
 import { loadData } from '@/lib/supabase-storage';
 
+const RATIO_DIMS: Record<string, { width: number; height: number }> = {
+  '16:9': { width: 1280, height: 720 },
+  '1:1':  { width: 1024, height: 1024 },
+  '4:5':  { width: 1024, height: 1280 },
+  '9:16': { width: 720,  height: 1280 },
+};
+
+function pollinationsUrl(prompt: string, aspectRatio: string): string {
+  const dims = RATIO_DIMS[aspectRatio] ?? RATIO_DIMS['16:9'];
+  return `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=${dims.width}&height=${dims.height}&nologo=true`;
+}
+
 const DEFAULT_FORM: CoverImageForm = {
   mood: [],
   color: [],
@@ -122,6 +134,11 @@ export default function CoverImageGeneratorPage() {
       ? output.geminiPrompt
       : output.conceptPreview;
 
+  const previewImageUrl =
+    output && activeTab === 'preview'
+      ? pollinationsUrl(output.geminiPrompt, form.aspectRatio)
+      : null;
+
   return (
     <div className="page-content">
       <Header
@@ -218,29 +235,48 @@ export default function CoverImageGeneratorPage() {
               </button>
             ))}
           </div>
-          <div style={{ position: 'relative' }}>
-            <pre
-              style={{
-                whiteSpace: 'pre-wrap',
-                wordBreak: 'break-word',
-                fontSize: 13,
-                color: 'var(--text-primary)',
-                background: 'var(--bg-secondary)',
-                padding: '12px 16px',
-                borderRadius: 8,
-                paddingRight: 80,
-              }}
-            >
-              {activeText}
-            </pre>
-            <button
-              className="btn btn-sm btn-secondary"
-              style={{ position: 'absolute', top: 8, right: 8 }}
-              onClick={() => handleCopy(activeText)}
-            >
-              {copyFeedback ? '✓ 복사됨' : '복사'}
-            </button>
-          </div>
+          {previewImageUrl ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={previewImageUrl}
+                alt="Pollinations 이미지 미리보기"
+                style={{
+                  width: '100%',
+                  borderRadius: 8,
+                  border: '1px solid var(--border)',
+                  objectFit: 'cover',
+                }}
+              />
+              <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6 }}>
+                {output?.conceptPreview}
+              </p>
+            </div>
+          ) : (
+            <div style={{ position: 'relative' }}>
+              <pre
+                style={{
+                  whiteSpace: 'pre-wrap',
+                  wordBreak: 'break-word',
+                  fontSize: 13,
+                  color: 'var(--text-primary)',
+                  background: 'var(--bg-secondary)',
+                  padding: '12px 16px',
+                  borderRadius: 8,
+                  paddingRight: 80,
+                }}
+              >
+                {activeText}
+              </pre>
+              <button
+                className="btn btn-sm btn-secondary"
+                style={{ position: 'absolute', top: 8, right: 8 }}
+                onClick={() => handleCopy(activeText)}
+              >
+                {copyFeedback ? '✓ 복사됨' : '복사'}
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

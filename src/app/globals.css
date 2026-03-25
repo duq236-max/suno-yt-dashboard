@@ -809,3 +809,81 @@ tbody tr:hover td {
     font-size: 22px;
   }
 }
+
+/* ═══════════════════════════════════════════════════
+   Chip Selector (CoverChipSelector, SeoChipSelector)
+════════════════════════════════════════════════════ */
+.chip-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.chip-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.chip-section-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-muted);
+  transition: all var(--transition);
+  white-space: nowrap;
+}
+
+.chip:hover {
+  border-color: var(--accent);
+  color: var(--text-primary);
+}
+
+.chip.selected {
+  border-color: var(--accent);
+  background: rgba(229, 62, 62, 0.15);
+  color: var(--accent);
+}
+
+.chip-label {
+  /* inner text span — inherits chip styling */
+}
+
+.chip-del {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  font-size: 11px;
+  line-height: 1;
+  margin-left: 2px;
+  color: var(--text-muted);
+  transition: color var(--transition);
+}
+
+.chip-del:hover {
+  color: var(--accent);
+}
