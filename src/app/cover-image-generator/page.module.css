@@ -1,0 +1,46 @@
+/* cover-image-generator — 모바일 반응형 오버라이드 */
+
+/* 이미지 미리보기 그리드 */
+.previewGrid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 12px;
+  align-items: start;
+}
+
+/* 결과 탭 버튼 행 */
+.tabRow {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+/* 비율 선택 버튼 행 */
+.ratioRow {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  /* 미리보기 그리드: 1열로 변경 */
+  .previewGrid {
+    grid-template-columns: 1fr;
+  }
+
+  /* 탭: 전체 너비 */
+  .tabRow {
+    flex-direction: column;
+  }
+
+  .tabRow button {
+    width: 100%;
+  }
+
+  /* 비율 버튼: 2열 그리드 */
+  .ratioRow {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
