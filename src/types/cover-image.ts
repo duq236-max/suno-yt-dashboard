@@ -27,3 +27,11 @@ export interface CoverImageOutput {
   geminiPrompt: string;
   conceptPreview: string;
 }
+
+export interface CoverImageHistory {
+  id: string;
+  prompt: string;
+  imageUrl: string;
+  style: string;
+  createdAt: string;
+}
