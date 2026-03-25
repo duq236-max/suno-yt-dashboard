@@ -44,7 +44,7 @@ export default function SeoPackagePage() {
         if (SINGLE_SECTION_IDS.has(sectionId)) {
             setForm((prev) => ({
                 ...prev,
-                [sectionId]: prev[sectionId as keyof SeoForm] === value ? '' : value,
+                [sectionId]: value,
             }));
         } else {
             const key = sectionId as 'targetAge' | 'category' | 'format' | 'situation';
