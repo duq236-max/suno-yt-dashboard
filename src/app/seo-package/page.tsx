@@ -573,6 +573,53 @@ export default function SeoPackagePage() {
                                         </div>
                                     </div>
 
+                                    {/* 영상 챕터 */}
+                                    {output.chapters.length > 0 && (
+                                        <div className="card" style={{ overflow: 'hidden' }}>
+                                            <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <span className="card-title">📑 영상 챕터</span>
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-sm btn-ghost"
+                                                    onClick={() => copy(output.chapters.join('\n'), 'chapters')}
+                                                >
+                                                    {copied === 'chapters' ? '✓ 복사됨' : '전체 복사'}
+                                                </button>
+                                            </div>
+                                            <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 5 }}>
+                                                {output.chapters.map((chapter, i) => (
+                                                    <div
+                                                        key={i}
+                                                        style={{
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            gap: 10,
+                                                            padding: '8px 12px',
+                                                            borderRadius: 7,
+                                                            background: 'var(--bg-secondary)',
+                                                            border: '1px solid var(--border)',
+                                                        }}
+                                                    >
+                                                        <span style={{ fontFamily: 'monospace', fontSize: 12, color: 'var(--accent)', minWidth: 40, flexShrink: 0 }}>
+                                                            {chapter.split(' ')[0]}
+                                                        </span>
+                                                        <span style={{ flex: 1, fontSize: 13, color: 'var(--text-primary)' }}>
+                                                            {chapter.split(' ').slice(1).join(' ')}
+                                                        </span>
+                                                        <button
+                                                            type="button"
+                                                            className="btn btn-sm btn-ghost"
+                                                            style={{ padding: '2px 8px', fontSize: 11 }}
+                                                            onClick={() => copy(chapter, `ch-${i}`)}
+                                                        >
+                                                            {copied === `ch-${i}` ? '✓' : '복사'}
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
                                     {/* 업로드 최적 시간 */}
                                     <div className="card" style={{ overflow: 'hidden' }}>
                                         <div className="card-header">

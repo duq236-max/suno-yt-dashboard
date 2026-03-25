@@ -22,6 +22,7 @@ export interface SeoOutput {
   longTailKeywords: string[];
   description: string;
   tags: string[];
+  chapters: string[];
   uploadTimes: { day: string; time: string }[];
   claudeInstruction: string;
 }
