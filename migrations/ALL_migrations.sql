@@ -327,7 +327,15 @@ CREATE POLICY "songs_user_policy" ON songs
     USING (user_id = current_setting('request.jwt.claims', true)::json->>'sub');
 
 -- ============================================================
+-- 006: cover_image_history 컬럼 추가
+-- ============================================================
+
+ALTER TABLE user_settings
+    ADD COLUMN IF NOT EXISTS cover_image_history JSONB DEFAULT '[]'::JSONB;
+
+-- ============================================================
 -- 완료! 테이블: channel_info, scrap_sheets, scrap_items,
 --   user_settings, youtube_channels, brand_kit,
 --   lyrics_history, revenue_entries, songs
+-- 컬럼 추가: user_settings.cover_image_history (JSONB)
 -- ============================================================
