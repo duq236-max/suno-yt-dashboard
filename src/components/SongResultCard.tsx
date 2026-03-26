@@ -9,6 +9,27 @@ interface SongResultCardProps {
   onSendToSuno?: (song: GeneratedSong) => void;
 }
 
+function StyleCopyButton({ style }: { style: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(style);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={(e) => { e.stopPropagation(); void handleCopy(); }}
+      className="btn btn-sm btn-secondary"
+      style={{ fontSize: '11px', padding: '4px 10px', flexShrink: 0 }}
+    >
+      {copied ? '✓ 복사됨' : '🏷️ 스타일 복사'}
+    </button>
+  );
+}
+
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
 
@@ -38,7 +59,7 @@ export default function SongResultCard({ index, song, onSendToSuno }: SongResult
 
   return (
     <div
-      className="card"
+      className="card glass-card"
       style={{ padding: '0', overflow: 'hidden', marginBottom: '8px' }}
     >
       {/* 접힌 상태 헤더 — 항상 보임 */}
@@ -96,6 +117,9 @@ export default function SongResultCard({ index, song, onSendToSuno }: SongResult
             </div>
           )}
         </div>
+
+        {/* 스타일 태그 복사 버튼 */}
+        <StyleCopyButton style={song.style} />
 
         {/* 화살표 */}
         <span

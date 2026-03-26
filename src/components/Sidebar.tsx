@@ -135,7 +135,13 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
                 key={item.label}
                 href={item.href}
                 className={`sidebar-link ${pathname === item.href || (item.href !== '#' && pathname.startsWith(item.href) && item.href !== '/') ? 'active' : ''}`}
-                style={item.href === '#' ? { pointerEvents: 'none', opacity: 0.5 } : {}}
+                style={
+                  item.href === '#'
+                    ? { pointerEvents: 'none', opacity: 0.5 }
+                    : (pathname === item.href || (item.href !== '#' && pathname.startsWith(item.href) && item.href !== '/'))
+                      ? { borderLeft: '3px solid #f472b6', paddingLeft: '9px' }
+                      : {}
+                }
                 onClick={item.href === '#' ? (e) => e.preventDefault() : undefined}
                 aria-disabled={item.href === '#' ? true : undefined}
                 title={item.tooltip}
