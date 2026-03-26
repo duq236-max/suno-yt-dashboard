@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Header from '@/components/Header';
 import CoverChipSelector from '@/components/CoverChipSelector';
@@ -56,7 +56,7 @@ const SECTION_TO_KEY: Record<string, keyof CoverImageForm> = {
 
 type OutputTab = 'claude' | 'gemini' | 'preview';
 
-export default function CoverImageGeneratorPage() {
+function CoverImageGeneratorInner() {
   const searchParams = useSearchParams();
   const [titleInput, setTitleInput] = useState('');
   const [form, setForm] = useState<CoverImageForm>(DEFAULT_FORM);
@@ -537,5 +537,13 @@ export default function CoverImageGeneratorPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function CoverImageGeneratorPage() {
+  return (
+    <Suspense>
+      <CoverImageGeneratorInner />
+    </Suspense>
   );
 }

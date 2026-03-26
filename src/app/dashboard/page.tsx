@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import Header from '@/components/Header';
 import StatCard from '@/components/StatCard';
-import { loadData, updateYoutubeChannels, generateId, formatNumber, loadLyricsHistory } from '@/lib/supabase-storage';
+import { loadData, updateYoutubeChannels, generateId, formatNumber, loadLyricsHistory, loadMusicGenHistory, loadSeoHistory, loadCoverImageHistory } from '@/lib/supabase-storage';
 import { fetchYoutubeChannel, fetchYoutubeAnalytics, YoutubeAnalytics, YoutubeChannelInfo } from '@/lib/youtube';
 import { AppData, YoutubeChannel } from '@/types';
 import Link from 'next/link';
@@ -31,10 +31,16 @@ export default function DashboardPage() {
     const [data, setData] = useState<AppData | null>(null);
 
     const [lyricsCount, setLyricsCount] = useState(0);
+    const [musicGenCount, setMusicGenCount] = useState(0);
+    const [coverImageCount, setCoverImageCount] = useState(0);
+    const [seoCount, setSeoCount] = useState(0);
 
     useEffect(() => {
         loadData().then(setData);
         loadLyricsHistory().then(h => setLyricsCount(h.length));
+        loadMusicGenHistory().then(h => setMusicGenCount(h.length));
+        loadCoverImageHistory().then(h => setCoverImageCount(h.length));
+        loadSeoHistory().then(h => setSeoCount(h.length));
     }, []);
     const [showYtModal, setShowYtModal] = useState(false);
     const [ytForm, setYtForm] = useState(EMPTY_YT);
@@ -577,6 +583,11 @@ export default function DashboardPage() {
                                 }}>🎵</div>
                                 <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>음악생성</div>
                                 <div style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: 1.5 }}>Suno용 프롬프트 자동 생성</div>
+                                {musicGenCount > 0 && (
+                                    <div style={{ marginTop: '10px', display: 'inline-block', fontSize: '11px', padding: '2px 8px', borderRadius: '20px', background: 'rgba(124,58,237,0.15)', color: '#a78bfa', border: '1px solid rgba(124,58,237,0.3)' }}>
+                                        {musicGenCount}회 생성
+                                    </div>
+                                )}
                             </div>
                         </Link>
                         <Link href="/cover-image-generator" style={{ textDecoration: 'none' }}>
@@ -592,6 +603,11 @@ export default function DashboardPage() {
                                 }}>🖼</div>
                                 <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>커버이미지</div>
                                 <div style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: 1.5 }}>AI 커버 이미지 자동 생성</div>
+                                {coverImageCount > 0 && (
+                                    <div style={{ marginTop: '10px', display: 'inline-block', fontSize: '11px', padding: '2px 8px', borderRadius: '20px', background: 'rgba(236,72,153,0.15)', color: '#f9a8d4', border: '1px solid rgba(236,72,153,0.3)' }}>
+                                        {coverImageCount}회 생성
+                                    </div>
+                                )}
                             </div>
                         </Link>
                         <Link href="/seo-package" style={{ textDecoration: 'none' }}>
@@ -607,6 +623,11 @@ export default function DashboardPage() {
                                 }}>🔍</div>
                                 <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>SEO 패키지</div>
                                 <div style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: 1.5 }}>제목·태그·설명 일괄 최적화</div>
+                                {seoCount > 0 && (
+                                    <div style={{ marginTop: '10px', display: 'inline-block', fontSize: '11px', padding: '2px 8px', borderRadius: '20px', background: 'rgba(16,185,129,0.15)', color: '#6ee7b7', border: '1px solid rgba(16,185,129,0.3)' }}>
+                                        {seoCount}회 생성
+                                    </div>
+                                )}
                             </div>
                         </Link>
                     </div>
