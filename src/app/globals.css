@@ -915,3 +915,105 @@ tbody tr:hover td {
     grid-template-columns: 1fr;
   }
 }
+
+/* ═══ REDESIGN-V2 디자인 시스템 추가 (2026-03-27) ═══ */
+
+/* 오로라 배경 */
+body::before {
+  content: '';
+  position: fixed;
+  top: -100px; left: -50px;
+  width: 400px; height: 400px;
+  background: radial-gradient(circle, rgba(168,85,247,0.06) 0%, transparent 70%);
+  pointer-events: none;
+  animation: auroraMove 12s ease-in-out infinite alternate;
+  z-index: 0;
+}
+body::after {
+  content: '';
+  position: fixed;
+  bottom: -80px; right: -30px;
+  width: 350px; height: 350px;
+  background: radial-gradient(circle, rgba(244,114,182,0.05) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+@keyframes auroraMove {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(60px, 40px); }
+}
+
+/* Glass 카드 */
+.glass-card {
+  background: rgba(15,15,30,0.7);
+  border: 1px solid rgba(168,85,247,0.15);
+  border-radius: 14px;
+  padding: 16px;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(8px);
+}
+.glass-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(244,114,182,0.4), transparent);
+}
+
+/* 칩 선택 스타일 업그레이드 (기존 .chip.selected 덮어쓰기) */
+.chip.selected {
+  background: linear-gradient(135deg, rgba(244,114,182,0.2), rgba(168,85,247,0.2));
+  border-color: rgba(244,114,182,0.5);
+  color: #f9a8d4;
+  font-weight: 600;
+  box-shadow: 0 2px 12px rgba(244,114,182,0.15);
+}
+.chip:hover {
+  border-color: rgba(168,85,247,0.5);
+  color: #c084fc;
+  transform: translateY(-1px);
+}
+
+/* 생성 버튼 */
+.btn-generate {
+  width: 100%;
+  padding: 15px;
+  background: linear-gradient(135deg, #f472b6, #a855f7, #818cf8);
+  border-radius: 14px;
+  color: white;
+  font-size: 15px;
+  font-weight: 700;
+  text-align: center;
+  box-shadow: 0 4px 28px rgba(244,114,182,0.35);
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.btn-generate:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 36px rgba(244,114,182,0.5);
+}
+.btn-generate::after {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 50%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
+  transform: skewX(-20deg);
+}
+.btn-generate:hover::after {
+  animation: shimmerBtn 0.7s ease;
+}
+@keyframes shimmerBtn {
+  0% { left: -100%; }
+  100% { left: 150%; }
+}
+
+/* 모바일 성능 보호 */
+@media (max-width: 768px) {
+  .glass-card { backdrop-filter: none; }
+  body::before, body::after { display: none; }
+}
