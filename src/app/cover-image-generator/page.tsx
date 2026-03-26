@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Header from '@/components/Header';
 import CoverChipSelector from '@/components/CoverChipSelector';
 import SheetCommandPalette from '@/components/SheetCommandPalette';
@@ -56,6 +57,8 @@ const SECTION_TO_KEY: Record<string, keyof CoverImageForm> = {
 type OutputTab = 'claude' | 'gemini' | 'preview';
 
 export default function CoverImageGeneratorPage() {
+  const searchParams = useSearchParams();
+  const [titleInput, setTitleInput] = useState('');
   const [form, setForm] = useState<CoverImageForm>(DEFAULT_FORM);
   const [sheets, setSheets] = useState<ScrapSheet[]>([]);
   const [showPalette, setShowPalette] = useState(false);
@@ -64,10 +67,20 @@ export default function CoverImageGeneratorPage() {
   const [activeTab, setActiveTab] = useState<OutputTab>('claude');
   const [apiKey, setApiKey] = useState('');
   const [copyFeedback, setCopyFeedback] = useState(false);
+  const [urlCopyFeedback, setUrlCopyFeedback] = useState<string | null>(null);
+  const [downloadingRatio, setDownloadingRatio] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [selectedRatio, setSelectedRatio] = useState<string>('16:9');
   const [history, setHistory] = useState<CoverImageHistory[]>([]);
+
+  // URL 파라미터 자동 세팅 (?title=xxx, ?mood=xxx)
+  useEffect(() => {
+    const title = searchParams.get('title');
+    const mood = searchParams.get('mood');
+    if (title) setTitleInput(title);
+    if (mood) setForm((prev) => ({ ...prev, mood: [mood] }));
+  }, [searchParams]);
 
   useEffect(() => {
     loadData()
@@ -78,6 +91,37 @@ export default function CoverImageGeneratorPage() {
       .catch(() => {});
     loadCoverImageHistory().then(setHistory).catch(() => {});
   }, []);
+
+  // Blob 다운로드 (외부 URL CORS 우회)
+  const handleDownload = useCallback(async (imgUrl: string, ratio: string) => {
+    setDownloadingRatio(ratio);
+    try {
+      const res = await fetch(imgUrl);
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = `cover-${ratio.replace(':', 'x')}.png`;
+      a.click();
+      URL.revokeObjectURL(blobUrl);
+    } catch {
+      // CORS 실패 시 새 탭으로 fallback
+      const a = document.createElement('a');
+      a.href = imgUrl;
+      a.download = `cover-${ratio.replace(':', 'x')}.png`;
+      a.target = '_blank';
+      a.click();
+    } finally {
+      setDownloadingRatio(null);
+    }
+  }, []);
+
+  function handleUrlCopy(imgUrl: string, ratio: string) {
+    navigator.clipboard.writeText(imgUrl).then(() => {
+      setUrlCopyFeedback(ratio);
+      setTimeout(() => setUrlCopyFeedback(null), 1500);
+    });
+  }
 
   function handleChipToggle(sectionId: string, value: string) {
     const key = SECTION_TO_KEY[sectionId];
@@ -120,7 +164,7 @@ export default function CoverImageGeneratorPage() {
       const res = await fetch('/api/cover-image', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ form, apiKey }),
+        body: JSON.stringify({ form, apiKey, title: titleInput }),
       });
       const data = await res.json() as CoverImageOutput & { error?: string };
       if (!res.ok) {
@@ -129,7 +173,6 @@ export default function CoverImageGeneratorPage() {
       }
       setOutput(data);
       setActiveTab('claude');
-      // 이력 저장
       const styleLabel = [...form.artStyle, ...form.mood].slice(0, 2).join(', ') || '기본';
       const record: CoverImageHistory = {
         id: generateId(),
@@ -151,12 +194,12 @@ export default function CoverImageGeneratorPage() {
   async function handleSaveConfirm(sheetId: string, openSuno: boolean) {
     if (!output) return;
     const appData = await loadData();
-    const sheets = appData.sheets ?? [];
-    const target = sheets.find((s) => s.id === sheetId);
+    const sheetList = appData.sheets ?? [];
+    const target = sheetList.find((s) => s.id === sheetId);
     if (!target) return;
     const newItem = {
       id: generateId(),
-      title: '커버 이미지 프롬프트',
+      title: titleInput || '커버 이미지 프롬프트',
       prompt: output.geminiPrompt,
       lyrics: output.claudeInstruction,
       genre: '',
@@ -167,7 +210,7 @@ export default function CoverImageGeneratorPage() {
       createdAt: new Date().toISOString(),
     };
     const updatedSheet = { ...target, items: [...target.items, newItem] };
-    const updatedSheets = sheets.map((s) => (s.id === sheetId ? updatedSheet : s));
+    const updatedSheets = sheetList.map((s) => (s.id === sheetId ? updatedSheet : s));
     await saveData({ ...appData, sheets: updatedSheets });
     setShowSaveModal(false);
     if (openSuno) window.open('https://suno.com', '_blank');
@@ -213,6 +256,20 @@ export default function CoverImageGeneratorPage() {
           onClose={() => setShowPalette(false)}
         />
       )}
+
+      {/* 제목 입력 (URL 파라미터 ?title=xxx 자동 세팅) */}
+      <div className="card" style={{ marginBottom: 16 }}>
+        <div className="form-group" style={{ marginBottom: 0 }}>
+          <label className="form-label">곡 제목 (선택)</label>
+          <input
+            className="form-input"
+            type="text"
+            placeholder="곡 제목을 입력하면 커버 컨셉에 반영됩니다"
+            value={titleInput}
+            onChange={(e) => setTitleInput(e.target.value)}
+          />
+        </div>
+      </div>
 
       {/* 칩 선택 */}
       <div className="card">
@@ -332,6 +389,26 @@ export default function CoverImageGeneratorPage() {
                       >
                         {ratio}
                       </p>
+                      {/* 다운로드 + URL 복사 버튼 */}
+                      {imgUrl && (
+                        <div style={{ display: 'flex', gap: 4, marginTop: 4, justifyContent: 'center' }}>
+                          <button
+                            className="btn btn-sm btn-secondary"
+                            style={{ fontSize: 11, padding: '3px 8px' }}
+                            onClick={(e) => { e.stopPropagation(); void handleDownload(imgUrl, ratio); }}
+                            disabled={downloadingRatio === ratio}
+                          >
+                            {downloadingRatio === ratio ? '⏳' : '⬇️ 다운로드'}
+                          </button>
+                          <button
+                            className="btn btn-sm btn-secondary"
+                            style={{ fontSize: 11, padding: '3px 8px' }}
+                            onClick={(e) => { e.stopPropagation(); handleUrlCopy(imgUrl, ratio); }}
+                          >
+                            {urlCopyFeedback === ratio ? '✓ 복사됨' : '🔗 URL 복사'}
+                          </button>
+                        </div>
+                      )}
                     </div>
                   );
                 })}

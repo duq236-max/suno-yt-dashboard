@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { GeistSans } from 'geist/font/sans';
 import './globals.css';
 import AppShell from '@/components/AppShell';
+import PageLoader from '@/components/PageLoader';
 import Providers from '@/components/Providers';
 import { Analytics } from '@vercel/analytics/react';
 
@@ -19,6 +20,7 @@ export default function RootLayout({
     <html lang="ko" className={GeistSans.variable}>
       <body>
         <Providers>
+          <PageLoader />
           <AppShell>{children}</AppShell>
         </Providers>
         <Analytics />
