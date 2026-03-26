@@ -5,8 +5,10 @@ import { useSearchParams } from 'next/navigation';
 import Header from '@/components/Header';
 import SeoChipSelector from '@/components/SeoChipSelector';
 import RegionTimeslot from '@/components/RegionTimeslot';
+import SheetCommandPalette from '@/components/SheetCommandPalette';
 import { SEO_CHIPS } from '@/data/seo-chips';
 import type { SeoForm, SeoOutput } from '@/types/seo-package';
+import type { ScrapSheet } from '@/types';
 import { loadData } from '@/lib/supabase-storage';
 import { saveSeoHistory, loadSeoHistory, deleteSeoHistory, type SeoHistoryEntry } from '@/lib/supabase-storage';
 import SaveToSheetModal from '@/components/SaveToSheetModal';
@@ -40,15 +42,29 @@ function SeoPackageContent() {
     const [errorMsg, setErrorMsg] = useState('');
     const [showSaveModal, setShowSaveModal] = useState(false);
     const [seoHistory, setSeoHistory] = useState<SeoHistoryEntry[]>([]);
+    const [sheets, setSheets] = useState<ScrapSheet[]>([]);
+    const [showPalette, setShowPalette] = useState(false);
+    const [linkedSheet, setLinkedSheet] = useState<ScrapSheet | null>(null);
 
     useEffect(() => {
         const titleParam = searchParams.get('title');
         if (titleParam) setTitleInput(decodeURIComponent(titleParam));
         loadData().then((data) => {
             setApiKey(data.geminiApiKey ?? '');
+            setSheets(data.sheets ?? []);
         }).catch(() => {});
         loadSeoHistory().then(setSeoHistory).catch(() => {});
     }, [searchParams]);
+
+    function handleSheetSelect(sheet: ScrapSheet) {
+        const genres = [
+            ...new Set(sheet.items.map((i) => i.genre).filter(Boolean) as string[]),
+        ].slice(0, 2);
+        setLinkedSheet(sheet);
+        if (genres.length > 0 && !titleInput) {
+            setTitleInput(genres.join(', '));
+        }
+    }
 
     function handleChipSelect(sectionId: string, value: string) {
         if (SINGLE_SECTION_IDS.has(sectionId)) {
@@ -171,6 +187,43 @@ function SeoPackageContent() {
                 title="🔍 SEO 최적화 패키지"
                 subtitle="메인/롱테일 키워드 · 제목 후보 5개 · 설명문 · 태그 30개 · 업로드 최적 시간"
             />
+
+            {/* 연동 배너 — URL 파라미터가 있거나 시트가 선택된 경우 표시 */}
+            {(searchParams.get('title') ?? searchParams.get('genre') ?? linkedSheet) ? (
+                <div
+                    className="info-banner"
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+                >
+                    <span style={{ fontSize: 13, color: 'var(--text-primary)' }}>
+                        🎵 음악생성 연동 중
+                        {(searchParams.get('title') ?? titleInput) && (
+                            <> — <strong>{searchParams.get('title') ?? titleInput}</strong></>
+                        )}
+                        {searchParams.get('genre') && (
+                            <> · <span style={{ color: 'var(--text-muted)' }}>{searchParams.get('genre')}</span></>
+                        )}
+                        {linkedSheet && (
+                            <> · 📋 <span style={{ color: '#22c55e' }}>{linkedSheet.name}</span></>
+                        )}
+                    </span>
+                    <button
+                        type="button"
+                        className="btn btn-secondary btn-sm"
+                        style={{ flexShrink: 0, marginLeft: 12 }}
+                        onClick={() => setShowPalette(true)}
+                    >
+                        🗂️ 시트 선택
+                    </button>
+                </div>
+            ) : null}
+
+            {showPalette && (
+                <SheetCommandPalette
+                    sheets={sheets}
+                    onSelect={handleSheetSelect}
+                    onClose={() => setShowPalette(false)}
+                />
+            )}
 
             {/* API 키 경고 */}
             {!apiKey && (

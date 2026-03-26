@@ -62,6 +62,7 @@ function CoverImageGeneratorInner() {
   const [form, setForm] = useState<CoverImageForm>(DEFAULT_FORM);
   const [sheets, setSheets] = useState<ScrapSheet[]>([]);
   const [showPalette, setShowPalette] = useState(false);
+  const [linkedSheet, setLinkedSheet] = useState<ScrapSheet | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [output, setOutput] = useState<CoverImageOutput | null>(null);
   const [activeTab, setActiveTab] = useState<OutputTab>('claude');
@@ -142,6 +143,7 @@ function CoverImageGeneratorInner() {
     const moods = [
       ...new Set(sheet.items.flatMap((i) => i.mood_tags ?? [])),
     ].slice(0, 3);
+    setLinkedSheet(sheet);
     setForm((prev) => ({ ...prev, concept: genres, mood: moods }));
   }
 
@@ -239,15 +241,42 @@ function CoverImageGeneratorInner() {
         subtitle="분위기와 스타일을 선택하면 유튜브 썸네일·채널아트 프롬프트를 생성합니다"
       />
 
-      {/* 시트 연동 */}
-      <div className="card" style={{ marginBottom: 16 }}>
-        <button
-          className="btn btn-secondary btn-sm"
-          onClick={() => setShowPalette(true)}
+      {/* 연동 배너 — URL 파라미터가 있거나 시트가 선택된 경우 표시 */}
+      {(searchParams.get('title') ?? searchParams.get('genre') ?? linkedSheet) ? (
+        <div
+          className="info-banner"
+          style={{ marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
         >
-          📋 시트에서 분위기 불러오기
-        </button>
-      </div>
+          <span style={{ fontSize: 13, color: 'var(--text-primary)' }}>
+            🎵 음악생성 연동 중
+            {(searchParams.get('title') ?? titleInput) && (
+              <> — <strong>{searchParams.get('title') ?? titleInput}</strong></>
+            )}
+            {searchParams.get('genre') && (
+              <> · <span style={{ color: 'var(--text-muted)' }}>{searchParams.get('genre')}</span></>
+            )}
+            {linkedSheet && (
+              <> · 📋 <span style={{ color: '#22c55e' }}>{linkedSheet.name}</span></>
+            )}
+          </span>
+          <button
+            className="btn btn-secondary btn-sm"
+            style={{ flexShrink: 0, marginLeft: 12 }}
+            onClick={() => setShowPalette(true)}
+          >
+            🗂️ 시트 선택
+          </button>
+        </div>
+      ) : (
+        <div className="card" style={{ marginBottom: 16 }}>
+          <button
+            className="btn btn-secondary btn-sm"
+            onClick={() => setShowPalette(true)}
+          >
+            📋 시트에서 분위기 불러오기
+          </button>
+        </div>
+      )}
 
       {showPalette && (
         <SheetCommandPalette
