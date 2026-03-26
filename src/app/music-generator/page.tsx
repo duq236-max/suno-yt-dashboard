@@ -1,11 +1,14 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import ChipSelector from '@/components/ChipSelector';
 import SongResultCard from '@/components/SongResultCard';
 import SaveToSheetModal from '@/components/SaveToSheetModal';
+import { SectionHeader } from '@/components/ui/SectionHeader';
+import { SongCountSelector } from '@/components/ui/SongCountSelector';
+import ErrorMessage from '@/components/ui/ErrorMessage';
 import { MUSIC_CHIPS } from '@/data/music-chips';
 import type { MusicGeneratorForm, GeneratedSong, MusicGenHistory } from '@/types/music-generator';
 import { loadData, saveMusicGenHistory, loadMusicGenHistory, generateId } from '@/lib/supabase-storage';
@@ -40,17 +43,42 @@ const ARRAY_KEYS = new Set<string>(['genres', 'moods', 'vocals', 'usage', 'instr
 
 const SUNO_SEND_TYPE = 'SUNO_BATCH_SEND';
 
+/** 클라이언트 측 buildPrompt — API route의 동일 로직을 모달 미리보기에 사용 */
+function buildPrompt(form: MusicGeneratorForm): string {
+    const parts: string[] = [];
+    if (form.genres.length > 0) parts.push(`장르: ${form.genres.join(', ')}`);
+    if (form.moods.length > 0) parts.push(`분위기: ${form.moods.join(', ')}`);
+    if (form.vocals.length > 0) parts.push(`보컬: ${form.vocals.join(', ')}`);
+    if (form.usage.length > 0) parts.push(`용도: ${form.usage.join(', ')}`);
+    if (form.instruments.length > 0) parts.push(`악기: ${form.instruments.join(', ')}`);
+    if (form.bpm) parts.push(`BPM: ${form.bpm}`);
+    if (form.targetAge) parts.push(`타겟 연령: ${form.targetAge}`);
+    if (form.language) parts.push(`가사 언어: ${form.language}`);
+    if (form.theme.length > 0) parts.push(`주제: ${form.theme.join(', ')}`);
+    if (form.atmosphere.length > 0) parts.push(`분위기 요소: ${form.atmosphere.join(', ')}`);
+    if (form.production.length > 0) parts.push(`프로덕션 스타일: ${form.production.join(', ')}`);
+    if (form.creativity) parts.push(`AI 창의성: ${form.creativity}`);
+    if (form.customRequest) parts.push(`추가 요청: ${form.customRequest}`);
+    const lyricsNote = form.shortsMode
+        ? '가사는 Shorts용으로 4줄 이내로 매우 짧게 작성하세요.'
+        : '가사는 버스 1절 + 코러스 형태로 20~30줄로 작성하세요.';
+    const count = form.count ?? 5;
+    return `당신은 Suno AI 전문 음악 프롬프트 작성가입니다.\n아래 조건으로 음악 총 ${count}개의 곡을 JSON으로 생성하세요.\n\n조건:\n${parts.length > 0 ? parts.join('\n') : '조건 없음 — 자유롭게 다양한 음악 스타일로 생성하세요.'}\n\n${lyricsNote}\n\n반드시 아래 JSON 형식만 응답하세요. 다른 텍스트는 절대 포함하지 마세요:\n{\n  "songs": [\n    {\n      "title": "(인상적인 곡 제목, 한국어 또는 영어)",\n      "style": "(Suno AI 스타일 태그, 영어, 쉼표 구분, 장르·분위기·악기·BPM)",\n      "lyrics": "(가사 전체)",\n      "bpm": 120\n    }\n  ]\n}\nsongs 배열에 정확히 ${count}개의 곡이 있어야 합니다.`;
+}
+
 export default function MusicGeneratorPage() {
     const router = useRouter();
     const [form, setForm] = useState<MusicGeneratorForm>(DEFAULT_FORM);
     const [activeTab, setActiveTab] = useState<ActiveTab>('generate');
     const [isGenerating, setIsGenerating] = useState(false);
     const [results, setResults] = useState<GeneratedSong[]>([]);
+    const [error, setError] = useState<string | null>(null);
     const resultsRef = useRef<HTMLDivElement>(null);
     const [apiKey, setApiKey] = useState('');
 
     // 모달 / Toast / 이력
     const [showSaveModal, setShowSaveModal] = useState(false);
+    const [showPromptModal, setShowPromptModal] = useState(false);
     const { toast } = useToast();
     const [history, setHistory] = useState<MusicGenHistory[]>([]);
 
@@ -64,6 +92,17 @@ export default function MusicGeneratorPage() {
     useEffect(() => {
         loadMusicGenHistory().then(setHistory).catch(() => {});
     }, []);
+
+    // ESC 키로 모달 닫기
+    const handleKeyDown = useCallback((e: KeyboardEvent) => {
+        if (e.key === 'Escape') setShowPromptModal(false);
+    }, []);
+    useEffect(() => {
+        if (showPromptModal) {
+            document.addEventListener('keydown', handleKeyDown);
+        }
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [showPromptModal, handleKeyDown]);
 
     function handleChipToggle(sectionId: string, chip: string) {
         if (ARRAY_KEYS.has(sectionId)) {
@@ -93,6 +132,7 @@ export default function MusicGeneratorPage() {
     async function generate(sheetId?: string, openSuno?: boolean) {
         setIsGenerating(true);
         setResults([]);
+        setError(null);
         try {
             const res = await fetch('/api/music-generator', {
                 method: 'POST',
@@ -101,7 +141,9 @@ export default function MusicGeneratorPage() {
             });
             const data = (await res.json()) as { songs?: GeneratedSong[]; error?: string };
             if (!res.ok || data.error) {
-                toast(data.error ?? '생성 오류', 'error');
+                const msg = data.error ?? '생성 오류';
+                setError(msg);
+                toast(msg, 'error');
                 return;
             }
             const songs = data.songs ?? [];
@@ -134,8 +176,10 @@ export default function MusicGeneratorPage() {
                 }
             }
         } catch {
+            const msg = '생성 중 오류가 발생했습니다';
             setResults([]);
-            toast('생성 중 오류가 발생했습니다', 'error');
+            setError(msg);
+            toast(msg, 'error');
         } finally {
             setIsGenerating(false);
         }
@@ -232,14 +276,23 @@ export default function MusicGeneratorPage() {
                     ))}
                 </div>
 
-                <button
-                    type="button"
-                    onClick={() => setForm(DEFAULT_FORM)}
-                    className="btn btn-ghost btn-sm"
-                    style={{ marginLeft: 'auto' }}
-                >
-                    초기화
-                </button>
+                <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <button
+                        type="button"
+                        onClick={() => setShowPromptModal(true)}
+                        className="btn btn-ghost btn-sm"
+                        style={{ fontSize: '12px', color: 'var(--text-muted)' }}
+                    >
+                        🤖 Claude 작업지시 보기
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setForm(DEFAULT_FORM)}
+                        className="btn btn-ghost btn-sm"
+                    >
+                        초기화
+                    </button>
+                </div>
             </div>
 
             {/* 탭 네비게이션 */}
@@ -300,6 +353,7 @@ export default function MusicGeneratorPage() {
                     )}
 
                     {/* ChipSelector 9개 섹션 */}
+                    <SectionHeader num="01" icon="🎸" title="음악 스타일 설정" />
                     <div className={`card ${styles.chipCard}`} style={{ padding: '20px', marginBottom: '16px' }}>
                         {MUSIC_CHIPS.map((section) => (
                             <ChipSelector
@@ -315,9 +369,7 @@ export default function MusicGeneratorPage() {
 
                         {/* 자유 입력 (customRequest) */}
                         <div style={{ marginTop: '8px' }}>
-                            <label className="form-label" style={{ fontSize: '13px', fontWeight: 700 }}>
-                                ✍️ 추가 요청사항 (선택)
-                            </label>
+                            <SectionHeader num="10" icon="✍️" title="추가 요청사항 (선택)" />
                             <textarea
                                 className="form-textarea"
                                 placeholder="원하는 주제, 가사 내용, 특별한 요청을 자유롭게 입력하세요..."
@@ -329,11 +381,9 @@ export default function MusicGeneratorPage() {
                     </div>
 
                     {/* 곡 수 선택 */}
+                    <SectionHeader num="02" icon="🎯" title="곡 수 선택" />
                     <div
                         style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
                             marginBottom: '12px',
                             padding: '12px 16px',
                             background: 'var(--bg-card)',
@@ -341,35 +391,18 @@ export default function MusicGeneratorPage() {
                             borderRadius: 'var(--radius-md)',
                         }}
                     >
-                        <span style={{ fontSize: '13px', color: 'var(--text-muted)', flexShrink: 0 }}>몇 곡 생성?</span>
-                        <div style={{ display: 'flex', gap: '6px', flex: 1 }}>
-                            {[1, 3, 5, 10].map((n) => (
-                                <button
-                                    key={n}
-                                    type="button"
-                                    onClick={() => setForm(prev => ({ ...prev, count: n }))}
-                                    style={{
-                                        flex: 1,
-                                        padding: '8px 0',
-                                        borderRadius: '10px',
-                                        border: `1px solid ${form.count === n ? 'var(--accent)' : 'var(--border)'}`,
-                                        background: form.count === n ? 'rgba(229,62,62,0.18)' : 'transparent',
-                                        color: form.count === n ? 'var(--accent)' : 'var(--text-muted)',
-                                        fontSize: '14px',
-                                        fontWeight: form.count === n ? 700 : 400,
-                                        cursor: 'pointer',
-                                        transition: 'var(--transition)',
-                                    }}
-                                >
-                                    {n}곡
-                                </button>
-                            ))}
-                        </div>
+                        <SongCountSelector
+                            value={form.count}
+                            options={[1, 3, 5, 10]}
+                            onChange={(n) => setForm(prev => ({ ...prev, count: n }))}
+                            label="몇 곡 생성?"
+                        />
                     </div>
 
                     {/* 생성하기 버튼 → 바로 생성 */}
                     <button
                         type="button"
+                        className="btn-generate"
                         onClick={() => generate()}
                         disabled={isGenerating || !apiKey}
                         style={{
@@ -384,13 +417,15 @@ export default function MusicGeneratorPage() {
                             fontSize: '15px',
                             fontWeight: 700,
                             cursor: isGenerating || !apiKey ? 'not-allowed' : 'pointer',
-                            marginBottom: '24px',
+                            marginBottom: '12px',
                             transition: 'var(--transition)',
                             boxShadow: isGenerating || !apiKey ? 'none' : 'var(--shadow-glow)',
                         }}
                     >
                         {isGenerating ? '⏳ 생성 중...' : `▶ ${form.count}곡 생성하기`}
                     </button>
+                    <ErrorMessage error={error} />
+                    <div style={{ marginBottom: '12px' }} />
 
                     {/* 로딩 스켈레톤 */}
                     {isGenerating && (
@@ -469,8 +504,8 @@ export default function MusicGeneratorPage() {
                                     type="button"
                                     onClick={() => {
                                         const title = encodeURIComponent(results[0]?.title ?? '');
-                                        const mood = encodeURIComponent(form.moods[0] ?? '');
-                                        router.push(`/cover-image-generator?title=${title}&mood=${mood}`);
+                                        const genre = encodeURIComponent(form.genres[0] ?? '');
+                                        router.push(`/cover-image-generator?title=${title}&genre=${genre}`);
                                     }}
                                     style={{
                                         display: 'flex',
@@ -493,7 +528,8 @@ export default function MusicGeneratorPage() {
                                     type="button"
                                     onClick={() => {
                                         const title = encodeURIComponent(results[0]?.title ?? '');
-                                        router.push(`/seo-package?title=${title}`);
+                                        const genre = encodeURIComponent(form.genres[0] ?? '');
+                                        router.push(`/seo-package?title=${title}&genre=${genre}`);
                                     }}
                                     style={{
                                         display: 'flex',
@@ -722,6 +758,69 @@ export default function MusicGeneratorPage() {
                         >
                             SEO 패키지 →
                         </a>
+                    </div>
+                </div>
+            )}
+
+            {/* Claude 작업지시 모달 */}
+            {showPromptModal && (
+                <div
+                    className="modal-overlay"
+                    onClick={() => setShowPromptModal(false)}
+                >
+                    <div
+                        className="modal"
+                        style={{ maxWidth: '640px', width: '100%' }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="modal-header">
+                            <span style={{ fontWeight: 700 }}>🤖 Claude 작업지시 미리보기</span>
+                            <button
+                                type="button"
+                                className="btn btn-ghost btn-sm"
+                                onClick={() => setShowPromptModal(false)}
+                            >
+                                ✕
+                            </button>
+                        </div>
+                        <div style={{ padding: '16px 20px' }}>
+                            <textarea
+                                readOnly
+                                value={buildPrompt(form)}
+                                style={{
+                                    width: '100%',
+                                    minHeight: '280px',
+                                    fontFamily: 'monospace',
+                                    fontSize: '12px',
+                                    background: 'var(--bg-secondary)',
+                                    border: '1px solid var(--border)',
+                                    borderRadius: '8px',
+                                    padding: '12px',
+                                    color: 'var(--text-primary)',
+                                    resize: 'vertical',
+                                    lineHeight: 1.6,
+                                }}
+                            />
+                        </div>
+                        <div className="modal-footer">
+                            <button
+                                type="button"
+                                className="btn btn-secondary btn-sm"
+                                onClick={() => {
+                                    void navigator.clipboard.writeText(buildPrompt(form));
+                                    toast('클립보드에 복사됨', 'success');
+                                }}
+                            >
+                                📋 복사
+                            </button>
+                            <button
+                                type="button"
+                                className="btn btn-ghost btn-sm"
+                                onClick={() => setShowPromptModal(false)}
+                            >
+                                닫기
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
