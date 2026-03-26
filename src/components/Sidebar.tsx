@@ -15,6 +15,7 @@ interface NavItem {
   label: string;
   badge?: string;
   badgeType?: 'new' | 'soon';
+  tooltip?: string;
 }
 
 const navItems: { section: string; items: NavItem[] }[] = [
@@ -49,12 +50,12 @@ const navItems: { section: string; items: NavItem[] }[] = [
       { href: '/brand-kit', icon: '🎨', label: 'BrandKit', badge: 'NEW', badgeType: 'new' as const },
       { href: '/ideation', icon: '🧠', label: 'Ideation', badge: 'NEW', badgeType: 'new' as const },
       { href: '/lyrics', icon: '📝', label: 'Lyrics', badge: 'NEW', badgeType: 'new' as const },
-      { href: '/cover', icon: '🎨', label: 'Cover Generator', badge: 'NEW', badgeType: 'new' as const },
+      { href: '/cover', icon: '🖼️', label: 'Cover Generator', badge: 'NEW', badgeType: 'new' as const },
       { href: '/library', icon: '📚', label: '프롬프트 라이브러리', badge: 'NEW', badgeType: 'new' as const },
     ],
   },
   {
-    section: '음원 패키지',
+    section: '🎵 음원 제작',
     items: [
       { href: '/music-generator', icon: '🎵', label: '음악생성', badge: 'NEW', badgeType: 'new' as const },
       { href: '/cover-image-generator', icon: '🖼', label: '커버이미지', badge: 'NEW', badgeType: 'new' as const },
@@ -64,8 +65,8 @@ const navItems: { section: string; items: NavItem[] }[] = [
   {
     section: '추후 예정',
     items: [
-      { href: '#', icon: '🤖', label: '자동 주입 (B안)', badge: 'SOON', badgeType: 'soon' },
-      { href: '#', icon: '📡', label: '라이브 스트리밍', badge: 'SOON', badgeType: 'soon' },
+      { href: '#', icon: '🤖', label: '자동 주입 (B안)', badge: 'SOON', badgeType: 'soon', tooltip: '준비중입니다' },
+      { href: '#', icon: '📡', label: '라이브 스트리밍', badge: 'SOON', badgeType: 'soon', tooltip: '준비중입니다' },
     ],
   },
 ];
@@ -137,6 +138,7 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
                 style={item.href === '#' ? { pointerEvents: 'none', opacity: 0.5 } : {}}
                 onClick={item.href === '#' ? (e) => e.preventDefault() : undefined}
                 aria-disabled={item.href === '#' ? true : undefined}
+                title={item.tooltip}
               >
                 <span className="icon">{item.icon}</span>
                 {item.label}
