@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import ChipSelector from '@/components/ChipSelector';
 import SongResultCard from '@/components/SongResultCard';
@@ -40,6 +41,7 @@ const ARRAY_KEYS = new Set<string>(['genres', 'moods', 'vocals', 'usage', 'instr
 const SUNO_SEND_TYPE = 'SUNO_BATCH_SEND';
 
 export default function MusicGeneratorPage() {
+    const router = useRouter();
     const [form, setForm] = useState<MusicGeneratorForm>(DEFAULT_FORM);
     const [activeTab, setActiveTab] = useState<ActiveTab>('generate');
     const [isGenerating, setIsGenerating] = useState(false);
@@ -446,6 +448,71 @@ export default function MusicGeneratorPage() {
                                     onSendToSuno={handleSendToSuno}
                                 />
                             ))}
+
+                            {/* 워크플로우 버튼 */}
+                            <div
+                                style={{
+                                    display: 'flex',
+                                    gap: '10px',
+                                    marginTop: '16px',
+                                    padding: '14px 16px',
+                                    background: 'var(--bg-secondary)',
+                                    borderRadius: 'var(--radius-md)',
+                                    border: '1px solid var(--border)',
+                                    flexWrap: 'wrap',
+                                }}
+                            >
+                                <span style={{ fontSize: '12px', color: 'var(--text-muted)', alignSelf: 'center', flexShrink: 0 }}>
+                                    다음 단계:
+                                </span>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        const title = encodeURIComponent(results[0]?.title ?? '');
+                                        const mood = encodeURIComponent(form.moods[0] ?? '');
+                                        router.push(`/cover-image-generator?title=${title}&mood=${mood}`);
+                                    }}
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '6px',
+                                        padding: '8px 16px',
+                                        borderRadius: '8px',
+                                        border: '1px solid rgba(168,85,247,0.4)',
+                                        background: 'rgba(168,85,247,0.12)',
+                                        color: '#c084fc',
+                                        fontSize: '13px',
+                                        fontWeight: 700,
+                                        cursor: 'pointer',
+                                        transition: 'var(--transition)',
+                                    }}
+                                >
+                                    🖼 커버이미지 생성하기
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        const title = encodeURIComponent(results[0]?.title ?? '');
+                                        router.push(`/seo-package?title=${title}`);
+                                    }}
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '6px',
+                                        padding: '8px 16px',
+                                        borderRadius: '8px',
+                                        border: '1px solid rgba(229,62,62,0.4)',
+                                        background: 'rgba(229,62,62,0.12)',
+                                        color: 'var(--accent)',
+                                        fontSize: '13px',
+                                        fontWeight: 700,
+                                        cursor: 'pointer',
+                                        transition: 'var(--transition)',
+                                    }}
+                                >
+                                    🔍 SEO 패키지 만들기
+                                </button>
+                            </div>
                         </div>
                     )}
 
