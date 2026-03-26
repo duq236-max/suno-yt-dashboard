@@ -55,7 +55,15 @@ JSON만 반환하고 다른 텍스트는 포함하지 마세요.`;
 
     if (!res.ok) {
       const err = await res.text();
-      return NextResponse.json({ error: `Gemini API 오류: ${err}` }, { status: res.status });
+      let errorMsg: string;
+      if (res.status === 429) {
+        errorMsg = 'API 사용량 초과. 잠시 후 다시 시도하거나 설정에서 API 키를 확인하세요.';
+      } else if (res.status === 404) {
+        errorMsg = 'AI 모델을 찾을 수 없습니다. 관리자에게 문의하세요.';
+      } else {
+        errorMsg = `Gemini API 오류 (코드: ${res.status})`;
+      }
+      return NextResponse.json({ error: errorMsg }, { status: res.status });
     }
 
     const data = await res.json() as {
