@@ -1,13 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Header from '@/components/Header';
 import SeoChipSelector from '@/components/SeoChipSelector';
 import RegionTimeslot from '@/components/RegionTimeslot';
 import { SEO_CHIPS } from '@/data/seo-chips';
 import type { SeoForm, SeoOutput } from '@/types/seo-package';
 import { loadData } from '@/lib/supabase-storage';
-import { saveSeoHistory, loadSeoHistory, type SeoHistoryEntry } from '@/lib/supabase-storage';
+import { saveSeoHistory, loadSeoHistory, deleteSeoHistory, type SeoHistoryEntry } from '@/lib/supabase-storage';
 import SaveToSheetModal from '@/components/SaveToSheetModal';
 import styles from './page.module.css';
 
@@ -26,7 +27,8 @@ const DEFAULT_FORM: SeoForm = {
     customRequest: '',
 };
 
-export default function SeoPackagePage() {
+function SeoPackageContent() {
+    const searchParams = useSearchParams();
     const [form, setForm] = useState<SeoForm>(DEFAULT_FORM);
     const [titleInput, setTitleInput] = useState('');
     const [isGenerating, setIsGenerating] = useState(false);
@@ -40,11 +42,13 @@ export default function SeoPackagePage() {
     const [seoHistory, setSeoHistory] = useState<SeoHistoryEntry[]>([]);
 
     useEffect(() => {
+        const titleParam = searchParams.get('title');
+        if (titleParam) setTitleInput(decodeURIComponent(titleParam));
         loadData().then((data) => {
             setApiKey(data.geminiApiKey ?? '');
         }).catch(() => {});
         loadSeoHistory().then(setSeoHistory).catch(() => {});
-    }, []);
+    }, [searchParams]);
 
     function handleChipSelect(sectionId: string, value: string) {
         if (SINGLE_SECTION_IDS.has(sectionId)) {
@@ -680,7 +684,7 @@ export default function SeoPackagePage() {
                             </div>
                             <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
                                 {seoHistory.slice(0, 3).map((entry) => {
-                                    const scoreColor = entry.seoScore >= 80
+                                    const entryScoreColor = entry.seoScore >= 80
                                         ? '#22c55e'
                                         : entry.seoScore >= 60
                                         ? '#f59e0b'
@@ -702,7 +706,7 @@ export default function SeoPackagePage() {
                                                 style={{
                                                     fontSize: 14,
                                                     fontWeight: 700,
-                                                    color: scoreColor,
+                                                    color: entryScoreColor,
                                                     minWidth: 32,
                                                     flexShrink: 0,
                                                 }}
@@ -717,8 +721,30 @@ export default function SeoPackagePage() {
                                                     {entry.mainKeywords.slice(0, 3).join(' · ')}
                                                 </div>
                                             </div>
-                                            <div style={{ fontSize: 10, color: 'var(--text-muted)', flexShrink: 0 }}>
+                                            <div style={{ fontSize: 10, color: 'var(--text-muted)', flexShrink: 0, marginTop: 2 }}>
                                                 {new Date(entry.createdAt).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                            </div>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flexShrink: 0 }}>
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-sm btn-ghost"
+                                                    style={{ padding: '2px 8px', fontSize: 11 }}
+                                                    onClick={() => setTitleInput(entry.titleInput || entry.titles[0] || '')}
+                                                >
+                                                    불러오기
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-sm btn-danger"
+                                                    style={{ padding: '2px 8px', fontSize: 11 }}
+                                                    onClick={() => {
+                                                        deleteSeoHistory(entry.id).then(() => {
+                                                            setSeoHistory((prev) => prev.filter((e) => e.id !== entry.id));
+                                                        }).catch(() => {});
+                                                    }}
+                                                >
+                                                    🗑 삭제
+                                                </button>
                                             </div>
                                         </div>
                                     );
@@ -738,5 +764,13 @@ export default function SeoPackagePage() {
                 }}
             />
         </div>
+    );
+}
+
+export default function SeoPackagePage() {
+    return (
+        <Suspense>
+            <SeoPackageContent />
+        </Suspense>
     );
 }

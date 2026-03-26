@@ -1121,6 +1121,26 @@ export async function loadSeoHistory(): Promise<SeoHistoryEntry[]> {
     return (data?.seo_history as SeoHistoryEntry[] | null) ?? [];
 }
 
+export async function deleteSeoHistory(id: string): Promise<void> {
+    const userId = await getCurrentUserId();
+    if (!userId) return;
+
+    const existing = await loadSeoHistory();
+    const updated = existing.filter((entry) => entry.id !== id);
+
+    const { error } = await supabase
+        .from('user_settings')
+        .upsert(
+            { user_id: userId, seo_history: updated },
+            { onConflict: 'user_id' }
+        );
+
+    if (error) {
+        console.error('deleteSeoHistory error:', error.message);
+        throw new Error(`SEO 히스토리 삭제 실패: ${error.message}`);
+    }
+}
+
 // ──────────────────────────────────────────────────────────
 // 커버 이미지 이력 (Supabase user_settings.cover_image_history jsonb)
 // ──────────────────────────────────────────────────────────
