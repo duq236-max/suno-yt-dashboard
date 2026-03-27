@@ -190,21 +190,38 @@ function SeoPackageContent() {
             {/* 연동 배너 — URL 파라미터가 있거나 시트가 선택된 경우 표시 */}
             {(searchParams.get('title') ?? searchParams.get('genre') ?? linkedSheet) ? (
                 <div
-                    className="info-banner"
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+                    className="glass-card"
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '12px 18px',
+                        marginBottom: 16,
+                        borderColor: 'rgba(244,114,182,0.4)',
+                        background: 'rgba(244,114,182,0.06)',
+                    }}
                 >
-                    <span style={{ fontSize: 13, color: 'var(--text-primary)' }}>
-                        🎵 음악생성 연동 중
-                        {(searchParams.get('title') ?? titleInput) && (
-                            <> — <strong>{searchParams.get('title') ?? titleInput}</strong></>
-                        )}
-                        {searchParams.get('genre') && (
-                            <> · <span style={{ color: 'var(--text-muted)' }}>{searchParams.get('genre')}</span></>
-                        )}
-                        {linkedSheet && (
-                            <> · 📋 <span style={{ color: '#22c55e' }}>{linkedSheet.name}</span></>
-                        )}
-                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <span style={{ fontSize: 18 }}>🎵</span>
+                        <div>
+                            <div style={{ fontSize: 11, color: '#f9a8d4', fontWeight: 600, marginBottom: 2 }}>
+                                음악생성 연동 중
+                            </div>
+                            <div style={{ fontSize: 13, color: 'var(--text-primary)', fontWeight: 700 }}>
+                                {searchParams.get('title') ?? titleInput}
+                                {searchParams.get('genre') && (
+                                    <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 400, marginLeft: 8 }}>
+                                        · {searchParams.get('genre')}
+                                    </span>
+                                )}
+                                {linkedSheet && (
+                                    <span style={{ fontSize: 12, color: '#22c55e', fontWeight: 400, marginLeft: 8 }}>
+                                        · 📋 {linkedSheet.name}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                    </div>
                     <button
                         type="button"
                         className="btn btn-secondary btn-sm"
@@ -284,8 +301,8 @@ function SeoPackageContent() {
                         {/* 생성 버튼 */}
                         <button
                             type="button"
-                            className="btn btn-primary"
-                            style={{ width: '100%', marginTop: 4 }}
+                            className="btn-generate"
+                            style={{ marginTop: 4 }}
                             onClick={generate}
                             disabled={isGenerating}
                         >
@@ -316,14 +333,59 @@ function SeoPackageContent() {
                         </div>
                     )}
 
-                    {/* 로딩 */}
+                    {/* 로딩 — 결과 카드 구조와 동일한 skeleton */}
                     {isGenerating && (
-                        <div
-                            className="glass-card loading-pulse"
-                            style={{ padding: '60px 40px', textAlign: 'center', color: 'var(--text-muted)' }}
-                        >
-                            <div style={{ fontSize: 36, marginBottom: 12 }}>🔍</div>
-                            <p>Gemini AI가 SEO를 분석하는 중...</p>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                            {/* SEO 점수 skeleton */}
+                            <div className="glass-card loading-pulse" style={{ padding: '14px 18px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                                    <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(255,255,255,0.08)', flexShrink: 0 }} />
+                                    <div style={{ flex: 1 }}>
+                                        <div style={{ height: 12, width: 60, background: 'rgba(255,255,255,0.08)', borderRadius: 6, marginBottom: 10 }} />
+                                        <div style={{ height: 6, width: 180, background: 'rgba(255,255,255,0.06)', borderRadius: 999 }} />
+                                    </div>
+                                    <div style={{ display: 'flex', gap: 8 }}>
+                                        <div style={{ width: 80, height: 28, background: 'rgba(255,255,255,0.06)', borderRadius: 6 }} />
+                                        <div style={{ width: 60, height: 28, background: 'rgba(255,255,255,0.06)', borderRadius: 6 }} />
+                                    </div>
+                                </div>
+                            </div>
+                            {/* 제목 후보 skeleton */}
+                            <div className="glass-card loading-pulse" style={{ overflow: 'hidden' }}>
+                                <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between' }}>
+                                    <div style={{ height: 12, width: 80, background: 'rgba(249,168,212,0.2)', borderRadius: 6 }} />
+                                    <div style={{ height: 12, width: 55, background: 'rgba(255,255,255,0.06)', borderRadius: 6 }} />
+                                </div>
+                                <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 7 }}>
+                                    {[80, 90, 75, 85, 70].map((w, i) => (
+                                        <div key={i} style={{ height: 36, background: 'rgba(236,72,153,0.05)', border: '1px solid rgba(236,72,153,0.1)', borderRadius: 8 }} />
+                                    ))}
+                                </div>
+                            </div>
+                            {/* 태그 skeleton */}
+                            <div className="glass-card loading-pulse" style={{ overflow: 'hidden' }}>
+                                <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between' }}>
+                                    <div style={{ height: 12, width: 70, background: 'rgba(196,181,253,0.2)', borderRadius: 6 }} />
+                                    <div style={{ height: 12, width: 55, background: 'rgba(255,255,255,0.06)', borderRadius: 6 }} />
+                                </div>
+                                <div style={{ padding: '14px 16px', display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                                    {[50,65,45,70,55,60,48,72,52,58,63,44].map((w, i) => (
+                                        <div key={i} style={{ height: 24, width: w, background: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.15)', borderRadius: 20 }} />
+                                    ))}
+                                </div>
+                            </div>
+                            {/* 설명문 skeleton */}
+                            <div className="glass-card loading-pulse" style={{ overflow: 'hidden' }}>
+                                <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between' }}>
+                                    <div style={{ height: 12, width: 80, background: 'rgba(134,239,172,0.2)', borderRadius: 6 }} />
+                                    <div style={{ height: 12, width: 40, background: 'rgba(255,255,255,0.06)', borderRadius: 6 }} />
+                                </div>
+                                <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                    {[100, 90, 95, 70, 85].map((w, i) => (
+                                        <div key={i} style={{ height: 12, width: `${w}%`, background: 'rgba(34,197,94,0.06)', borderRadius: 6 }} />
+                                    ))}
+                                </div>
+                            </div>
                         </div>
                     )}
 
