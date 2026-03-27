@@ -65,8 +65,10 @@ export async function POST(req: NextRequest) {
         }
 
         const modelId = form.model === 'pro'
-            ? 'gemini-2.5-pro'
-            : 'gemini-2.5-flash';
+            ? 'gemini-1.5-pro'
+            : form.model === 'flash'
+                ? 'gemini-1.5-flash'
+                : 'gemini-2.5-flash';
 
         const prompt = buildPrompt(form);
 

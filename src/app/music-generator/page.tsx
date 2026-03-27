@@ -254,26 +254,31 @@ export default function MusicGeneratorPage() {
 
                 {/* 모델 선택 */}
                 <div style={{ display: 'flex', gap: '6px' }}>
-                    {(['flash', 'pro'] as const).map((m) => (
-                        <button
-                            key={m}
-                            type="button"
-                            onClick={() => setForm(prev => ({ ...prev, model: m }))}
-                            style={{
-                                padding: '6px 14px',
-                                borderRadius: '20px',
-                                border: `1px solid ${form.model === m ? (m === 'flash' ? '#3b82f6' : '#f97316') : 'var(--border)'}`,
-                                background: form.model === m ? (m === 'flash' ? 'rgba(59,130,246,0.15)' : 'rgba(249,115,22,0.15)') : 'transparent',
-                                color: form.model === m ? (m === 'flash' ? '#60a5fa' : '#fb923c') : 'var(--text-muted)',
-                                fontSize: '13px',
-                                fontWeight: form.model === m ? 700 : 400,
-                                cursor: 'pointer',
-                                transition: 'var(--transition)',
-                            }}
-                        >
-                            {m === 'flash' ? '🆓 Flash' : '🔥 Pro'}
-                        </button>
-                    ))}
+                    {(['flash', 'pro'] as const).map((m) => {
+                        const isActive = form.model === m;
+                        const isFlash = m === 'flash';
+                        return (
+                            <button
+                                key={m}
+                                type="button"
+                                onClick={() => setForm(prev => ({ ...prev, model: m }))}
+                                style={{
+                                    padding: '6px 14px',
+                                    borderRadius: '20px',
+                                    border: `1px solid ${isFlash ? 'rgba(251,191,36,0.3)' : 'rgba(168,85,247,0.35)'}`,
+                                    background: isFlash ? 'rgba(251,191,36,0.1)' : 'rgba(168,85,247,0.15)',
+                                    color: isFlash ? '#fbbf24' : '#c084fc',
+                                    fontSize: '13px',
+                                    fontWeight: isActive ? 700 : 400,
+                                    cursor: 'pointer',
+                                    transition: 'var(--transition)',
+                                    opacity: isActive ? 1.0 : 0.5,
+                                }}
+                            >
+                                {isFlash ? '⚡ Flash' : '✨ Pro'}
+                            </button>
+                        );
+                    })}
                 </div>
 
                 <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -476,12 +481,17 @@ export default function MusicGeneratorPage() {
                                 </button>
                             </div>
                             {results.map((song, idx) => (
-                                <SongResultCard
+                                <div
                                     key={idx}
-                                    index={idx + 1}
-                                    song={song}
-                                    onSendToSuno={handleSendToSuno}
-                                />
+                                    className="result-card-stagger"
+                                    style={{ animationDelay: `${idx * 0.08}s` }}
+                                >
+                                    <SongResultCard
+                                        index={idx + 1}
+                                        song={song}
+                                        onSendToSuno={handleSendToSuno}
+                                    />
+                                </div>
                             ))}
 
                             {/* 워크플로우 버튼 */}
