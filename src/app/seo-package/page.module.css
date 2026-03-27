@@ -17,12 +17,30 @@
   justify-content: flex-end;
 }
 
-/* 결과 액션 버튼 행 */
+/* 결과 액션 버튼 행 (레거시, 삭제 보류) */
 .outputActions {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+/* 결과 카드 헤더 */
+.resultCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid transparent;
+}
+
+/* SEO 점수 카드 내 인라인 액션 */
+.actionsInline {
+  margin-left: auto;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 @media (max-width: 768px) {
@@ -47,5 +65,11 @@
   .outputActions button {
     flex: 1;
     justify-content: center;
+  }
+
+  /* 인라인 액션: 왼쪽 정렬 */
+  .actionsInline {
+    margin-left: 0;
+    justify-content: flex-start;
   }
 }

@@ -4,7 +4,6 @@ import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Header from '@/components/Header';
 import SeoChipSelector from '@/components/SeoChipSelector';
-import RegionTimeslot from '@/components/RegionTimeslot';
 import SheetCommandPalette from '@/components/SheetCommandPalette';
 import { SEO_CHIPS } from '@/data/seo-chips';
 import type { SeoForm, SeoOutput } from '@/types/seo-package';
@@ -13,8 +12,6 @@ import { loadData } from '@/lib/supabase-storage';
 import { saveSeoHistory, loadSeoHistory, deleteSeoHistory, type SeoHistoryEntry } from '@/lib/supabase-storage';
 import SaveToSheetModal from '@/components/SaveToSheetModal';
 import styles from './page.module.css';
-
-type OutputTab = 'score' | 'desc' | 'claude';
 
 const SINGLE_SECTION_IDS = new Set(['language', 'region', 'strategy']);
 
@@ -36,7 +33,6 @@ function SeoPackageContent() {
     const [isGenerating, setIsGenerating] = useState(false);
     const [output, setOutput] = useState<SeoOutput | null>(null);
     const [uploadTime, setUploadTime] = useState('');
-    const [activeTab, setActiveTab] = useState<OutputTab>('score');
     const [copied, setCopied] = useState<string | null>(null);
     const [apiKey, setApiKey] = useState('');
     const [errorMsg, setErrorMsg] = useState('');
@@ -45,6 +41,7 @@ function SeoPackageContent() {
     const [sheets, setSheets] = useState<ScrapSheet[]>([]);
     const [showPalette, setShowPalette] = useState(false);
     const [linkedSheet, setLinkedSheet] = useState<ScrapSheet | null>(null);
+    const [showHistory, setShowHistory] = useState(false);
 
     useEffect(() => {
         const titleParam = searchParams.get('title');
@@ -119,7 +116,6 @@ function SeoPackageContent() {
             if (data.output) {
                 setOutput(data.output);
                 setUploadTime(data.uploadTime ?? '');
-                setActiveTab('score');
                 await saveSeoHistory({
                     titleInput,
                     seoScore: data.output.seoScore,
@@ -174,12 +170,6 @@ function SeoPackageContent() {
             ? '#f59e0b'
             : '#ef4444'
         : '#374151';
-
-    const tabs: { id: OutputTab; label: string }[] = [
-        { id: 'score', label: '📊 SEO 점수 · 제목 · 키워드' },
-        { id: 'desc', label: '📝 설명 · 태그 · 업로드 시간' },
-        { id: 'claude', label: '🤖 Claude 작업지시서' },
-    ];
 
     return (
         <div className="page-content">
@@ -299,28 +289,28 @@ function SeoPackageContent() {
                     </div>
                 </div>
 
-                {/* ── 오른쪽: 출력 패널 ── */}
+                {/* ── 오른쪽: 결과 패널 ── */}
                 <div>
+                    {/* 플레이스홀더 */}
                     {!output && !isGenerating && (
                         <div
-                            className="card"
+                            className="glass-card"
                             style={{ padding: '60px 40px', textAlign: 'center', color: 'var(--text-muted)' }}
                         >
                             <div style={{ fontSize: 48, marginBottom: 16 }}>🔍</div>
                             <h3 style={{ fontSize: 16, color: '#4a5568', marginBottom: 8, fontWeight: 600 }}>
-                                SEO 설정 후 생성하세요
+                                SEO 패키지가 여기 표시됩니다
                             </h3>
                             <p style={{ fontSize: 13, lineHeight: 1.6 }}>
-                                왼쪽에서 타겟 연령·언어·카테고리 등을 선택하고
-                                <br />
-                                <strong>SEO 패키지 생성</strong>을 누르면 AI가 분석합니다.
+                                왼쪽에서 설정 후 <strong>SEO 패키지 생성</strong>을 누르세요
                             </p>
                         </div>
                     )}
 
+                    {/* 로딩 */}
                     {isGenerating && (
                         <div
-                            className="card loading-pulse"
+                            className="glass-card loading-pulse"
                             style={{ padding: '60px 40px', textAlign: 'center', color: 'var(--text-muted)' }}
                         >
                             <div style={{ fontSize: 36, marginBottom: 12 }}>🔍</div>
@@ -328,30 +318,11 @@ function SeoPackageContent() {
                         </div>
                     )}
 
+                    {/* 결과 4카드 */}
                     {output && (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                            {/* 저장 / 전체 복사 버튼 */}
-                            <div className={styles.outputActions}>
-                                <button
-                                    type="button"
-                                    className="btn btn-ghost"
-                                    style={{ display: 'flex', alignItems: 'center', gap: 6 }}
-                                    onClick={copyAll}
-                                >
-                                    {copied === 'all' ? '✅ 복사 완료!' : '📋 전체 복사'}
-                                </button>
-                                <button
-                                    type="button"
-                                    className="btn btn-secondary"
-                                    style={{ display: 'flex', alignItems: 'center', gap: 6 }}
-                                    onClick={() => setShowSaveModal(true)}
-                                >
-                                    💾 결과 저장
-                                </button>
-                            </div>
-
-                            {/* SEO 점수 요약 */}
-                            <div className="card" style={{ padding: '14px 18px' }}>
+                            {/* 액션 버튼 + SEO 점수 */}
+                            <div className="glass-card" style={{ padding: '14px 18px' }}>
                                 <div className={styles.scoreInner}>
                                     <div
                                         style={{
@@ -370,13 +341,14 @@ function SeoPackageContent() {
                                     >
                                         {output.seoScore}
                                     </div>
-                                    <div>
+                                    <div style={{ flex: 1 }}>
                                         <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>
                                             SEO 점수
                                         </div>
                                         <div
                                             style={{
-                                                width: 200,
+                                                width: '100%',
+                                                maxWidth: 200,
                                                 height: 6,
                                                 background: 'var(--bg-secondary)',
                                                 borderRadius: 999,
@@ -395,143 +367,162 @@ function SeoPackageContent() {
                                             />
                                         </div>
                                     </div>
-                                    <div className={styles.tabsRow}>
-                                        {tabs.map((tab) => (
-                                            <button
-                                                key={tab.id}
-                                                type="button"
-                                                onClick={() => setActiveTab(tab.id)}
-                                                style={{
-                                                    padding: '5px 12px',
-                                                    borderRadius: 20,
-                                                    border: `1px solid ${activeTab === tab.id ? 'var(--accent)' : 'var(--border)'}`,
-                                                    background: activeTab === tab.id
-                                                        ? 'rgba(229,62,62,0.12)'
-                                                        : 'transparent',
-                                                    color: activeTab === tab.id
-                                                        ? 'var(--accent)'
-                                                        : 'var(--text-muted)',
-                                                    fontSize: 11,
-                                                    fontWeight: activeTab === tab.id ? 700 : 400,
-                                                    cursor: 'pointer',
-                                                    transition: 'var(--transition)',
-                                                    whiteSpace: 'nowrap',
-                                                }}
-                                            >
-                                                {tab.label}
-                                            </button>
-                                        ))}
+                                    <div className={styles.actionsInline}>
+                                        <button
+                                            type="button"
+                                            className="btn btn-ghost btn-sm"
+                                            onClick={copyAll}
+                                        >
+                                            {copied === 'all' ? '✅ 복사됨' : '📋 전체 복사'}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className="btn btn-secondary btn-sm"
+                                            onClick={() => setShowSaveModal(true)}
+                                        >
+                                            💾 저장
+                                        </button>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* ── 탭 1: 제목 · 키워드 ── */}
-                            {activeTab === 'score' && (
-                                <>
-                                    {/* 제목 후보 5개 */}
-                                    <div className="card" style={{ overflow: 'hidden' }}>
+                            {/* 📌 제목 카드 */}
+                            <div className="glass-card" style={{ overflow: 'hidden' }}>
+                                <div
+                                    className={styles.resultCardHeader}
+                                    style={{ borderBottomColor: 'rgba(236,72,153,0.3)' }}
+                                >
+                                    <span style={{ color: '#f9a8d4', fontWeight: 700, fontSize: 13 }}>
+                                        📌 제목 후보
+                                    </span>
+                                    <button
+                                        type="button"
+                                        className="btn btn-sm btn-ghost"
+                                        onClick={() => copy(output.titles.slice(0, 5).join('\n'), 'titles')}
+                                    >
+                                        {copied === 'titles' ? '✅ 복사됨' : '전체 복사'}
+                                    </button>
+                                </div>
+                                <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 7 }}>
+                                    {output.titles.slice(0, 5).map((title, i) => (
                                         <div
-                                            className="card-header"
-                                            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                                            key={i}
+                                            style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: 10,
+                                                background: 'rgba(236,72,153,0.05)',
+                                                border: '1px solid rgba(236,72,153,0.15)',
+                                                borderRadius: 8,
+                                                padding: '9px 12px',
+                                            }}
                                         >
-                                            <span className="card-title">🏆 제목 후보 5개</span>
+                                            <span style={{ fontSize: 11, color: '#f9a8d4', fontWeight: 700, width: 18, flexShrink: 0 }}>
+                                                {i + 1}
+                                            </span>
+                                            <span style={{ flex: 1, fontSize: 13, color: 'var(--text-primary)', lineHeight: 1.4 }}>
+                                                {title}
+                                            </span>
                                             <button
                                                 type="button"
                                                 className="btn btn-sm btn-ghost"
-                                                onClick={() => copy(output.titles.join('\n'), 'titles')}
+                                                style={{ padding: '2px 8px', fontSize: 11 }}
+                                                onClick={() => copy(title, `title-${i}`)}
                                             >
-                                                {copied === 'titles' ? '✓ 복사됨' : '전체 복사'}
+                                                {copied === `title-${i}` ? '✅' : '복사'}
                                             </button>
                                         </div>
-                                        <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 7 }}>
-                                            {output.titles.map((title, i) => (
-                                                <div
-                                                    key={i}
-                                                    style={{
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        gap: 10,
-                                                        background: 'var(--bg-secondary)',
-                                                        border: '1px solid var(--border)',
-                                                        borderRadius: 8,
-                                                        padding: '9px 12px',
-                                                    }}
-                                                >
-                                                    <span
-                                                        style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 700, width: 18, flexShrink: 0 }}
-                                                    >
-                                                        {i + 1}
-                                                    </span>
-                                                    <span style={{ flex: 1, fontSize: 13, color: 'var(--text-primary)', lineHeight: 1.4 }}>
-                                                        {title}
-                                                    </span>
-                                                    <button
-                                                        type="button"
-                                                        className="btn btn-sm btn-ghost"
-                                                        style={{ padding: '2px 8px', fontSize: 11 }}
-                                                        onClick={() => copy(title, `title-${i}`)}
-                                                    >
-                                                        {copied === `title-${i}` ? '✓' : '복사'}
-                                                    </button>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
+                                    ))}
+                                </div>
+                            </div>
 
-                                    {/* 메인 키워드 */}
-                                    <div className="card" style={{ overflow: 'hidden' }}>
-                                        <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <span className="card-title">🔑 메인 키워드</span>
-                                            <button
-                                                type="button"
-                                                className="btn btn-sm btn-ghost"
-                                                onClick={() => copy(output.mainKeywords.join(', '), 'mainKw')}
-                                            >
-                                                {copied === 'mainKw' ? '✓ 복사됨' : '복사'}
-                                            </button>
-                                        </div>
-                                        <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 5 }}>
-                                            {output.mainKeywords.map((kw, i) => (
-                                                <div
-                                                    key={i}
-                                                    style={{
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        gap: 10,
-                                                        padding: '8px 10px',
-                                                        borderRadius: 7,
-                                                        background: 'var(--bg-secondary)',
-                                                        border: '1px solid var(--border)',
-                                                    }}
-                                                >
-                                                    <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 700, width: 18, flexShrink: 0 }}>{i + 1}</span>
-                                                    <span style={{ flex: 1, fontSize: 13, color: '#d1fae5' }}>{kw}</span>
-                                                    <button
-                                                        type="button"
-                                                        className="btn btn-sm btn-ghost"
-                                                        style={{ padding: '2px 8px', fontSize: 11 }}
-                                                        onClick={() => copy(kw, `mkw-${i}`)}
-                                                    >
-                                                        {copied === `mkw-${i}` ? '✓' : '복사'}
-                                                    </button>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
+                            {/* 🏷️ 태그 카드 */}
+                            <div className="glass-card" style={{ overflow: 'hidden' }}>
+                                <div
+                                    className={styles.resultCardHeader}
+                                    style={{ borderBottomColor: 'rgba(168,85,247,0.3)' }}
+                                >
+                                    <span style={{ color: '#c4b5fd', fontWeight: 700, fontSize: 13 }}>
+                                        🏷️ 태그 ({output.tags.length}개)
+                                    </span>
+                                    <button
+                                        type="button"
+                                        className="btn btn-sm btn-ghost"
+                                        onClick={() => copy(output.tags.join(', '), 'tags')}
+                                    >
+                                        {copied === 'tags' ? '✅ 복사됨' : '전체 복사'}
+                                    </button>
+                                </div>
+                                <div style={{ padding: '14px 16px', display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                                    {output.tags.map((tag, i) => (
+                                        <button
+                                            key={i}
+                                            type="button"
+                                            onClick={() => copy(tag, `tag-${i}`)}
+                                            style={{
+                                                background: copied === `tag-${i}` ? 'rgba(168,85,247,0.2)' : 'rgba(168,85,247,0.08)',
+                                                border: `1px solid ${copied === `tag-${i}` ? 'rgba(168,85,247,0.6)' : 'rgba(168,85,247,0.2)'}`,
+                                                borderRadius: 20,
+                                                padding: '4px 11px',
+                                                fontSize: 11,
+                                                color: copied === `tag-${i}` ? '#c4b5fd' : '#a78bfa',
+                                                cursor: 'pointer',
+                                                transition: 'var(--transition)',
+                                            }}
+                                        >
+                                            {tag}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
 
-                                    {/* 롱테일 키워드 */}
-                                    <div className="card" style={{ overflow: 'hidden' }}>
-                                        <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <span className="card-title">🔍 롱테일 키워드</span>
+                            {/* 🔑 키워드 카드 */}
+                            <div className="glass-card" style={{ overflow: 'hidden' }}>
+                                <div
+                                    className={styles.resultCardHeader}
+                                    style={{ borderBottomColor: 'rgba(59,130,246,0.3)' }}
+                                >
+                                    <span style={{ color: '#93c5fd', fontWeight: 700, fontSize: 13 }}>
+                                        🔑 키워드
+                                    </span>
+                                    <button
+                                        type="button"
+                                        className="btn btn-sm btn-ghost"
+                                        onClick={() => copy([...output.mainKeywords, ...output.longTailKeywords].join(', '), 'kws')}
+                                    >
+                                        {copied === 'kws' ? '✅ 복사됨' : '전체 복사'}
+                                    </button>
+                                </div>
+                                <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 5 }}>
+                                    <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4, fontWeight: 600 }}>메인</div>
+                                    {output.mainKeywords.map((kw, i) => (
+                                        <div
+                                            key={i}
+                                            style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: 10,
+                                                padding: '8px 10px',
+                                                borderRadius: 7,
+                                                background: 'rgba(59,130,246,0.07)',
+                                                border: '1px solid rgba(59,130,246,0.18)',
+                                            }}
+                                        >
+                                            <span style={{ fontSize: 11, color: '#93c5fd', fontWeight: 700, width: 18, flexShrink: 0 }}>{i + 1}</span>
+                                            <span style={{ flex: 1, fontSize: 13, color: '#d1fae5' }}>{kw}</span>
                                             <button
                                                 type="button"
                                                 className="btn btn-sm btn-ghost"
-                                                onClick={() => copy(output.longTailKeywords.join(', '), 'ltKw')}
+                                                style={{ padding: '2px 8px', fontSize: 11 }}
+                                                onClick={() => copy(kw, `mkw-${i}`)}
                                             >
-                                                {copied === 'ltKw' ? '✓ 복사됨' : '복사'}
+                                                {copied === `mkw-${i}` ? '✅' : '복사'}
                                             </button>
                                         </div>
-                                        <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 5 }}>
+                                    ))}
+                                    {output.longTailKeywords.length > 0 && (
+                                        <>
+                                            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8, marginBottom: 4, fontWeight: 600 }}>롱테일</div>
                                             {output.longTailKeywords.map((kw, i) => (
                                                 <div
                                                     key={i}
@@ -541,8 +532,8 @@ function SeoPackageContent() {
                                                         gap: 10,
                                                         padding: '8px 10px',
                                                         borderRadius: 7,
-                                                        background: 'var(--bg-secondary)',
-                                                        border: '1px solid var(--border)',
+                                                        background: 'rgba(59,130,246,0.04)',
+                                                        border: '1px solid rgba(59,130,246,0.1)',
                                                     }}
                                                 >
                                                     <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 700, width: 18, flexShrink: 0 }}>{i + 1}</span>
@@ -553,256 +544,125 @@ function SeoPackageContent() {
                                                         style={{ padding: '2px 8px', fontSize: 11 }}
                                                         onClick={() => copy(kw, `ltkw-${i}`)}
                                                     >
-                                                        {copied === `ltkw-${i}` ? '✓' : '복사'}
+                                                        {copied === `ltkw-${i}` ? '✅' : '복사'}
                                                     </button>
                                                 </div>
                                             ))}
-                                        </div>
-                                    </div>
-                                </>
-                            )}
-
-                            {/* ── 탭 2: 설명 · 태그 · 업로드 시간 ── */}
-                            {activeTab === 'desc' && (
-                                <>
-                                    {/* 설명문 */}
-                                    <div className="card" style={{ overflow: 'hidden' }}>
-                                        <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <span className="card-title">📄 영상 설명문</span>
-                                            <button
-                                                type="button"
-                                                className="btn btn-sm btn-ghost"
-                                                onClick={() => copy(output.description, 'desc')}
-                                            >
-                                                {copied === 'desc' ? '✓ 복사됨' : '복사'}
-                                            </button>
-                                        </div>
-                                        <div style={{ padding: '14px 16px' }}>
-                                            <div
-                                                style={{
-                                                    background: 'var(--bg-secondary)',
-                                                    border: '1px solid var(--border)',
-                                                    borderRadius: 8,
-                                                    padding: 14,
-                                                    fontSize: 13,
-                                                    color: 'var(--text-muted)',
-                                                    lineHeight: 1.8,
-                                                    whiteSpace: 'pre-wrap',
-                                                }}
-                                            >
-                                                {output.description}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* 태그 */}
-                                    <div className="card" style={{ overflow: 'hidden' }}>
-                                        <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <span className="card-title">🏷️ 태그 ({output.tags.length}개)</span>
-                                            <button
-                                                type="button"
-                                                className="btn btn-sm btn-ghost"
-                                                onClick={() => copy(output.tags.join(', '), 'tags')}
-                                            >
-                                                {copied === 'tags' ? '✓ 복사됨' : '전체 복사'}
-                                            </button>
-                                        </div>
-                                        <div style={{ padding: '14px 16px', display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                                            {output.tags.map((tag, i) => (
-                                                <button
-                                                    key={i}
-                                                    type="button"
-                                                    onClick={() => copy(tag, `tag-${i}`)}
-                                                    style={{
-                                                        background: copied === `tag-${i}` ? 'rgba(34,197,94,0.15)' : '#172554',
-                                                        border: `1px solid ${copied === `tag-${i}` ? '#22c55e' : '#1e3a8a'}`,
-                                                        borderRadius: 6,
-                                                        padding: '4px 10px',
-                                                        fontSize: 11,
-                                                        color: copied === `tag-${i}` ? '#22c55e' : '#93c5fd',
-                                                        cursor: 'pointer',
-                                                        transition: 'var(--transition)',
-                                                    }}
-                                                >
-                                                    {tag}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    {/* 영상 챕터 */}
-                                    {output.chapters.length > 0 && (
-                                        <div className="card" style={{ overflow: 'hidden' }}>
-                                            <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                <span className="card-title">📑 영상 챕터</span>
-                                                <button
-                                                    type="button"
-                                                    className="btn btn-sm btn-ghost"
-                                                    onClick={() => copy(output.chapters.join('\n'), 'chapters')}
-                                                >
-                                                    {copied === 'chapters' ? '✓ 복사됨' : '전체 복사'}
-                                                </button>
-                                            </div>
-                                            <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 5 }}>
-                                                {output.chapters.map((chapter, i) => (
-                                                    <div
-                                                        key={i}
-                                                        style={{
-                                                            display: 'flex',
-                                                            alignItems: 'center',
-                                                            gap: 10,
-                                                            padding: '8px 12px',
-                                                            borderRadius: 7,
-                                                            background: 'var(--bg-secondary)',
-                                                            border: '1px solid var(--border)',
-                                                        }}
-                                                    >
-                                                        <span style={{ fontFamily: 'monospace', fontSize: 12, color: 'var(--accent)', minWidth: 40, flexShrink: 0 }}>
-                                                            {chapter.split(' ')[0]}
-                                                        </span>
-                                                        <span style={{ flex: 1, fontSize: 13, color: 'var(--text-primary)' }}>
-                                                            {chapter.split(' ').slice(1).join(' ')}
-                                                        </span>
-                                                        <button
-                                                            type="button"
-                                                            className="btn btn-sm btn-ghost"
-                                                            style={{ padding: '2px 8px', fontSize: 11 }}
-                                                            onClick={() => copy(chapter, `ch-${i}`)}
-                                                        >
-                                                            {copied === `ch-${i}` ? '✓' : '복사'}
-                                                        </button>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
+                                        </>
                                     )}
+                                </div>
+                            </div>
 
-                                    {/* 업로드 최적 시간 */}
-                                    <div className="card" style={{ overflow: 'hidden' }}>
-                                        <div className="card-header">
-                                            <span className="card-title">⏰ 업로드 최적 시간</span>
-                                        </div>
-                                        <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
-                                            {uploadTime && (
-                                                <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.7 }}>
-                                                    {uploadTime}
-                                                </p>
-                                            )}
-                                            <RegionTimeslot region={form.region || '한국'} />
-                                        </div>
-                                    </div>
-                                </>
-                            )}
-
-                            {/* ── 탭 3: Claude 작업지시서 ── */}
-                            {activeTab === 'claude' && (
-                                <div className="card" style={{ overflow: 'hidden' }}>
-                                    <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <span className="card-title">🤖 Claude.ai 작업지시서</span>
-                                        <button
-                                            type="button"
-                                            className="btn btn-sm btn-ghost"
-                                            onClick={() => copy(output.claudeInstruction, 'claude')}
-                                        >
-                                            {copied === 'claude' ? '✓ 복사됨' : '복사'}
-                                        </button>
-                                    </div>
-                                    <div style={{ padding: '14px 16px' }}>
-                                        <div
-                                            style={{
-                                                background: 'var(--bg-secondary)',
-                                                border: '1px solid var(--border)',
-                                                borderRadius: 8,
-                                                padding: 14,
-                                                fontSize: 12,
-                                                color: 'var(--text-muted)',
-                                                lineHeight: 1.7,
-                                                whiteSpace: 'pre-wrap',
-                                                fontFamily: "'Courier New', monospace",
-                                            }}
-                                        >
-                                            {output.claudeInstruction}
-                                        </div>
+                            {/* 📝 설명문 카드 */}
+                            <div className="glass-card" style={{ overflow: 'hidden' }}>
+                                <div
+                                    className={styles.resultCardHeader}
+                                    style={{ borderBottomColor: 'rgba(34,197,94,0.3)' }}
+                                >
+                                    <span style={{ color: '#86efac', fontWeight: 700, fontSize: 13 }}>
+                                        📝 영상 설명문
+                                    </span>
+                                    <button
+                                        type="button"
+                                        className="btn btn-sm btn-ghost"
+                                        onClick={() => copy(output.description, 'desc')}
+                                    >
+                                        {copied === 'desc' ? '✅ 복사됨' : '복사'}
+                                    </button>
+                                </div>
+                                <div style={{ padding: '14px 16px' }}>
+                                    <div
+                                        style={{
+                                            background: 'rgba(34,197,94,0.04)',
+                                            border: '1px solid rgba(34,197,94,0.15)',
+                                            borderRadius: 8,
+                                            padding: 14,
+                                            fontSize: 13,
+                                            color: 'var(--text-muted)',
+                                            lineHeight: 1.8,
+                                            whiteSpace: 'pre-wrap',
+                                        }}
+                                    >
+                                        {output.description}
                                     </div>
                                 </div>
-                            )}
+                            </div>
                         </div>
                     )}
 
                     {/* ── SEO 이력 패널 ── */}
                     {seoHistory.length > 0 && (
                         <div className="card" style={{ marginTop: 20, overflow: 'hidden' }}>
-                            <div className="card-header">
-                                <span className="card-title">🕒 최근 SEO 이력</span>
+                            <div
+                                className="card-header"
+                                style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                                onClick={() => setShowHistory((v) => !v)}
+                            >
+                                <span className="card-title">🕒 최근 SEO 이력 ({seoHistory.length})</span>
+                                <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{showHistory ? '▲' : '▼'}</span>
                             </div>
-                            <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                                {seoHistory.slice(0, 3).map((entry) => {
-                                    const entryScoreColor = entry.seoScore >= 80
-                                        ? '#22c55e'
-                                        : entry.seoScore >= 60
-                                        ? '#f59e0b'
-                                        : '#ef4444';
-                                    return (
-                                        <div
-                                            key={entry.id}
-                                            style={{
-                                                background: 'var(--bg-secondary)',
-                                                border: '1px solid var(--border)',
-                                                borderRadius: 8,
-                                                padding: '10px 14px',
-                                                display: 'flex',
-                                                alignItems: 'flex-start',
-                                                gap: 12,
-                                            }}
-                                        >
+                            {showHistory && (
+                                <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                                    {seoHistory.slice(0, 5).map((entry) => {
+                                        const entryScoreColor = entry.seoScore >= 80
+                                            ? '#22c55e'
+                                            : entry.seoScore >= 60
+                                            ? '#f59e0b'
+                                            : '#ef4444';
+                                        return (
                                             <div
+                                                key={entry.id}
                                                 style={{
-                                                    fontSize: 14,
-                                                    fontWeight: 700,
-                                                    color: entryScoreColor,
-                                                    minWidth: 32,
-                                                    flexShrink: 0,
+                                                    background: 'var(--bg-secondary)',
+                                                    border: '1px solid var(--border)',
+                                                    borderRadius: 8,
+                                                    padding: '10px 14px',
+                                                    display: 'flex',
+                                                    alignItems: 'flex-start',
+                                                    gap: 12,
                                                 }}
                                             >
-                                                {entry.seoScore}
-                                            </div>
-                                            <div style={{ flex: 1, minWidth: 0 }}>
-                                                <div style={{ fontSize: 12, color: 'var(--text-primary)', fontWeight: 600, marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                                    {entry.titleInput || entry.titles[0] || '제목 없음'}
+                                                <div style={{ fontSize: 14, fontWeight: 700, color: entryScoreColor, minWidth: 32, flexShrink: 0 }}>
+                                                    {entry.seoScore}
                                                 </div>
-                                                <div style={{ fontSize: 11, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                                    {entry.mainKeywords.slice(0, 3).join(' · ')}
+                                                <div style={{ flex: 1, minWidth: 0 }}>
+                                                    <div style={{ fontSize: 12, color: 'var(--text-primary)', fontWeight: 600, marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                        {entry.titleInput || entry.titles[0] || '제목 없음'}
+                                                    </div>
+                                                    <div style={{ fontSize: 11, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                        {entry.mainKeywords.slice(0, 3).join(' · ')}
+                                                    </div>
+                                                </div>
+                                                <div style={{ fontSize: 10, color: 'var(--text-muted)', flexShrink: 0, marginTop: 2 }}>
+                                                    {new Date(entry.createdAt).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                                </div>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flexShrink: 0 }}>
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-sm btn-ghost"
+                                                        style={{ padding: '2px 8px', fontSize: 11 }}
+                                                        onClick={() => setTitleInput(entry.titleInput || entry.titles[0] || '')}
+                                                    >
+                                                        불러오기
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-sm btn-danger"
+                                                        style={{ padding: '2px 8px', fontSize: 11 }}
+                                                        onClick={() => {
+                                                            deleteSeoHistory(entry.id).then(() => {
+                                                                setSeoHistory((prev) => prev.filter((e) => e.id !== entry.id));
+                                                            }).catch(() => {});
+                                                        }}
+                                                    >
+                                                        🗑 삭제
+                                                    </button>
                                                 </div>
                                             </div>
-                                            <div style={{ fontSize: 10, color: 'var(--text-muted)', flexShrink: 0, marginTop: 2 }}>
-                                                {new Date(entry.createdAt).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                                            </div>
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flexShrink: 0 }}>
-                                                <button
-                                                    type="button"
-                                                    className="btn btn-sm btn-ghost"
-                                                    style={{ padding: '2px 8px', fontSize: 11 }}
-                                                    onClick={() => setTitleInput(entry.titleInput || entry.titles[0] || '')}
-                                                >
-                                                    불러오기
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    className="btn btn-sm btn-danger"
-                                                    style={{ padding: '2px 8px', fontSize: 11 }}
-                                                    onClick={() => {
-                                                        deleteSeoHistory(entry.id).then(() => {
-                                                            setSeoHistory((prev) => prev.filter((e) => e.id !== entry.id));
-                                                        }).catch(() => {});
-                                                    }}
-                                                >
-                                                    🗑 삭제
-                                                </button>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
