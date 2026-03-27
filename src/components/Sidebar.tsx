@@ -4,7 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 const RECENT_PAGES_KEY = 'recentPages';
 const RECENT_MAX = 3;
@@ -18,48 +18,47 @@ interface NavItem {
   tooltip?: string;
 }
 
+const SECTION_LABEL_STYLE: React.CSSProperties = {
+  padding: '6px 16px 2px',
+  fontSize: '9px',
+  color: '#334155',
+  letterSpacing: '2px',
+  textTransform: 'uppercase',
+  fontWeight: 600,
+};
+
 const navItems: { section: string; items: NavItem[] }[] = [
   {
-    section: '메인',
+    section: '🎵 음원제작',
     items: [
-      { href: '/dashboard', icon: '🏠', label: '대시보드' },
+      { href: '/music-generator', icon: '🎵', label: '음악생성', badge: 'NEW', badgeType: 'new' as const },
+      { href: '/cover-image-generator', icon: '🖼', label: '커버이미지', badge: 'NEW', badgeType: 'new' as const },
+      { href: '/seo-package', icon: '🔍', label: 'SEO패키지', badge: 'NEW', badgeType: 'new' as const },
     ],
   },
   {
-    section: '콘텐츠',
+    section: '✍️ 크리에이티브',
     items: [
-      { href: '/scrapsheet', icon: '✂️', label: '스크랩시트' },
-      { href: '/planner', icon: '💡', label: '채널기획' },
-      { href: '/schedule', icon: '🗓️', label: '스케쥴 알림' },
-    ],
-  },
-  {
-    section: '분석',
-    items: [
-      { href: '/statistics', icon: '📈', label: '통합 통계', badge: 'NEW', badgeType: 'new' },
-      { href: '/audit', icon: '📊', label: '채널 감사', badge: 'NEW', badgeType: 'new' },
-      { href: '/insight', icon: '🔍', label: '딥 인사이트', badge: 'NEW', badgeType: 'new' },
-      { href: '/videos', icon: '🎬', label: '영상 목록', badge: 'NEW', badgeType: 'new' },
-      { href: '/comments', icon: '💬', label: '댓글 관리', badge: 'NEW', badgeType: 'new' },
-      { href: '/revenue', icon: '💰', label: '수익 관리', badge: 'NEW', badgeType: 'new' },
-    ],
-  },
-  {
-    section: '크리에이티브',
-    items: [
-      { href: '/brand-kit', icon: '🎨', label: 'BrandKit', badge: 'NEW', badgeType: 'new' as const },
+      { href: '/lyrics', icon: '📝', label: '가사 작성', badge: 'NEW', badgeType: 'new' as const },
       { href: '/ideation', icon: '🧠', label: 'Ideation', badge: 'NEW', badgeType: 'new' as const },
-      { href: '/lyrics', icon: '📝', label: 'Lyrics', badge: 'NEW', badgeType: 'new' as const },
+      { href: '/planner', icon: '💡', label: '채널기획' },
       { href: '/cover', icon: '🖼️', label: 'Cover Generator', badge: 'NEW', badgeType: 'new' as const },
       { href: '/library', icon: '📚', label: '프롬프트 라이브러리', badge: 'NEW', badgeType: 'new' as const },
     ],
   },
   {
-    section: '🎵 음원 제작',
+    section: '📊 채널관리',
     items: [
-      { href: '/music-generator', icon: '🎵', label: '음악생성', badge: 'NEW', badgeType: 'new' as const },
-      { href: '/cover-image-generator', icon: '🖼', label: '커버이미지', badge: 'NEW', badgeType: 'new' as const },
-      { href: '/seo-package', icon: '🔍', label: 'SEO패키지', badge: 'NEW', badgeType: 'new' as const },
+      { href: '/dashboard', icon: '🏠', label: '대시보드' },
+      { href: '/schedule', icon: '🗓️', label: '스케쥴 알림' },
+      { href: '/statistics', icon: '📈', label: '통합 통계', badge: 'NEW', badgeType: 'new' as const },
+      { href: '/revenue', icon: '💰', label: '수익 관리', badge: 'NEW', badgeType: 'new' as const },
+      { href: '/audit', icon: '📊', label: '채널 감사', badge: 'NEW', badgeType: 'new' as const },
+      { href: '/insight', icon: '🔍', label: '딥 인사이트', badge: 'NEW', badgeType: 'new' as const },
+      { href: '/videos', icon: '🎬', label: '영상 목록', badge: 'NEW', badgeType: 'new' as const },
+      { href: '/comments', icon: '💬', label: '댓글 관리', badge: 'NEW', badgeType: 'new' as const },
+      { href: '/scrapsheet', icon: '✂️', label: '스크랩시트' },
+      { href: '/brand-kit', icon: '🎨', label: 'BrandKit', badge: 'NEW', badgeType: 'new' as const },
     ],
   },
   {
@@ -129,7 +128,7 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
       <nav className="sidebar-nav">
         {navItems.map((section) => (
           <div key={section.section}>
-            <div className="sidebar-section-label">{section.section}</div>
+            <div className="sidebar-section-label" style={SECTION_LABEL_STYLE}>{section.section}</div>
             {section.items.map((item) => (
               <Link
                 key={item.label}
