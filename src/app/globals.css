@@ -755,6 +755,26 @@ tbody tr:hover td {
     display: flex;
   }
 
+  /* 헤더 — 모바일에서 패딩 축소 */
+  .header {
+    padding: 0 12px;
+  }
+
+  /* user-badge — 이름 텍스트 숨김, 아바타+버튼만 표시 */
+  .user-badge > span {
+    display: none;
+  }
+
+  .user-badge {
+    padding: 4px 8px;
+    gap: 4px;
+  }
+
+  /* 헤더 subtitle — 모바일에서 숨김 */
+  .header .header-left > div > div:last-child {
+    display: none;
+  }
+
   /* 사이드바 — 기본 숨김, 슬라이드 인/아웃 */
   .sidebar {
     position: fixed;

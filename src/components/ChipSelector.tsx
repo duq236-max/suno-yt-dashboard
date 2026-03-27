@@ -75,7 +75,7 @@ export default function ChipSelector({
       </div>
 
       {/* 칩 목록 */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' }}>
+      <div className="chip-row-grid" style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' }}>
         {chips.map((chip) => {
           const isSelected = selected.includes(chip.label);
           return (

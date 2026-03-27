@@ -333,7 +333,7 @@ export default function MusicGeneratorPage() {
             {/* 음악 생성 탭 */}
             {activeTab === 'generate' && (
                 <div>
-                    <div className="info-banner" style={{ marginBottom: '20px' }}>
+                    <div className="info-banner" style={{ marginBottom: '20px', display: 'block' }}>
                         🎵 음악 스타일 및 옵션 선택 — 원하는 항목을 클릭하고{' '}
                         <strong>{form.count}곡 생성하기</strong>를 누르세요.
                         {form.shortsMode && (

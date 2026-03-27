@@ -27,10 +27,10 @@
     gap: 0.5rem;
   }
 
-  /* 칩 그리드: 3열 고정 */
-  .chipCard > div > div {
+  /* 칩 그리드: 2열 고정 (칩 목록만 타겟) */
+  .chipCard :global(.chip-row-grid) {
     display: grid !important;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 6px;
   }
 
