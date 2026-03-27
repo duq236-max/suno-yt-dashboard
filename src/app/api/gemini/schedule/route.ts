@@ -39,7 +39,7 @@ YouTube 알고리즘, 시청자 활동 패턴, 장르별 특성을 고려하여 
 }`;
 
         const res = await fetch(
-            `${GEMINI_BASE}/gemini-2.5-flash:generateContent?key=${apiKey}`,
+            `${GEMINI_BASE}/gemini-3.1-flash-lite-preview:generateContent?key=${apiKey}`,
             {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },

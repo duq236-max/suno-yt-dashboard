@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateWithGemini, type GeminiModel } from '@/lib/gemini';
 
-const VALID_MODELS: GeminiModel[] = ['gemini-2.5-flash', 'gemini-2.5-pro'];
+const VALID_MODELS: GeminiModel[] = ['gemini-3.1-flash-lite-preview'];
 
 export async function POST(req: NextRequest) {
     try {
@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
         }
 
         // 'flash' | 'pro' 단축어 → 실제 모델 ID로 변환
-        const modelId: GeminiModel = model === 'pro' ? 'gemini-2.5-pro' : 'gemini-2.5-flash';
+        const modelId: GeminiModel = model === 'pro' ? 'gemini-3.1-flash-lite-preview' : 'gemini-3.1-flash-lite-preview';
         if (!VALID_MODELS.includes(modelId)) {
             return NextResponse.json({ error: '유효하지 않은 모델입니다.' }, { status: 400 });
         }

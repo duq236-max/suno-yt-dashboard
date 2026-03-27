@@ -116,14 +116,23 @@ function SeoPackageContent() {
             if (data.output) {
                 setOutput(data.output);
                 setUploadTime(data.uploadTime ?? '');
-                await saveSeoHistory({
-                    titleInput,
-                    seoScore: data.output.seoScore,
-                    titles: data.output.titles,
-                    mainKeywords: data.output.mainKeywords,
-                    tags: data.output.tags,
-                });
-                loadSeoHistory().then(setSeoHistory).catch(() => {});
+                try {
+                    await saveSeoHistory({
+                        titleInput,
+                        seoScore: data.output.seoScore,
+                        titles: data.output.titles,
+                        mainKeywords: data.output.mainKeywords,
+                        tags: data.output.tags,
+                        longTailKeywords: data.output.longTailKeywords,
+                        description: data.output.description,
+                        chapters: data.output.chapters,
+                        uploadTimes: data.output.uploadTimes,
+                        claudeInstruction: data.output.claudeInstruction,
+                    });
+                    loadSeoHistory().then(setSeoHistory).catch(() => {});
+                } catch {
+                    // 이력 저장 실패는 무시 (생성 결과는 이미 표시됨)
+                }
             }
         } catch {
             setErrorMsg('서버 오류가 발생했습니다.');
@@ -641,7 +650,20 @@ function SeoPackageContent() {
                                                         type="button"
                                                         className="btn btn-sm btn-ghost"
                                                         style={{ padding: '2px 8px', fontSize: 11 }}
-                                                        onClick={() => setTitleInput(entry.titleInput || entry.titles[0] || '')}
+                                                        onClick={() => {
+                                                            setTitleInput(entry.titleInput || entry.titles[0] || '');
+                                                            setOutput({
+                                                                seoScore: entry.seoScore,
+                                                                titles: entry.titles,
+                                                                mainKeywords: entry.mainKeywords,
+                                                                tags: entry.tags,
+                                                                longTailKeywords: entry.longTailKeywords ?? [],
+                                                                description: entry.description ?? '',
+                                                                chapters: entry.chapters ?? [],
+                                                                uploadTimes: entry.uploadTimes ?? [],
+                                                                claudeInstruction: entry.claudeInstruction ?? '',
+                                                            });
+                                                        }}
                                                     >
                                                         불러오기
                                                     </button>

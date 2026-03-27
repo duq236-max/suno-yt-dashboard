@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        const modelId: GeminiModel = model === 'pro' ? 'gemini-2.5-pro' : 'gemini-2.5-flash';
+        const modelId: GeminiModel = model === 'pro' ? 'gemini-3.1-flash-lite-preview' : 'gemini-3.1-flash-lite-preview';
         const generationConfig = creativityParams
             ? { temperature: creativityParams.temperature, topP: creativityParams.topP, topK: creativityParams.topK }
             : { temperature: 0.9, topK: 40, topP: 0.95 };

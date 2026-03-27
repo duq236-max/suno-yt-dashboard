@@ -114,7 +114,7 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        const modelId = model === 'pro' ? 'gemini-2.5-pro' : 'gemini-2.5-flash';
+        const modelId = model === 'pro' ? 'gemini-3.1-flash-lite-preview' : 'gemini-3.1-flash-lite-preview';
         const input: PlannerInput = { channelName, genre, targetAudience, uploadFrequency, concept, youtubeName };
         const generationConfig = creativityParams
             ? { temperature: creativityParams.temperature, topP: creativityParams.topP, topK: creativityParams.topK }

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-type GeminiModel = 'gemini-2.5-flash' | 'gemini-2.5-pro';
+type GeminiModel = 'gemini-3.1-flash-lite-preview';
 
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
 
@@ -126,7 +126,7 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        const modelId: GeminiModel = model === 'pro' ? 'gemini-2.5-pro' : 'gemini-2.5-flash';
+        const modelId: GeminiModel = model === 'pro' ? 'gemini-3.1-flash-lite-preview' : 'gemini-3.1-flash-lite-preview';
         const prompt = buildLyricsPrompt({ genre, mood, theme, language, style, copyrightDefense, vocalKeywords, shortForm });
 
         const res = await fetch(

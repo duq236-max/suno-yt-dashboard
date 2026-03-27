@@ -123,7 +123,7 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        const modelId = model === 'pro' ? 'gemini-2.5-pro' : 'gemini-2.5-flash';
+        const modelId = model === 'pro' ? 'gemini-3.1-flash-lite-preview' : 'gemini-3.1-flash-lite-preview';
         const input: InsightInput = {
             channelName,
             genre,

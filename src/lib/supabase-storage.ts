@@ -1076,6 +1076,11 @@ export interface SeoHistoryEntry {
     titles: string[];
     mainKeywords: string[];
     tags: string[];
+    longTailKeywords?: string[];
+    description?: string;
+    chapters?: string[];
+    uploadTimes?: { day: string; time: string }[];
+    claudeInstruction?: string;
 }
 
 export async function saveSeoHistory(entry: Omit<SeoHistoryEntry, 'id' | 'createdAt'>): Promise<void> {

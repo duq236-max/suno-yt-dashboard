@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import type { SeoForm, SeoOutput } from '@/types/seo-package';
 
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
-const MODEL_ID = 'gemini-2.5-flash';
+const MODEL_ID = 'gemini-3.1-flash-lite-preview';
 
 function buildPrompt(form: SeoForm): string {
     return `당신은 유튜브 SEO 전문가입니다.

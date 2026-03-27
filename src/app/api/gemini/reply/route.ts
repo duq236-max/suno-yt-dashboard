@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '댓글 내용이 없습니다.' }, { status: 400 });
     }
 
-    const modelId = model === 'pro' ? 'gemini-2.5-pro' : 'gemini-2.5-flash';
+    const modelId = model === 'pro' ? 'gemini-3.1-flash-lite-preview' : 'gemini-3.1-flash-lite-preview';
     const input: ReplyInput = { comment, authorName, channelName, genre, moodKeywords };
 
     const res = await fetch(

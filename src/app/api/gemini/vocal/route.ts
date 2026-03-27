@@ -40,7 +40,7 @@ ${styleList}
 }`;
 
         const res = await fetch(
-            `${GEMINI_BASE}/gemini-2.5-flash:generateContent?key=${apiKey}`,
+            `${GEMINI_BASE}/gemini-3.1-flash-lite-preview:generateContent?key=${apiKey}`,
             {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },

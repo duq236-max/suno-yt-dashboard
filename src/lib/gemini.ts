@@ -1,7 +1,7 @@
 // 서버사이드 전용 — 클라이언트에서 직접 import 금지
 // Phase 2: apiKey 파라미터를 제거하고 Supabase에서 읽도록 교체 예정
 
-export type GeminiModel = 'gemini-2.5-flash' | 'gemini-2.5-pro';
+export type GeminiModel = 'gemini-3.1-flash-lite-preview';
 
 export interface GeminiGenerateParams {
     apiKey: string;

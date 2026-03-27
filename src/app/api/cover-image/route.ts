@@ -42,7 +42,7 @@ JSON만 반환하고 다른 텍스트는 포함하지 마세요.`;
 
   try {
     const res = await fetch(
-      `${GEMINI_BASE}/gemini-2.0-flash:generateContent?key=${apiKey}`,
+      `${GEMINI_BASE}/gemini-3.1-flash-lite-preview:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

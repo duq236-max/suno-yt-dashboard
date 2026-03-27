@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
 3. 마무리곡 선택 기준`;
 
         const res = await fetch(
-            `${GEMINI_BASE}/gemini-2.5-flash:generateContent?key=${apiKey}`,
+            `${GEMINI_BASE}/gemini-3.1-flash-lite-preview:generateContent?key=${apiKey}`,
             {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },

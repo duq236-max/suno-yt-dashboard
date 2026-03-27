@@ -334,8 +334,16 @@ ALTER TABLE user_settings
     ADD COLUMN IF NOT EXISTS cover_image_history JSONB DEFAULT '[]'::JSONB;
 
 -- ============================================================
+-- 007: seo_history 컬럼 추가
+-- ============================================================
+
+ALTER TABLE user_settings
+    ADD COLUMN IF NOT EXISTS seo_history JSONB DEFAULT '[]'::JSONB;
+
+-- ============================================================
 -- 완료! 테이블: channel_info, scrap_sheets, scrap_items,
 --   user_settings, youtube_channels, brand_kit,
 --   lyrics_history, revenue_entries, songs
 -- 컬럼 추가: user_settings.cover_image_history (JSONB)
+--            user_settings.seo_history (JSONB)
 -- ============================================================
