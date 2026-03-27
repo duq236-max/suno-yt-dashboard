@@ -95,9 +95,17 @@ export default function SongResultCard({ index, song, onSendToSuno }: SongResult
       style={{ padding: '0', overflow: 'hidden', marginBottom: '8px' }}
     >
       {/* 접힌 상태 헤더 — 항상 보임 */}
-      <button
-        type="button"
+      {/* div[role="button"]을 사용해 내부 StyleCopyButton(button)과의 중첩을 방지 */}
+      <div
+        role="button"
+        tabIndex={0}
         onClick={() => setExpanded((prev) => !prev)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setExpanded((prev) => !prev);
+          }
+        }}
         style={{
           width: '100%',
           display: 'flex',
@@ -105,9 +113,7 @@ export default function SongResultCard({ index, song, onSendToSuno }: SongResult
           gap: '12px',
           padding: '14px 16px',
           background: 'transparent',
-          border: 'none',
           cursor: 'pointer',
-          textAlign: 'left',
         }}
       >
         {/* 번호 원형 뱃지 (핑크) */}
@@ -150,7 +156,7 @@ export default function SongResultCard({ index, song, onSendToSuno }: SongResult
           )}
         </div>
 
-        {/* 스타일 태그 복사 버튼 */}
+        {/* 스타일 태그 복사 버튼 — stopPropagation으로 헤더 토글 차단 */}
         <StyleCopyButton style={song.style} />
 
         {/* 화살표 */}
@@ -165,7 +171,7 @@ export default function SongResultCard({ index, song, onSendToSuno }: SongResult
         >
           ▼
         </span>
-      </button>
+      </div>
 
       {/* 펼친 상태 내용 */}
       {expanded && (
