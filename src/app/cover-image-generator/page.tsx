@@ -144,6 +144,7 @@ function CoverImageGeneratorInner() {
       ...new Set(sheet.items.flatMap((i) => i.mood_tags ?? [])),
     ].slice(0, 3);
     setLinkedSheet(sheet);
+    setTitleInput(sheet.name);
     setForm((prev) => ({ ...prev, concept: genres, mood: moods }));
   }
 
@@ -260,20 +261,37 @@ function CoverImageGeneratorInner() {
             )}
           </span>
           <button
-            className="btn btn-secondary btn-sm"
-            style={{ flexShrink: 0, marginLeft: 12 }}
+            style={{
+              flexShrink: 0,
+              marginLeft: 12,
+              background: 'rgba(168,85,247,0.15)',
+              border: '1px solid rgba(168,85,247,0.35)',
+              color: '#c084fc',
+              borderRadius: 8,
+              fontSize: 12,
+              padding: '5px 10px',
+              cursor: 'pointer',
+            }}
             onClick={() => setShowPalette(true)}
           >
-            🗂️ 시트 선택
+            📋 시트 선택
           </button>
         </div>
       ) : (
         <div className="card" style={{ marginBottom: 16 }}>
           <button
-            className="btn btn-secondary btn-sm"
+            style={{
+              background: 'rgba(168,85,247,0.15)',
+              border: '1px solid rgba(168,85,247,0.35)',
+              color: '#c084fc',
+              borderRadius: 8,
+              fontSize: 12,
+              padding: '5px 10px',
+              cursor: 'pointer',
+            }}
             onClick={() => setShowPalette(true)}
           >
-            📋 시트에서 분위기 불러오기
+            📋 시트 선택
           </button>
         </div>
       )}
@@ -369,10 +387,10 @@ function CoverImageGeneratorInner() {
                 onClick={() => setActiveTab(tab)}
               >
                 {tab === 'claude'
-                  ? 'Claude 작업지시서'
+                  ? '🤖 Claude 작업지시서'
                   : tab === 'gemini'
-                  ? 'Gemini 프롬프트'
-                  : '컨셉 미리보기'}
+                  ? '🎨 Gemini 프롬프트'
+                  : '👁️ 컨셉 미리보기'}
               </button>
             ))}
           </div>
