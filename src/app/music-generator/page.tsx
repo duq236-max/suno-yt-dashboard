@@ -427,7 +427,12 @@ export default function MusicGeneratorPage() {
                             boxShadow: isGenerating || !apiKey ? 'none' : 'var(--shadow-glow)',
                         }}
                     >
-                        {isGenerating ? '⏳ 생성 중...' : `▶ ${form.count}곡 생성하기`}
+                        {isGenerating ? (
+                            <>
+                                <span className={styles.spinner} />
+                                생성 중...
+                            </>
+                        ) : `▶ ${form.count}곡 생성하기`}
                     </button>
                     <ErrorMessage error={error} />
                     <div style={{ marginBottom: '12px' }} />
@@ -446,6 +451,32 @@ export default function MusicGeneratorPage() {
                                     }}
                                 />
                             ))}
+                        </div>
+                    )}
+
+                    {/* 빈 상태 UI */}
+                    {!isGenerating && results.length === 0 && !error && (
+                        <div
+                            style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '12px',
+                                padding: '48px 24px',
+                                background: 'var(--bg-card)',
+                                border: '1px dashed var(--border)',
+                                borderRadius: 'var(--radius-md)',
+                                marginBottom: '12px',
+                            }}
+                        >
+                            <span style={{ fontSize: '40px', opacity: 0.25 }}>🎵</span>
+                            <div style={{ fontSize: '14px', color: 'var(--text-muted)', textAlign: 'center' }}>
+                                칩을 선택하고 <strong style={{ color: 'var(--text-secondary)' }}>생성하기</strong>를 눌러보세요
+                            </div>
+                            <div style={{ fontSize: '12px', color: 'var(--text-muted)', opacity: 0.6 }}>
+                                장르, 분위기, 보컬 등 원하는 옵션을 고른 후 생성하면 AI가 가사와 스타일을 만들어드립니다
+                            </div>
                         </div>
                     )}
 

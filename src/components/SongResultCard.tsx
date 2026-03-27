@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import type { GeneratedSong } from '@/types/music-generator';
 
 interface SongResultCardProps {
@@ -9,7 +10,7 @@ interface SongResultCardProps {
   onSendToSuno?: (song: GeneratedSong) => void;
 }
 
-function StyleCopyButton({ style }: { style: string }) {
+function StyleCopyButton({ style, fullWidth = false }: { style: string; fullWidth?: boolean }) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -17,6 +18,18 @@ function StyleCopyButton({ style }: { style: string }) {
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
   };
+
+  if (fullWidth) {
+    return (
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); void handleCopy(); }}
+        style={{ ...ACTION_BTN_STYLE, border: '1px solid rgba(236,72,153,0.3)', color: '#f9a8d4', background: 'rgba(236,72,153,0.08)' }}
+      >
+        {copied ? '✓ 복사됨' : '🏷️ 스타일 복사'}
+      </button>
+    );
+  }
 
   return (
     <button
@@ -51,8 +64,27 @@ function CopyButton({ text }: { text: string }) {
   );
 }
 
+const ACTION_BTN_STYLE: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: '5px',
+  flex: 1,
+  height: '36px',
+  borderRadius: '8px',
+  border: '1px solid var(--border)',
+  background: 'var(--bg-secondary)',
+  color: 'var(--text-secondary)',
+  fontSize: '12px',
+  fontWeight: 600,
+  cursor: 'pointer',
+  transition: 'var(--transition)',
+  whiteSpace: 'nowrap',
+};
+
 export default function SongResultCard({ index, song, onSendToSuno }: SongResultCardProps) {
   const [expanded, setExpanded] = useState(false);
+  const router = useRouter();
 
   // 제목에서 짧은 태그라인 추출 (첫 괄호 안 텍스트 또는 스타일 첫 단어)
   const tagline = song.style.split(',')[0]?.trim() ?? '';
@@ -154,6 +186,32 @@ export default function SongResultCard({ index, song, onSendToSuno }: SongResult
 
           {/* LYRICS 섹션 */}
           <Section label="LYRICS" content={song.lyrics} multiline />
+
+          {/* 하단 액션 버튼 3개 */}
+          <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+            <StyleCopyButton style={song.style} fullWidth />
+            <button
+              type="button"
+              style={ACTION_BTN_STYLE}
+              onClick={() => {
+                const title = encodeURIComponent(song.title);
+                const mood = encodeURIComponent(song.style.split(',')[0]?.trim() ?? '');
+                router.push(`/cover-image-generator?title=${title}&mood=${mood}`);
+              }}
+            >
+              🎨 커버이미지
+            </button>
+            <button
+              type="button"
+              style={ACTION_BTN_STYLE}
+              onClick={() => {
+                const title = encodeURIComponent(song.title);
+                router.push(`/seo-package?title=${title}`);
+              }}
+            >
+              🔍 SEO 패키지
+            </button>
+          </div>
 
           {/* Suno 전송 버튼 */}
           {onSendToSuno && (

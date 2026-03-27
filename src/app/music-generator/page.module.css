@@ -1,5 +1,22 @@
 /* music-generator — 모바일 반응형 오버라이드 */
 
+/* 생성 버튼 spinner */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  vertical-align: middle;
+  margin-right: 6px;
+}
+
 /* 탭 네비게이션 바 */
 .tabBar {
   display: flex;
